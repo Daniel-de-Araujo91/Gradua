@@ -3,6 +3,8 @@ import Header from '../components/Header';
 import ButtomNav from '../components/ButtomNav';
 import TodayAgenda from '../components/TodayAgenda';
 import StatsCards from "../components/StatsCards";
+import Announcements from "../components/Announcements";
+import CommunityForum from "../components/CommunityForum";
 
 const HomePage = () => {
     const [activeTab, setActiveTab] = useState('home');
@@ -13,7 +15,8 @@ const HomePage = () => {
             <ButtomNav activeTab={activeTab} onTabChange={setActiveTab}></ButtomNav>
             <StatsCards></StatsCards>
             <TodayAgenda></TodayAgenda>
-
+            <Announcements></Announcements>
+            <CommunityForum></CommunityForum>
         </div>
     );
 };
