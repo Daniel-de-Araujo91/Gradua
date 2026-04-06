@@ -5,6 +5,7 @@ import TodayAgenda from '../components/TodayAgenda';
 import StatsCards from "../components/StatsCards";
 import Announcements from "../components/Announcements";
 import CommunityForum from "../components/CommunityForum";
+import MySubjects from "../components/MySubjects";
 
 const HomePage = () => {
     const [activeTab, setActiveTab] = useState('home');
@@ -17,6 +18,7 @@ const HomePage = () => {
             <TodayAgenda></TodayAgenda>
             <Announcements></Announcements>
             <CommunityForum></CommunityForum>
+            <MySubjects></MySubjects>
         </div>
     );
 };
