@@ -1,26 +1,32 @@
-import { useState } from "react";
-import Header from '../components/Header';
-import ButtomNav from '../components/ButtomNav';
+import TopAppBar from '../components/TopAppBar';
+import BottomNavBar from '../components/BottomNavBar';
+import StatsCards from '../components/StatsCards';
 import TodayAgenda from '../components/TodayAgenda';
-import StatsCards from "../components/StatsCards";
-import Announcements from "../components/Announcements";
-import CommunityForum from "../components/CommunityForum";
-import MySubjects from "../components/MySubjects";
+import Announcements from '../components/Announcements';
+import CommunityForum from '../components/CommunityForum';
+import MySubjects from '../components/MySubjects';
 
-const HomePage = () => {
-    const [activeTab, setActiveTab] = useState('home');
-
-    return (
-        <div className="min-h-screen bg-gray-50 pb-16">
-            <Header userName="Guilherme"></Header>
-            <ButtomNav activeTab={activeTab} onTabChange={setActiveTab}></ButtomNav>
-            <StatsCards></StatsCards>
-            <TodayAgenda></TodayAgenda>
-            <Announcements></Announcements>
-            <CommunityForum></CommunityForum>
-            <MySubjects></MySubjects>
-        </div>
-    );
+const HomePage = ({ onNavigate }) => {
+  return (
+    <div style={{
+      width: '390px',
+      height: '100%',
+      backgroundColor: '#F5F5F5',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+    }}>
+      <TopAppBar />
+      <main style={{ flex: 1, overflowY: 'auto', padding: '16px 0' }}>
+        <StatsCards />
+        <TodayAgenda />
+        <Announcements />
+        <CommunityForum />
+        <MySubjects />
+      </main>
+      <BottomNavBar activeTab="inicio" onNavigate={onNavigate} />
+    </div>
+  );
 };
 
 export default HomePage;

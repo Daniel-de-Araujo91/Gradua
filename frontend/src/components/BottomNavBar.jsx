@@ -1,5 +1,3 @@
-import React from 'react';
-
 const HomeIcon = ({ active }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill={active ? '#10305F' : '#9E9E9E'} />
@@ -41,7 +39,6 @@ const BottomNavBar = ({ activeTab = 'inicio', onNavigate }) => {
       justifyContent: 'space-around',
       alignItems: 'center',
       padding: '8px 0 16px',
-      boxShadow: '0px -2px 8px rgba(0,0,0,0.06)',
       flexShrink: 0,
     }}>
       {tabs.map(({ id, label, Icon }) => {
