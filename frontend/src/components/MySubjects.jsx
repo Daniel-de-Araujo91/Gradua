@@ -1,4 +1,3 @@
-// src/components/MySubjects.jsx
 import { useState } from 'react';
 import { ChevronRight, X, Clock, MapPin, User, Users, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 

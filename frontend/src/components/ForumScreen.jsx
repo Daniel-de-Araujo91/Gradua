@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import TopAppBar from './TopAppBar';
+import Header from './Header';
 import BottomNavBar from './BottomNavBar';
 
 /* -------------------------
@@ -260,7 +260,7 @@ const ForumScreen = ({ onNavigate }) => {
         display: 'flex',
         flexDirection: 'column',
       }}>
-        <TopAppBar />
+        <Header />
         <div style={{ flex: 1, overflowY: 'auto', position: 'relative', maxWidth: '600px', width: '100%', margin: '0 auto' }}></div>
 
       {/* Scrollable Content + FAB */}
@@ -371,7 +371,7 @@ const ForumScreen = ({ onNavigate }) => {
       </div>
 
       {/* Bottom Nav */}
-      <BottomNavBar activeTab="forum" onNavigate={onNavigate} />
+        <BottomNavBar activeTab="forum" onTabChange={onNavigate} />
     </div>
   );
 };

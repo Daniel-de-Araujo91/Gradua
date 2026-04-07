@@ -1,4 +1,4 @@
-import TopAppBar from '../components/TopAppBar';
+import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import StatsCards from '../components/StatsCards';
 import TodayAgenda from '../components/TodayAgenda';
@@ -8,28 +8,16 @@ import MySubjects from '../components/MySubjects';
 
 const HomePage = ({ onNavigate }) => {
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      backgroundColor: '#F5F5F5',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      <TopAppBar />
-      <main style={{ 
-        flex: 1, 
-        maxWidth: '600px', 
-        width: '100%', 
-        margin: '0 auto',
-        padding: '16px 0 80px 0'
-      }}>
+    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+      <main className="flex-1 w-full px-4 pb-24">
         <StatsCards />
         <TodayAgenda />
         <Announcements />
         <CommunityForum />
         <MySubjects />
       </main>
-      <BottomNavBar activeTab="inicio" onNavigate={onNavigate} />
+      <BottomNavBar activeTab="home" onTabChange={onNavigate} />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import TopAppBar from './TopAppBar';
+import Header from './Header';
 import BottomNavBar from './BottomNavBar';
 import guilhermeFoto from '../assets/guilherme_perfil.webp';
 
@@ -409,7 +409,7 @@ const PerfilScreen = ({ onNavigate }) => {
       display: 'flex',
       flexDirection: 'column',
     }}>
-      <TopAppBar />
+      <Header />
       <main style={{ flex: 1, maxWidth: '600px', width: '100%', margin: '0 auto', padding: '16px 20px 80px 20px', overflowY: 'auto' }}></main>
 
       {/* Scrollable Content */}
@@ -421,7 +421,7 @@ const PerfilScreen = ({ onNavigate }) => {
       </main>
 
       {/* Bottom Nav */}
-      <BottomNavBar activeTab="perfil" onNavigate={onNavigate} />
+        <BottomNavBar activeTab="profile" onTabChange={onNavigate} />
     </div>
   );
 };

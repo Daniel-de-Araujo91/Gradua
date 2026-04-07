@@ -1,29 +1,15 @@
-import TopAppBar from '../components/TopAppBar';
+import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 
 const AgendaPage = ({ onNavigate }) => {
   return (
-    <div style={{
-      width: '390px',
-      height: '100%',
-      backgroundColor: '#F5F5F5',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    }}>
-      <TopAppBar />
-      <main style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-        <h1 style={{
-          fontSize: '28px',
-          fontWeight: '800',
-          color: '#10305F',
-          marginBottom: '20px',
-        }}>
-          Minha Agenda
-        </h1>
-        <p style={{ color: '#9E9E9E' }}>Conteúdo da agenda em desenvolvimento...</p>
+    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+      <main className="flex-1 w-full px-4 pb-24">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Minha Agenda</h1>
+        <p className="text-gray-500">Conteúdo da agenda em desenvolvimento...</p>
       </main>
-      <BottomNavBar activeTab="agenda" onNavigate={onNavigate} />
+      <BottomNavBar activeTab="agenda" onTabChange={onNavigate} />
     </div>
   );
 };
