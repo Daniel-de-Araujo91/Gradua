@@ -246,26 +246,22 @@ const FAB = () => (
 ------------------------- */
 const ForumScreen = ({ onNavigate }) => {
   const [activeFilter, setActiveFilter] = useState('todos');
-
   const filters = [
-    { id: 'todos', label: 'Todos os Tópicos' },
-    { id: 'perguntas', label: 'Perguntas' },
-    { id: 'avisos', label: 'Avisos' },
-  ];
+      { id: 'todos', label: 'Todos os Tópicos' },
+      { id: 'perguntas', label: 'Perguntas' },
+      { id: 'avisos', label: 'Avisos' },
+    ];
 
-  return (
-    <div style={{
-      width: '390px',
-      height: '100%',
-      backgroundColor: '#F5F5F5',
-      margin: '0 auto',
-      fontFamily: 'Inter, sans-serif',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    }}>
-      {/* Header */}
-      <TopAppBar />
+    return (
+      <div style={{
+        width: '100%',
+        minHeight: '100vh',
+        backgroundColor: '#F5F5F5',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        <TopAppBar />
+        <div style={{ flex: 1, overflowY: 'auto', position: 'relative', maxWidth: '600px', width: '100%', margin: '0 auto' }}></div>
 
       {/* Scrollable Content + FAB */}
       <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>

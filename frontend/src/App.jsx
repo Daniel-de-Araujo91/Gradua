@@ -31,11 +31,11 @@ function App() {
     <div style={{
       width: '100%',
       minHeight: '100vh',
-      backgroundColor: '#F5F5F5', 
+      backgroundColor: '#F5F5F5',
     }}>
       {renderScreen()}
     </div>
   );
 }
 
-export default App
+export default App;

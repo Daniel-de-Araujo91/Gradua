@@ -33,12 +33,14 @@ const BottomNavBar = ({ activeTab = 'inicio', onNavigate }) => {
   return (
     <nav style={{
       width: '100%',
+      maxWidth: '600px',
+      margin: '0 auto',
       backgroundColor: '#FFFFFF',
       borderTop: '1px solid #F0F0F0',
       display: 'flex',
       justifyContent: 'space-around',
       alignItems: 'center',
-      padding: '8px 0 16px',
+      padding: '8px 16px 16px',
       flexShrink: 0,
     }}>
       {tabs.map(({ id, label, Icon }) => {

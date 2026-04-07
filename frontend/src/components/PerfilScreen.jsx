@@ -403,17 +403,14 @@ const CentralAlunoCard = () => (
 const PerfilScreen = ({ onNavigate }) => {
   return (
     <div style={{
-      width: '390px',
-      height: '100%',
+      width: '100%',
+      minHeight: '100vh',
       backgroundColor: '#F5F5F5',
-      margin: '0 auto',
-      fontFamily: 'Inter, sans-serif',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden',
     }}>
-      {/* Top App Bar */}
       <TopAppBar />
+      <main style={{ flex: 1, maxWidth: '600px', width: '100%', margin: '0 auto', padding: '16px 20px 80px 20px', overflowY: 'auto' }}></main>
 
       {/* Scrollable Content */}
       <main style={{ flex: 1, padding: '16px 20px', overflowY: 'auto' }}>
