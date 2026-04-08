@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import StatsCards from '../components/StatsCards';
