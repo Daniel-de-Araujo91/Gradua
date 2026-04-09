@@ -1,41 +1,7 @@
 import React, { useState } from 'react';
 import Header from './Header';
 import BottomNavBar from './BottomNavBar';
-
-/* -------------------------
-   SVG Icons
-------------------------- */
-const HeartIcon = ({ filled = false }) => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
-      stroke={filled ? '#E53935' : '#9E9E9E'}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill={filled ? '#E53935' : 'none'}
-    />
-  </svg>
-);
-
-const CommentIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-      stroke="#9E9E9E"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-  </svg>
-);
-
-const PlusIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 5v14M5 12h14" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
-  </svg>
-);
+import { ArrowUp, ArrowDown, MessageCircle } from 'lucide-react';
 
 /* -------------------------
    Post Category Tag
@@ -75,12 +41,39 @@ const PostCard = ({
   time,
   title,
   content,
-  likes,
+  initialLikes,
+  initialDislikes = 0,
   comments,
   tag,
   tagVariant,
   featured = false,
 }) => {
+  const [likes, setLikes] = useState(initialLikes);
+  const [dislikes, setDislikes] = useState(initialDislikes);
+  const [userVote, setUserVote] = useState(null); 
+
+  const handleVote = (voteType) => {
+    if (voteType === 'up') {
+      if (userVote === 'up') {
+        setLikes(likes - 1);
+        setUserVote(null);
+      } else {
+        setLikes(likes + 1);
+        if (userVote === 'down') setDislikes(dislikes - 1);
+        setUserVote('up');
+      }
+    } else {
+      if (userVote === 'down') {
+        setDislikes(dislikes - 1);
+        setUserVote(null);
+      } else {
+        setDislikes(dislikes + 1);
+        if (userVote === 'up') setLikes(likes - 1);
+        setUserVote('down');
+      }
+    }
+  };
+
   const bg = featured ? '#10305F' : '#FFFFFF';
   const textColor = featured ? '#FFFFFF' : '#10305F';
   const subColor = featured ? 'rgba(255,255,255,0.7)' : '#9E9E9E';
@@ -185,23 +178,39 @@ const PostCard = ({
         justifyContent: 'space-between',
       }}>
         {/* Interactions */}
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <HeartIcon />
-            <span style={{
-              fontSize: '13px',
-              color: subColor,
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: '600',
-            }}>
-              {likes}
-            </span>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          
+          {/* Votos (Up/Down) */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+             <button 
+                onClick={() => handleVote('up')}
+                style={{ 
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  color: userVote === 'up' ? '#4CAF50' : subColor,
+                  fontWeight: userVote === 'up' ? '700' : '600'
+                }}>
+                <ArrowUp size={16} strokeWidth={userVote === 'up' ? 3 : 2} />
+                <span style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>{likes}</span>
+             </button>
+
+             <button 
+                onClick={() => handleVote('down')}
+                style={{ 
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  color: userVote === 'down' ? '#F44336' : subColor,
+                  fontWeight: userVote === 'down' ? '700' : '600'
+                }}>
+                <ArrowDown size={16} strokeWidth={userVote === 'down' ? 3 : 2} />
+                <span style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>{dislikes}</span>
+             </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <CommentIcon />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: subColor }}>
+            <MessageCircle size={16} />
             <span style={{
               fontSize: '13px',
-              color: subColor,
               fontFamily: 'Inter, sans-serif',
               fontWeight: '600',
             }}>
@@ -220,11 +229,17 @@ const PostCard = ({
 /* -------------------------
    Floating Action Button
 ------------------------- */
+const PlusIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 5v14M5 12h14" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
 const FAB = () => (
   <button style={{
-    position: 'absolute',
-    bottom: '80px',
-    right: '16px',
+    position: 'fixed', 
+    bottom: '90px',    
+    right: '24px',
     width: '56px',
     height: '56px',
     borderRadius: '50%',
@@ -260,13 +275,12 @@ const ForumScreen = ({ onNavigate }) => {
         display: 'flex',
         flexDirection: 'column',
       }}>
-        <Header />
-        <div style={{ flex: 1, overflowY: 'auto', position: 'relative', maxWidth: '600px', width: '100%', margin: '0 auto' }}></div>
+        <Header onNavigate={onNavigate} />
 
-      {/* Scrollable Content + FAB */}
+      {/* Scrollable Content */}
       <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
         {/* Title Section */}
-        <div style={{ padding: '8px 20px 0' }}>
+        <div style={{ padding: '16px 20px 0' }}>
           <h1 style={{
             fontSize: '28px',
             fontWeight: '800',
@@ -324,7 +338,7 @@ const ForumScreen = ({ onNavigate }) => {
         </div>
 
         {/* Posts Feed */}
-        <div style={{ padding: '0 20px 24px' }}>
+        <div style={{ padding: '0 20px', paddingBottom: '120px' }}>
           <PostCard
             avatar="beatriz-oliveira"
             name="Beatriz Oliveira"
@@ -332,7 +346,8 @@ const ForumScreen = ({ onNavigate }) => {
             time="Há 2 horas"
             title="Dicas para a prova final de Estrutura de Dados II"
             content="Pessoal, alguém tem resumos sobre Árvores B+ e Grafos direcionados? A prova do Prof. Ricardo está chegando e o conteúdo de Red-Black Trees ainda está um pouco nebuloso..."
-            likes={24}
+            initialLikes={24}
+            initialDislikes={2}
             comments={12}
             tag="PERGUNTAS"
             tagVariant="perguntas"
@@ -345,7 +360,8 @@ const ForumScreen = ({ onNavigate }) => {
             time="Há 5 horas"
             title="Grupo de estudos para Redes de Computadores"
             content="Estamos montando um grupo para praticar configuração de roteadores e subnets. Quem tiver interesse, vamos nos reunir na biblioteca central quarta-feira às 14h."
-            likes={15}
+            initialLikes={15}
+            initialDislikes={0}
             comments={8}
             tag="AVISOS"
             tagVariant="avisos"
@@ -358,7 +374,8 @@ const ForumScreen = ({ onNavigate }) => {
             time="Ontem"
             title="Vaga de estágio no polo tecnológico"
             content="Abertura de seleção para estágio em Desenvolvimento Web (React/Node). Necessário estar cursando a partir do 5º semestre. Bolsa auxílio compatível com o mercado + benefícios."
-            likes={56}
+            initialLikes={56}
+            initialDislikes={1}
             comments={31}
             tag="DESTAQUE"
             tagVariant="destaque"
@@ -366,9 +383,10 @@ const ForumScreen = ({ onNavigate }) => {
           />
         </div>
 
-        {/* FAB */}
-        <FAB />
       </div>
+      
+      {/* FAB */}
+      <FAB />
 
       {/* Bottom Nav */}
         <BottomNavBar activeTab="forum" onTabChange={onNavigate} />

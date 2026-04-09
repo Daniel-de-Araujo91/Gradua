@@ -16,16 +16,8 @@ const MySubjects = () => {
             professor: "Dr. Rodrigo Paes",
             participants: 42,
             monitors: [],
-            grades: {
-                ab1: 8.5,
-                ab2: null,
-                reav: null,
-                final: null
-            },
-            absences: {
-                registered: 2,
-                remaining: 13
-            },
+            grades: { ab1: 8.5, ab2: null, reav: null, final: null },
+            absences: { registered: 2, remaining: 13 },
             deliveryRate: "Em dia"
         },
         {
@@ -38,16 +30,8 @@ const MySubjects = () => {
             professor: "Prof. Maria Santos",
             participants: 38,
             monitors: ["Carlos Eduardo"],
-            grades: {
-                ab1: 7.0,
-                ab2: null,
-                reav: null,
-                final: null
-            },
-            absences: {
-                registered: 1,
-                remaining: 14
-            },
+            grades: { ab1: 7.0, ab2: null, reav: null, final: null },
+            absences: { registered: 1, remaining: 14 },
             deliveryRate: "Em dia"
         },
         {
@@ -60,16 +44,8 @@ const MySubjects = () => {
             professor: "Prof. Ricardo Santos",
             participants: 35,
             monitors: ["Fernanda Lima"],
-            grades: {
-                ab1: 9.0,
-                ab2: null,
-                reav: null,
-                final: null
-            },
-            absences: {
-                registered: 0,
-                remaining: 15
-            },
+            grades: { ab1: 9.0, ab2: null, reav: null, final: null },
+            absences: { registered: 0, remaining: 15 },
             deliveryRate: "Em dia"
         },
         {
@@ -82,16 +58,8 @@ const MySubjects = () => {
             professor: "Prof. Dr. Ana Beatriz",
             participants: 40,
             monitors: ["Rafael Souza"],
-            grades: {
-                ab1: 6.5,
-                ab2: null,
-                reav: null,
-                final: null
-            },
-            absences: {
-                registered: 3,
-                remaining: 12
-            },
+            grades: { ab1: 6.5, ab2: null, reav: null, final: null },
+            absences: { registered: 3, remaining: 12 },
             deliveryRate: "Atrasado"
         },
         {
@@ -104,16 +72,8 @@ const MySubjects = () => {
             professor: "Prof. Dr. Paulo Mendes",
             participants: 45,
             monitors: ["Juliana Costa", "Lucas Almeida"],
-            grades: {
-                ab1: 8.0,
-                ab2: null,
-                reav: null,
-                final: null
-            },
-            absences: {
-                registered: 1,
-                remaining: 14
-            },
+            grades: { ab1: 8.0, ab2: null, reav: null, final: null },
+            absences: { registered: 1, remaining: 14 },
             deliveryRate: "Em dia"
         }
     ];
@@ -130,7 +90,7 @@ const MySubjects = () => {
 
     return (
         <>
-            <div className='px-4 mb-6'>
+            <div className='px-4 mb-6 pb-4'> 
                 <div className='flex justify-between items-center mb-3'>
                     <h2 className='text-lg font-semibold text-gray-900'>Grade Ativa</h2>
                     <p className='text-xs text-gray-500'>2026.1 // UFAL</p>
@@ -164,15 +124,12 @@ const MySubjects = () => {
                 </div>
             </div>
 
-            {/*popup*/}
             {showModal && selectedSubject && (
-                <div className='fixed inset-0 bg-black/50 z-50 flex items-end justify-center' onClick={closeModal}>
+                <div className='fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4' onClick={closeModal}>
                     <div 
-                        className='bg-white rounded-t-2xl w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up'
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/*header*/}
-                        <div className='sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center'>
+                        className='bg-white rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto animate-fade-in shadow-xl'
+                        onClick={(e) => e.stopPropagation()}>
+                        <div className='sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center z-10'>
                             <div>
                                 <div className='flex items-center gap-2'>
                                     <span className='text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded'>
@@ -182,13 +139,12 @@ const MySubjects = () => {
                                 </div>
                                 <h2 className='text-xl font-bold text-gray-900 mt-1'>{selectedSubject.name}</h2>
                             </div>
-                            <button onClick={closeModal} className='p-1 hover:bg-gray-100 rounded-full'>
+                            <button onClick={closeModal} className='p-1 hover:bg-gray-100 rounded-full transition-colors'>
                                 <X size={24} className='text-gray-500' />
                             </button>
                         </div>
 
-                        {/*conteúdo*/}
-                        <div className='p-4 space-y-4'>
+                        <div className='p-4 space-y-4 pb-8'>
                             <div className='space-y-3'>
                                 <div className='flex items-start gap-3'>
                                     <MapPin size={18} className='text-gray-400 mt-0.5' />
@@ -208,12 +164,11 @@ const MySubjects = () => {
                                     <Users size={18} className='text-gray-400 mt-0.5' />
                                     <div>
                                         <p className='text-xs text-gray-500'>PARTICIPANTES</p>
-                                        <p className='text-sm font-medium text-gray-800'>{selectedSubject.participantes}</p>
+                                        <p className='text-sm font-medium text-gray-800'>{selectedSubject.participants}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/*monitores*/}
                             {selectedSubject.monitors && selectedSubject.monitors.length > 0 && (
                                 <div className='border-t border-gray-100 pt-3'>
                                     <p className='text-xs text-gray-500 mb-2'>MONITORES</p>
@@ -227,7 +182,6 @@ const MySubjects = () => {
                                 </div>
                             )}
 
-                            {/*notas*/}
                             <div className='border-t border-gray-100 pt-3'>
                                 <p className='text-xs text-gray-500 mb-2'>NOTAS</p>
                                 <div className='grid grid-cols-4 gap-2'>
@@ -250,7 +204,6 @@ const MySubjects = () => {
                                 </div>
                             </div>
 
-                            {/*faltas*/}
                             <div className='border-t border-gray-100 pt-3'>
                                 <div className='flex justify-between items-center'>
                                     <div>
@@ -272,7 +225,6 @@ const MySubjects = () => {
                                 </div>
                             </div>
 
-                            {/*entrega*/}
                             <div className='border-t border-gray-100 pt-3'>
                                 <div className='flex items-center justify-between'>
                                     <p className='text-xs text-gray-500'>TAXA DE ENTREGA</p>
@@ -296,16 +248,18 @@ const MySubjects = () => {
             )}
 
             <style jsx>{`
-                @keyframes slide-up {
+                 @keyframes fade-in {
                     from {
-                        transform: translateY(100%);
+                        opacity: 0;
+                        transform: scale(0.95);
                     }
                     to {
-                        transform: translateY(0);
+                        opacity: 1;
+                        transform: scale(1);
                     }
                 }
-                .animate-slide-up {
-                    animation: slide-up 0.3s ease-out;
+                .animate-fade-in {
+                    animation: fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                 }
             `}</style>
         </>

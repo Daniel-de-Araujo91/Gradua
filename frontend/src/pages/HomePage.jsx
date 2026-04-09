@@ -10,12 +10,12 @@ import MySubjects from '../components/MySubjects';
 const HomePage = ({ onNavigate }) => {
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <Header />
+      <Header onNavigate={onNavigate}/>
       <main className="flex-1 w-full px-4 pb-24">
         <StatsCards />
         <TodayAgenda />
         <Announcements />
-        <CommunityForum />
+        <CommunityForum onNavigate={onNavigate}/>
         <MySubjects />
       </main>
       <BottomNavBar activeTab="home" onTabChange={onNavigate} />

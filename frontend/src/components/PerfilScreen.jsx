@@ -1,8 +1,7 @@
 import React from 'react';
 import Header from './Header';
 import BottomNavBar from './BottomNavBar';
-import guilhermeFoto from '../assets/guilherme_perfil.webp';
-
+import perfil from '../assets/perfil.webp';
 /* -------------------------
    SVG Icons
 ------------------------- */
@@ -76,8 +75,8 @@ const ProfileCard = () => (
         backgroundColor: '#C8E0F4',
       }}>
         <img
-          src={guilhermeFoto}
-          alt="José Guilherme"
+          src={perfil}
+          alt="Tester"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </div>
@@ -102,7 +101,7 @@ const ProfileCard = () => (
       textTransform: 'uppercase',
       marginTop: '8px',
     }}>
-      MATRÍCULA: 202407483
+      MATRÍCULA: xxxxxxxxx
     </p>
 
     {/* Name */}
@@ -115,7 +114,7 @@ const ProfileCard = () => (
       textAlign: 'center',
       lineHeight: '1.2',
     }}>
-      José Guilherme de Almeida Novais
+      Tester da Silva Santos
     </h1>
 
     {/* Chips */}
