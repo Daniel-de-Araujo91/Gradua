@@ -85,16 +85,17 @@ const AgendaPage = ({ onNavigate }) => {
             <Header onNavigate={onNavigate} />
             
             <div className="px-4 py-4" style={{ backgroundColor: '#f0f2f7' }}>
-                <div className="flex gap-2 overflow-x-auto">
+                <div className="flex justify-between gap-2 w-full">
                     {weekDays.map((day) => (
                         <button
                             key={day.label}
                             onClick={() => setSelectedDay(day.label)}
-                            className="flex flex-col items-center justify-center py-2 px-4 rounded-2xl flex-shrink-0 transition-all"
+                            className="flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all"
                             style={
                                 selectedDay === day.label
-                                    ? { backgroundColor: '#1e3a5f', color: '#fff', minWidth: 56 }
-                                    : { backgroundColor: '#ffffff', color: '#4a5568', minWidth: 56, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }} >
+                                    ? { backgroundColor: '#1e3a5f', color: '#fff' }
+                                    : { backgroundColor: '#ffffff', color: '#4a5568', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }
+                            } >
                             <span className="text-xs font-bold uppercase tracking-wide">{day.label}</span>
                             <span className="text-2xl font-black mt-0.5">{day.day}</span>
                             {selectedDay === day.label && (
@@ -126,8 +127,7 @@ const AgendaPage = ({ onNavigate }) => {
                         
                         <button 
                             onClick={() => removeClass(classItem.id)}
-                            className="absolute top-3 right-3 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                        >
+                            className="absolute top-3 right-3 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                             <Trash2 size={16} />
                         </button>
 
@@ -246,7 +246,7 @@ const AgendaPage = ({ onNavigate }) => {
 
                             <button 
                                 type="submit"
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-6 transition-colors">
+                                className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 rounded-xl mt-6 transition-colors">
                                 Salvar Lembrete
                             </button>
                         </form>

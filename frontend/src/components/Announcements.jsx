@@ -29,7 +29,9 @@ const Announcements = ({userNameProfessor = "Leandro Pereira"}) => {
               flex-1 flex items-center justify-center gap-2
               h-11 px-4 rounded-full
               bg-white/10 border border-white/10
-              text-white font-semibold text-sm">
+              text-white font-semibold text-sm
+              hover:bg-white/20 hover:border-white/20 
+              active:bg-white/30 transition-all duration-200">
             <MessageSquareMore size={16} />
             WhatsApp
           </button>
@@ -39,7 +41,9 @@ const Announcements = ({userNameProfessor = "Leandro Pereira"}) => {
               flex-1 flex items-center justify-center gap-2
               h-11 px-4 rounded-full
               bg-white/10 border border-white/10
-              text-white font-semibold text-sm">
+              text-white font-semibold text-sm
+              hover:bg-white/20 hover:border-white/20 
+              active:bg-white/30 transition-all duration-200">
             <Send size={16} />
             Telegram
           </button>
