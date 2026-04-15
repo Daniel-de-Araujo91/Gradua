@@ -139,7 +139,7 @@ const ProfileCard = () => (
         borderRadius: '20px',
         fontFamily: 'Inter, sans-serif',
       }}>
-        8º Semestre
+        4º Semestre
       </span>
     </div>
   </div>
@@ -420,7 +420,7 @@ const PerfilScreen = ({ onNavigate }) => {
       </main>
 
       {/* Bottom Nav */}
-        <BottomNavBar activeTab="profile" onTabChange={onNavigate} />
+      <BottomNavBar activeTab="profile" onTabChange={onNavigate} />
     </div>
   );
 };

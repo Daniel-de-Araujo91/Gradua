@@ -8,6 +8,7 @@ CLAUDE.md
 .antigravity/
 brain/
 artifacts/
+frontend/superpowers/
 
 # Environments
 .env
