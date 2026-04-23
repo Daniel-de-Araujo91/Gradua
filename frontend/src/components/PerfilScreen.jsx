@@ -27,7 +27,7 @@ const ProfileCard = () => (
       MATRÍCULA: xxxxxxxxx
     </p>
 
-    <h1 className="text-2xl sm:text-3xl font-black text-gradua-primary text-center leading-tight">
+    <h1 className="text-2xl sm:text-3xl font-black text-gradua-perfil text-center leading-tight">
       Tester da Silva Santos
     </h1>
 
@@ -35,7 +35,7 @@ const ProfileCard = () => (
       <span className="bg-gradua-perfil/10 text-gradua-perfil text-xs font-bold px-4 py-1.5 rounded-full">
         Ciência da Computação
       </span>
-      <span className="bg-gray-100 text-gray-600 text-xs font-bold px-4 py-1.5 rounded-full">
+      <span className="bg-gradua-perfil/10 text-gradua-perfil text-xs font-bold px-4 py-1.5 rounded-full">
         4º Semestre
       </span>
     </div>
@@ -48,12 +48,12 @@ const IRACard = () => (
       <span className="text-[11px] font-bold text-gray-400 tracking-[1.5px] uppercase">
         IRA GERAL
       </span>
-      <div className="bg-green-50 p-2 rounded-full">
-        <TrendingUp size={18} className="text-green-500" />
+      <div className="bg-gradua-inicio/10 p-2 rounded-full">
+        <TrendingUp size={18} className="text-gradua-inicio" />
       </div>
     </div>
 
-    <p className="text-6xl font-black text-gradua-primary leading-none tracking-tight">
+    <p className="text-6xl font-black text-gradua-perfil leading-none tracking-tight">
       7.5
     </p>
 
@@ -70,10 +70,10 @@ const ProgressCard = () => (
     </span>
 
     <div className="flex justify-between items-end mb-3">
-      <p className="text-xl sm:text-2xl font-black text-gradua-primary leading-tight">
-        Conclusão<br />Total
+      <p className="text-xl sm:text-2xl font-black text-gradua-perfil leading-tight">
+        Conclusão Total
       </p>
-      <p className="text-4xl font-black text-gradua-primary leading-none">
+      <p className="text-4xl font-black text-gradua-perfil leading-none">
         68%
       </p>
     </div>
@@ -87,7 +87,7 @@ const ProgressCard = () => (
         <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
           CRÉDITOS
         </p>
-        <p className="text-lg font-black text-gradua-primary">
+        <p className="text-lg font-black text-gradua-perfil">
           164 / 240
         </p>
       </div>
@@ -95,7 +95,7 @@ const ProgressCard = () => (
         <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
           HORAS EXT.
         </p>
-        <p className="text-lg font-black text-gradua-primary">
+        <p className="text-lg font-black text-gradua-perfil">
           90 / 120
         </p>
       </div>
@@ -125,7 +125,7 @@ const CentralAlunoItem = ({ icon: Icon, title, subtitle, isRed = false, onClick 
 
 const CentralAlunoCard = ({ onNavigate }) => (
   <div className="bg-white rounded-3xl p-6 mb-28 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50">
-    <h3 className="text-lg font-black text-gradua-primary mb-2">
+    <h3 className="text-lg font-black text-gradua-perfil mb-2">
       Central do Aluno
     </h3>
 

@@ -62,7 +62,7 @@ const INITIAL_POSTS = [
 ───────────────────────────────────────── */
 const CategoryTag = ({ label, variant }) => {
   const styles = {
-    perguntas: 'bg-green-100 text-green-800',
+    perguntas: 'bg-green-50 text-green-800',
     avisos: 'bg-blue-100 text-blue-800',
     destaque: 'bg-white text-gradua-forum', 
   };

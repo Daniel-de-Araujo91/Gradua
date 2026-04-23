@@ -218,7 +218,7 @@ const MySubjects = () => {
                                 </div>
                                 <div className='mt-2 bg-gray-200 rounded-full h-1.5'>
                                     <div 
-                                        className='bg-red-500 rounded-full h-1.5' 
+                                        className='bg-red-700 rounded-full h-1.5' 
                                         style={{ width: `${(selectedSubject.absences.registered / 15) * 100}%` }}
                                     />
                                 </div>
@@ -229,12 +229,12 @@ const MySubjects = () => {
                                     <p className='text-xs text-gray-500'>TAXA DE ENTREGA</p>
                                     <div className='flex items-center gap-1'>
                                         {selectedSubject.deliveryRate === 'Em dia' ? (
-                                            <CheckCircle size={14} className='text-green-500' />
+                                            <CheckCircle size={14} className='text-green-700' />
                                         ) : (
-                                            <AlertCircle size={14} className='text-red-500' />
+                                            <AlertCircle size={14} className='text-red-700' />
                                         )}
                                         <span className={`text-sm font-medium ${
-                                            selectedSubject.deliveryRate === 'Em dia' ? 'text-green-600' : 'text-red-600'
+                                            selectedSubject.deliveryRate === 'Em dia' ? 'text-green-700' : 'text-red-700'
                                         }`}>
                                             {selectedSubject.deliveryRate}
                                         </span>

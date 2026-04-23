@@ -49,7 +49,7 @@ const LoginForm = ({ onLoginSuccess }) => {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-black text-gradua-primary text-center">
+        <h2 className="text-2xl font-black text-gradua-inicio text-center">
           Bem-vindo de volta!
         </h2>
         <p className="text-gray-500 text-sm text-center mt-2 font-medium">
@@ -73,7 +73,7 @@ const LoginForm = ({ onLoginSuccess }) => {
             value={cpf}
             onChange={handleCpfChange}
             placeholder="000.000.000-00"
-            className="w-full px-4 py-3.5 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:border-gradua-primary focus:ring-2 focus:ring-gradua-primary/20 focus:bg-white outline-none transition-all font-medium"
+            className="w-full px-4 py-3.5 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:border-gradua-inicio focus:ring-2 focus:ring-gradua-inicio/20 focus:bg-white outline-none transition-all font-medium"
             required
           />
         </div>
@@ -87,13 +87,13 @@ const LoginForm = ({ onLoginSuccess }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full px-4 py-3.5 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:border-gradua-primary focus:ring-2 focus:ring-gradua-primary/20 focus:bg-white outline-none transition-all font-medium"
+            className="w-full px-4 py-3.5 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:border-gradua-inicio focus:ring-2 focus:ring-gradua-inicio/20 focus:bg-white outline-none transition-all font-medium"
             required
           />
         </div>
 
         <div className="flex justify-center mb-2">
-          <button type="button" className="text-sm font-bold text-gradua-primary hover:opacity-80 transition-opacity">
+          <button type="button" className="text-sm font-bold text-gradua-inicio hover:opacity-80 transition-opacity">
             Esqueceu a senha?
           </button>
         </div>

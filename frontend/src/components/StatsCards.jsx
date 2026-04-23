@@ -8,7 +8,7 @@ const StatsCards = () => {
                 <p className="text-sm font-semibold text-gradua-inicio uppercase tracking-wide mb-2 z-10 relative">IRA GERAL</p>
                 <p className="text-4xl font-black text-gradua-inicio mb-1.5 z-10 relative leading-tight">7.5</p>
                 <div className="flex items-center gap-1 text-xs font-medium text-gradua-inicio z-10 relative">
-                    <TrendingUp size={14} className="text-green-500" />
+                    <TrendingUp size={14} className="text-green/50" />
                     <span>+0.4 este semestre</span>
                 </div>
             </div>

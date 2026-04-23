@@ -150,16 +150,15 @@ const AgendaPage = ({ onNavigate }) => {
                                     <h3 className="text-base font-black text-gradua-agenda">
                                         {classItem.title}
                                     </h3>
-                                    {classItem.status && (
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0"
-                                            style={
-                                                classItem.statusType === 'confirmed' ? { backgroundColor: '#dcfce7', color: '#16a34a' } :
-                                                classItem.statusType === 'lab' ? { backgroundColor: '#ede9fe', color: '#7c3aed' } :
-                                                { backgroundColor: '#e2e8f0', color: '#475569' } 
-                                            }>
-                                            {classItem.status}
-                                        </span>
-                                    )}
+                                        {classItem.status && (
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0 ${
+                                                classItem.statusType === 'confirmed' ? 'bg-gradua-inicio/15 text-gradua-inicio' :
+                                                classItem.statusType === 'lab' ? 'bg-gradua-agenda/15 text-gradua-agenda' :
+                                                'bg-gray-100 text-gray-500'
+                                            }`}>
+                                                {classItem.status}
+                                            </span>
+                                        )}
                                 </div>
                                 
                                 <div className="flex items-start gap-1.5 mb-1">

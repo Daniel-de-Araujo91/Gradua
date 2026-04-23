@@ -25,7 +25,7 @@ const Header = ({ userName = "Tester", onNavigate }) => {
     };
 
     return (
-        <header className='bg-white px-4 pt-4 pb-2 relative'>
+        <header className='bg-white px-4 py-2 md:py-4 relative'>
             <div className='flex justify-between items-start mb-4'>
                 
                 <div className='flex items-center gap-3'>
@@ -40,7 +40,7 @@ const Header = ({ userName = "Tester", onNavigate }) => {
                             Olá, <span className='text-blue-900'>{userName}</span>
                         </h1>
                         <div className='flex items-center gap-2 mt-1'>
-                            <span className='px-2 py-0.5 bg-green-200 text-green-900 text-xs font-semibold rounded-full'>
+                            <span className='px-2 py-0.5 bg-gradua-inicio/20 text-gradua-inicio text-xs font-semibold rounded-full'>
                                 ATIVO
                             </span>
                             <span className='text-gray-500 text-xs font-semibold'>
@@ -69,7 +69,7 @@ const Header = ({ userName = "Tester", onNavigate }) => {
                         onClick={(e) => e.stopPropagation()}>
                         
                         <div className='sticky top-0 bg-white border-b border-gray-100 px-4 py-4 flex justify-between items-center z-10 rounded-t-2xl'>
-                            <h2 className='text-lg font-bold text-gray-900'>Notificações</h2>
+                            <h2 className='text-lg font-bold text-gradua-inicio'>Notificações</h2>
                             <button onClick={() => setShowNotifications(false)} className='p-1 hover:bg-gray-100 rounded-full transition-colors'>
                                 <X size={20} className='text-gray-500' />
                             </button>
@@ -102,7 +102,7 @@ const Header = ({ userName = "Tester", onNavigate }) => {
                             <div className='border-t border-gray-100 p-3'>
                                 <button 
                                     onClick={markAllAsRead}
-                                    className='w-full text-center text-sm font-semibold text-blue-600 hover:text-blue-700 p-2 transition-colors rounded-lg hover:bg-blue-50'>
+                                    className='w-full text-center text-sm font-semibold text-gradua-inicio hover:text-gradua-inicio/70 p-2 transition-colors rounded-lg hover:bg-blue-50'>
                                     Marcar todas como lidas
                                 </button>
                             </div>
