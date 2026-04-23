@@ -12,11 +12,13 @@ const AgendaPage = ({ onNavigate }) => {
     const [newLocation, setNewLocation] = useState('');
 
     const weekDays = [
+        { label: 'DOM', day: 17 },
         { label: 'SEG', day: 18 },
         { label: 'TER', day: 19 },
         { label: 'QUA', day: 20 },
         { label: 'QUI', day: 21 },
         { label: 'SEX', day: 22 },
+        { label: 'SÁB', day: 23 },
     ];
 
     const [classes, setClasses] = useState([
@@ -47,8 +49,8 @@ const AgendaPage = ({ onNavigate }) => {
     ]);
 
     const dayNames = {
-        SEG: 'Segunda-feira', TER: 'Terça-feira', QUA: 'Quarta-feira',
-        QUI: 'Quinta-feira',  SEX: 'Sexta-feira',
+        DOM: 'Domingo', SEG: 'Segunda-feira', TER: 'Terça-feira', QUA: 'Quarta-feira',
+        QUI: 'Quinta-feira',  SEX: 'Sexta-feira', SÁB: 'Sábado'
     };
 
     const removeClass = (idToRemove) => {
@@ -84,34 +86,36 @@ const AgendaPage = ({ onNavigate }) => {
         <div className="w-full min-h-screen flex flex-col bg-gray-50">
             <Header onNavigate={onNavigate} />
             
-            <div className="px-4 py-4" style={{ backgroundColor: '#f0f2f7' }}>
-                <div className="flex justify-between gap-2 w-full">
-                    {weekDays.map((day) => (
-                        <button
-                            key={day.label}
-                            onClick={() => setSelectedDay(day.label)}
-                            className="flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all"
-                            style={
-                                selectedDay === day.label
-                                    ? { backgroundColor: '#1e3a5f', color: '#fff' }
-                                    : { backgroundColor: '#ffffff', color: '#4a5568', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }
-                            } >
-                            <span className="text-xs font-bold uppercase tracking-wide">{day.label}</span>
-                            <span className="text-2xl font-black mt-0.5">{day.day}</span>
-                            {selectedDay === day.label && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-white mt-1" />
-                            )}
-                        </button>
-                    ))}
+            <div className="px-4 py-4 bg-gray-50">
+                <div className="flex justify-between gap-1 w-full">
+                    {weekDays.map((day) => {
+                        const isSelected = selectedDay === day.label;
+                        return (
+                            <button
+                                key={day.label}
+                                onClick={() => setSelectedDay(day.label)}
+                                className={`flex-1 flex flex-col items-center justify-center py-2.5 rounded-2xl transition-all ${
+                                    isSelected 
+                                        ? 'bg-gradua-agenda text-white shadow-md' 
+                                        : 'bg-white text-gray-500 shadow-sm hover:bg-gray-100'
+                                }`}
+                            >
+                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wide">{day.label}</span>
+                                <span className="text-xl sm:text-2xl font-black mt-0.5 leading-none">{day.day}</span>
+                                {isSelected && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white mt-1" />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
-            <div className="px-5 pt-5 pb-4 flex justify-between items-center" style={{ backgroundColor: '#f0f2f7' }}>
+            <div className="px-5 pt-3 pb-4 flex justify-between items-center bg-gray-50">
                 <div>
-                    <h2 className="text-2xl font-bold" style={{ color: '#1e3a5f' }}>{dayNames[selectedDay]}</h2>
+                    <h2 className="text-2xl font-bold text-gradua-agenda">{dayNames[selectedDay]}</h2>
                     <div className="flex items-center gap-1 mt-1">
-                        <span className="text-xs font-bold px-3 py-1 rounded-full"
-                              style={{ backgroundColor: '#1e3a5f', color: '#fff' }}>
+                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-gradua-agenda text-white">
                             {classes.length} {classes.length === 1 ? 'AULA/LEMBRETE' : 'AULAS/LEMBRETES'} HOJE
                         </span>
                     </div>
@@ -122,33 +126,32 @@ const AgendaPage = ({ onNavigate }) => {
                 style={{ maxHeight: 'calc(100vh - 280px)' }}>  
                 
                 {classes.map((classItem) => (
-                    <div key={classItem.id} className="rounded-2xl overflow-hidden flex-shrink-0 relative group"  
-                        style={{ backgroundColor: '#fff', boxShadow: '0 2px 8px rgba(30,58,95,0.08)' }}>
+                    <div key={classItem.id} className="rounded-2xl overflow-hidden flex-shrink-0 relative group bg-white shadow-[0_2px_8px_rgba(30,58,95,0.08)]">
                         
                         <button 
                             onClick={() => removeClass(classItem.id)}
-                            className="absolute top-3 right-3 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                            className="absolute top-3 right-3 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        >
                             <Trash2 size={16} />
                         </button>
 
                         <div className="flex">
-                            <div className="flex flex-col items-center justify-center px-4 py-5 min-w-[80px]"
-                                style={{ borderRight: '1px solid #edf2f7' }}>
-                                <span className="text-xl font-black leading-none" style={{ color: '#1a7fe8' }}>
+                            <div className="flex flex-col items-center justify-center px-4 py-5 min-w-[80px] border-r border-slate-100">
+                                <span className="text-xl font-black leading-none text-gradua-agenda">
                                     {classItem.time}
                                 </span>
-                                <span className="text-xs font-semibold mt-0.5" style={{ color: '#7a8cb0' }}>
+                                <span className="text-xs font-semibold mt-0.5 text-gray-400">
                                     {classItem.period}
                                 </span>
                             </div>
 
                             <div className="flex-1 px-4 py-4 break-words pr-10">
                                 <div className="flex justify-between items-start mb-2 flex-wrap gap-2">  
-                                    <h3 className="text-base font-black" style={{ color: '#1e3a5f' }}>
+                                    <h3 className="text-base font-black text-gradua-agenda">
                                         {classItem.title}
                                     </h3>
                                     {classItem.status && (
-                                        <span className="text-xs font-bold px-2 py-0.5 rounded-md flex-shrink-0"
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0"
                                             style={
                                                 classItem.statusType === 'confirmed' ? { backgroundColor: '#dcfce7', color: '#16a34a' } :
                                                 classItem.statusType === 'lab' ? { backgroundColor: '#ede9fe', color: '#7c3aed' } :
@@ -160,16 +163,16 @@ const AgendaPage = ({ onNavigate }) => {
                                 </div>
                                 
                                 <div className="flex items-start gap-1.5 mb-1">
-                                    <MapPin size={13} style={{ color: '#7a8cb0', marginTop: 2, flexShrink: 0 }} />
-                                    <span className="text-xs break-words flex-1" style={{ color: '#4a5568' }}>  
+                                    <MapPin size={13} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                                    <span className="text-xs break-words flex-1 text-gray-600">  
                                         {classItem.location}
                                     </span>
                                 </div>
                                 
                                 {classItem.professor && (
                                     <div className="flex items-center gap-1.5">
-                                        <User size={12} style={{ color: '#7a8cb0', flexShrink: 0 }} />
-                                        <span className="text-xs break-words" style={{ color: '#7a8cb0' }}> 
+                                        <User size={12} className="text-gray-400 flex-shrink-0" />
+                                        <span className="text-xs break-words text-gray-500"> 
                                             {classItem.professor}
                                         </span>
                                     </div>
@@ -187,8 +190,8 @@ const AgendaPage = ({ onNavigate }) => {
 
                 <button 
                     onClick={() => setShowAddModal(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 mt-4 text-sm font-bold transition-opacity hover:opacity-90 shadow-sm"
-                    style={{ color: '#fff', backgroundColor: '#1e3a5f', borderRadius: '14px' }}>
+                    className="w-full flex items-center justify-center gap-2 py-3 mt-4 text-sm font-bold transition-opacity hover:opacity-90 shadow-sm text-white bg-gradua-agenda rounded-xl"
+                >
                     <BellPlus size={16} />
                     Adicionar Lembrete
                 </button>
@@ -246,7 +249,7 @@ const AgendaPage = ({ onNavigate }) => {
 
                             <button 
                                 type="submit"
-                                className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 rounded-xl mt-6 transition-colors">
+                                className="w-full bg-gradua-agenda hover:opacity-90 text-white font-bold py-3 rounded-xl mt-6 transition-opacity">
                                 Salvar Lembrete
                             </button>
                         </form>

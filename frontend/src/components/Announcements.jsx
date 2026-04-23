@@ -3,7 +3,7 @@ import { Megaphone, MessageSquareMore, Send } from 'lucide-react';
 const Announcements = ({userNameProfessor = "Leandro Pereira"}) => {
   return (
     <div className="px-3 mb-6">
-      <h2 className="text-xl font-semibold text-zinc-900 mb-3">
+      <h2 className="text-xl font-semibold text-gradua-inicio mb-3">
         Comunicados
       </h2>
 

@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import Header from './Header';
-import BottomNavBar from './BottomNavBar';
+import Header from '../components/Header';
+import BottomNavBar from '../components/BottomNavBar';
 import { ArrowUp, ArrowDown, MessageCircle, Search, Plus, BookOpen, Bell, Lightbulb, CalendarDays, X } from 'lucide-react';
 
 /* ─────────────────────────────────────────
-   Dados dos posts — cada post tem um campo
-   "category" que corresponde aos filtros.
+   Dados dos posts
 ───────────────────────────────────────── */
 const INITIAL_POSTS = [
   {
@@ -15,8 +14,7 @@ const INITIAL_POSTS = [
     meta: '7º SEMESTRE • MACEIÓ',
     time: 'Há 2 horas',
     title: 'Dicas para a prova final de Estrutura de Dados II',
-    content:
-      'Pessoal, alguém tem resumos sobre Árvores B+ e Grafos direcionados? A prova do Prof. Ricardo está chegando e o conteúdo de Red-Black Trees ainda está um pouco nebuloso...',
+    content: 'Pessoal, alguém tem resumos sobre Árvores B+ e Grafos direcionados? A prova do Prof. Ricardo está chegando e o conteúdo de Red-Black Trees ainda está um pouco nebuloso...',
     likes: 24,
     dislikes: 2,
     comments: 12,
@@ -32,8 +30,7 @@ const INITIAL_POSTS = [
     meta: '4º SEMESTRE • MACEIÓ',
     time: 'Há 5 horas',
     title: 'Grupo de estudos para Redes de Computadores',
-    content:
-      'Estamos montando um grupo para praticar configuração de roteadores e subnets. Quem tiver interesse, vamos nos reunir na biblioteca central quarta-feira às 14h.',
+    content: 'Estamos montando um grupo para praticar configuração de roteadores e subnets. Quem tiver interesse, vamos nos reunir na biblioteca central quarta-feira às 14h.',
     likes: 15,
     dislikes: 0,
     comments: 8,
@@ -49,8 +46,7 @@ const INITIAL_POSTS = [
     meta: 'MACEIÓ • INSTITUCIONAL',
     time: 'Ontem',
     title: 'Vaga de estágio no polo tecnológico',
-    content:
-      'Abertura de seleção para estágio em Desenvolvimento Web (React/Node). Necessário estar cursando a partir do 5º semestre. Bolsa auxílio compatível com o mercado + benefícios.',
+    content: 'Abertura de seleção para estágio em Desenvolvimento Web (React/Node). Necessário estar cursando a partir do 5º semestre. Bolsa auxílio compatível com o mercado + benefícios.',
     likes: 56,
     dislikes: 1,
     comments: 31,
@@ -66,26 +62,14 @@ const INITIAL_POSTS = [
 ───────────────────────────────────────── */
 const CategoryTag = ({ label, variant }) => {
   const styles = {
-    perguntas: { bg: '#E8F5E9', color: '#2E7D32' },
-    avisos: { bg: '#E3F2FD', color: '#1565C0' },
-    destaque: { bg: '#10305F', color: '#FFFFFF' },
+    perguntas: 'bg-green-100 text-green-800',
+    avisos: 'bg-blue-100 text-blue-800',
+    destaque: 'bg-white text-gradua-forum', 
   };
-  const s = styles[variant] || { bg: '#E0E0E0', color: '#424242' };
+  const activeStyle = styles[variant] || 'bg-gray-200 text-gray-800';
 
   return (
-    <span
-      style={{
-        backgroundColor: s.bg,
-        color: s.color,
-        fontSize: '11px',
-        fontWeight: '700',
-        padding: '4px 12px',
-        borderRadius: '20px',
-        letterSpacing: '0.5px',
-        fontFamily: 'Inter, sans-serif',
-        textTransform: 'uppercase',
-      }}
-    >
+    <span className={`text-[10px] sm:text-[11px] font-bold px-3 py-1 rounded-full tracking-wide uppercase ${activeStyle}`}>
       {label}
     </span>
   );
@@ -113,68 +97,64 @@ const PostCard = ({
     }
   };
 
-  const bg = featured ? '#10305F' : '#FFFFFF';
-  const textColor = featured ? '#FFFFFF' : '#10305F';
-  const subColor = featured ? 'rgba(255,255,255,0.7)' : '#9E9E9E';
-  const contentColor = featured ? 'rgba(255,255,255,0.85)' : '#424242';
-
   return (
-    <div
-      style={{
-        backgroundColor: bg,
-        borderRadius: '20px',
-        padding: '16px',
-        marginBottom: '12px',
-        boxShadow: featured ? 'none' : '0px 2px 8px rgba(0,0,0,0.05)',
-      }}
-    >
+    <div className={`rounded-2xl p-5 mb-4 shadow-sm transition-shadow ${featured ? 'bg-gradua-forum text-white' : 'bg-white border border-gray-100'}`}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#D4A574', flexShrink: 0 }}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-orange-100 flex-shrink-0">
             <img
-              src={`https://api.dicebear.com/7.x/personas/svg?seed=${avatar}&backgroundColor=b6e3f4`}
+              src={`https://api.dicebear.com/7.x/personas/svg?seed=${avatar}&backgroundColor=ffedd5`}
               alt={name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              onError={(e) => { e.target.style.display = 'none'; }}
+              className="w-full h-full object-cover"
             />
           </div>
           <div>
-            <p style={{ fontSize: '14px', fontWeight: '700', color: textColor, margin: 0, fontFamily: 'Inter, sans-serif' }}>{name}</p>
-            <p style={{ fontSize: '11px', color: subColor, margin: 0, fontFamily: 'Inter, sans-serif', letterSpacing: '0.5px', textTransform: 'uppercase', fontWeight: '500' }}>{meta}</p>
+            <p className={`text-sm font-bold ${featured ? 'text-white' : 'text-gray-900'}`}>{name}</p>
+            <p className={`text-[10px] font-medium tracking-wide uppercase ${featured ? 'text-white/70' : 'text-gray-500'}`}>{meta}</p>
           </div>
         </div>
-        <span style={{ fontSize: '11px', color: subColor, fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{time}</span>
+        <span className={`text-[11px] whitespace-nowrap ${featured ? 'text-white/70' : 'text-gray-400'}`}>{time}</span>
       </div>
 
-      {/* Title */}
-      <h3 style={{ fontSize: '16px', fontWeight: '700', color: textColor, margin: '0 0 8px', fontFamily: 'Inter, sans-serif', lineHeight: '1.4' }}>{title}</h3>
-
-      {/* Content */}
-      <p style={{ fontSize: '13px', color: contentColor, margin: '0 0 14px', fontFamily: 'Inter, sans-serif', lineHeight: '1.6' }}>{content}</p>
+      {/* Title & Content */}
+      <h3 className={`text-base font-bold mb-2 leading-tight ${featured ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
+      <p className={`text-[13px] mb-4 leading-relaxed ${featured ? 'text-white/90' : 'text-gray-600'}`}>{content}</p>
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '12px' }}>
+      <div className="flex items-center justify-between">
+        <div className="flex gap-4 items-center">
+          
+          {/* Lógica de Cores dos Botões Corrigida! */}
+          <div className="flex gap-2">
             <button
               onClick={() => handleVote('up')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '4px', color: userVote === 'up' ? '#4CAF50' : subColor, fontWeight: userVote === 'up' ? '700' : '600' }}
+              className={`flex items-center gap-1 px-1.5 py-1 rounded-md transition-colors ${
+                featured 
+                  ? (userVote === 'up' ? 'text-white font-black bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10') 
+                  : (userVote === 'up' ? 'text-green-600 font-bold bg-green-50' : 'text-gray-500 hover:text-green-600 hover:bg-gray-50')
+              }`}
             >
               <ArrowUp size={16} strokeWidth={userVote === 'up' ? 3 : 2} />
-              <span style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>{likes}</span>
+              <span className="text-xs">{likes}</span>
             </button>
+            
             <button
               onClick={() => handleVote('down')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '4px', color: userVote === 'down' ? '#F44336' : subColor, fontWeight: userVote === 'down' ? '700' : '600' }}
+              className={`flex items-center gap-1 px-1.5 py-1 rounded-md transition-colors ${
+                featured 
+                  ? (userVote === 'down' ? 'text-white font-black bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10') 
+                  : (userVote === 'down' ? 'text-red-600 font-bold bg-red-50' : 'text-gray-500 hover:text-red-600 hover:bg-gray-50')
+              }`}
             >
               <ArrowDown size={16} strokeWidth={userVote === 'down' ? 3 : 2} />
-              <span style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>{dislikes}</span>
+              <span className="text-xs">{dislikes}</span>
             </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: subColor }}>
+
+          <div className={`flex items-center gap-1.5 px-1.5 py-1 text-xs font-semibold ${featured ? 'text-white/70' : 'text-gray-500'}`}>
             <MessageCircle size={16} />
-            <span style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif', fontWeight: '600' }}>{comments}</span>
+            <span>{comments}</span>
           </div>
         </div>
         <CategoryTag label={tag} variant={tagVariant} />
@@ -184,8 +164,7 @@ const PostCard = ({
 };
 
 /* ─────────────────────────────────────────
-   Card de Adição — baseado no Figma node 118-2
-   "card_forum": card de criação de postagem
+   Card de Adição
 ───────────────────────────────────────── */
 const CARD_CATEGORIES = [
   { id: 'pergunta', label: 'Pergunta', icon: BookOpen },
@@ -207,179 +186,77 @@ const AddPostCard = ({ onPublish }) => {
 
   return (
     <div
-      style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '20px',
-        border: '1.5px dashed #B0BEC5',
-        padding: '16px',
-        marginBottom: '12px',
-        boxShadow: '0px 2px 8px rgba(0,0,0,0.04)',
-        transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
-        cursor: isExpanded ? 'default' : 'pointer',
-      }}
-      onMouseEnter={(e) => {
-        if (!isExpanded) e.currentTarget.style.borderColor = '#10305F';
-      }}
-      onMouseLeave={(e) => {
-        if (!isExpanded) e.currentTarget.style.borderColor = '#B0BEC5';
-      }}
+      className={`bg-white rounded-2xl border-2 border-dashed p-4 mb-4 transition-all cursor-pointer ${isExpanded ? 'border-gradua-forum shadow-md' : 'border-gray-300 hover:border-gradua-forum'}`}
       onClick={() => { if (!isExpanded) setIsExpanded(true); }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !isExpanded) setIsExpanded(true); }}
     >
-      {/* Linha do avatar + prompt / header expandido */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
-        {/* Avatar do usuário atual (seed fixo) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: '#E8EEF4' }}>
-            <img
-              src="https://api.dicebear.com/7.x/personas/svg?seed=usuario-atual&backgroundColor=b6e3f4"
-              alt="Você"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-orange-50 flex-shrink-0">
+            <img src="https://api.dicebear.com/7.x/personas/svg?seed=usuario-atual&backgroundColor=ffedd5" alt="Você" className="w-full h-full object-cover" />
           </div>
-
           {!isExpanded ? (
-            /* Estado colapsado — prompt clicável */
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-              <span style={{ fontSize: '14px', color: '#9E9E9E', fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
-                Compartilhe algo com a turma...
-              </span>
-            </div>
+            <span className="text-sm font-medium text-gray-400">Compartilhe algo com a turma...</span>
           ) : (
-            /* Estado expandido — título */
-            <p style={{ fontSize: '14px', fontWeight: '700', color: '#10305F', margin: 0, fontFamily: 'Inter, sans-serif' }}>
-              Criar Postagem
-            </p>
+            <p className="text-sm font-bold text-gradua-forum">Criar Postagem</p>
           )}
         </div>
 
         {isExpanded ? (
-          /* Botão fechar */
-          <button
-            onClick={(e) => { e.stopPropagation(); handleClose(); }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9E9E9E', padding: '4px', display: 'flex', alignItems: 'center', borderRadius: '8px' }}
-          >
+          <button onClick={(e) => { e.stopPropagation(); handleClose(); }} className="p-1 text-gray-400 hover:bg-gray-100 rounded-full">
             <X size={18} />
           </button>
         ) : (
-          /* Ícone de plus colapsado */
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#10305F', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Plus size={18} color="#FFFFFF" strokeWidth={2.5} />
+          <div className="w-9 h-9 rounded-full bg-gradua-forum flex items-center justify-center flex-shrink-0 text-white">
+            <Plus size={18} strokeWidth={2.5} />
           </div>
         )}
       </div>
 
-      {/* Conteúdo expandido */}
       {isExpanded && (
-        <div style={{ marginTop: '16px' }}>
-          {/* Seleção de categorias */}
-          <div style={{ marginBottom: '12px' }}>
-            <p style={{ fontSize: '11px', fontWeight: '600', color: '#9E9E9E', margin: '0 0 8px', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Categoria
-            </p>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {CARD_CATEGORIES.map(({ id, label, icon: Icon }) => {
-                const isSelected = selectedCategory === id;
-                return (
-                  <button
-                    key={id}
-                    onClick={(e) => { e.stopPropagation(); setSelectedCategory(isSelected ? null : id); }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '8px 14px',
-                      borderRadius: '50px',
-                      border: isSelected ? '1.5px solid #10305F' : '1.5px solid #E0E0E0',
-                      backgroundColor: isSelected ? '#10305F' : '#F5F5F5',
-                      color: isSelected ? '#FFFFFF' : '#424242',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      fontFamily: 'Inter, sans-serif',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    <Icon size={14} strokeWidth={2} />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+        <div className="mt-4 animate-fade-in">
+          <p className="text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wide">Categoria</p>
+          <div className="flex gap-2 flex-wrap mb-4">
+            {CARD_CATEGORIES.map(({ id, label, icon: Icon }) => {
+              const isSelected = selectedCategory === id;
+              return (
+                <button
+                  key={id}
+                  onClick={(e) => { e.stopPropagation(); setSelectedCategory(isSelected ? null : id); }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors border-2 ${
+                    isSelected ? 'bg-gradua-forum border-gradua-forum text-white' : 'bg-gray-50 border-transparent text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Icon size={14} strokeWidth={isSelected ? 2.5 : 2} /> {label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Área de texto */}
           <textarea
-            placeholder="O que você quer compartilhar com a turma?"
+            placeholder="O que você quer compartilhar?"
             value={postText}
             onChange={(e) => setPostText(e.target.value)}
             onClick={(e) => e.stopPropagation()}
             rows={4}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '12px',
-              border: '1.5px solid #E0E0E0',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '14px',
-              color: '#10305F',
-              resize: 'none',
-              outline: 'none',
-              boxSizing: 'border-box',
-              lineHeight: '1.6',
-              transition: 'border-color 0.15s ease',
-            }}
-            onFocus={(e) => { e.target.style.borderColor = '#10305F'; }}
-            onBlur={(e) => { e.target.style.borderColor = '#E0E0E0'; }}
+            className="w-full p-3 rounded-xl border-2 border-gray-200 text-sm text-gray-800 focus:border-gradua-forum outline-none resize-none transition-colors bg-gray-50 focus:bg-white"
           />
 
-          {/* Botão publicar */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               if (!postText.trim()) return;
-              const categoryMap = {
-                pergunta: { tag: 'PERGUNTAS', tagVariant: 'perguntas', category: 'perguntas' },
-                aviso:    { tag: 'AVISOS',    tagVariant: 'avisos',    category: 'avisos'    },
-                dica:     { tag: 'DICAS',     tagVariant: 'perguntas', category: 'perguntas' },
-                evento:   { tag: 'EVENTOS',   tagVariant: 'avisos',    category: 'avisos'    },
-              };
-              const cat = categoryMap[selectedCategory] || { tag: 'PERGUNTAS', tagVariant: 'perguntas', category: 'perguntas' };
+              const cat = CARD_CATEGORIES.find(c => c.id === selectedCategory) || CARD_CATEGORIES[0];
               onPublish({
-                id: Date.now(),
-                avatar: 'usuario-atual',
-                name: 'Você',
-                meta: 'ESTUDANTE • MACEIÓ',
-                time: 'Agora mesmo',
-                title: postText.trim().split('\n')[0] || postText.trim(),
-                content: postText.trim(),
-                likes: 0,
-                dislikes: 0,
-                comments: 0,
-                tag: cat.tag,
-                tagVariant: cat.tagVariant,
-                category: cat.category,
-                featured: false,
+                id: Date.now(), avatar: 'usuario-atual', name: 'Você', meta: 'ESTUDANTE • MACEIÓ', time: 'Agora mesmo',
+                title: postText.trim().split('\n')[0] || postText.trim(), content: postText.trim(),
+                likes: 0, dislikes: 0, comments: 0, tag: cat.label.toUpperCase(), tagVariant: cat.id === 'pergunta' ? 'perguntas' : cat.id === 'aviso' ? 'avisos' : 'perguntas', category: cat.id, featured: false,
               });
               handleClose();
             }}
             disabled={!postText.trim()}
-            style={{
-              marginTop: '12px',
-              width: '100%',
-              padding: '14px',
-              borderRadius: '12px',
-              backgroundColor: postText.trim() ? '#10305F' : '#E8EEF4',
-              color: postText.trim() ? '#FFFFFF' : '#9E9E9E',
-              fontSize: '14px',
-              fontWeight: '700',
-              fontFamily: 'Inter, sans-serif',
-              border: 'none',
-              cursor: postText.trim() ? 'pointer' : 'not-allowed',
-              transition: 'all 0.15s ease',
-            }}
+            className={`w-full mt-3 py-3 rounded-xl font-bold text-sm transition-all ${
+              postText.trim() ? 'bg-gradua-forum text-white hover:opacity-90' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
           >
             Publicar
           </button>
@@ -390,32 +267,16 @@ const AddPostCard = ({ onPublish }) => {
 };
 
 /* ─────────────────────────────────────────
-   Estado vazio (sem resultados)
+   Estado Vazio
 ───────────────────────────────────────── */
 const EmptyState = ({ query, filter }) => (
-  <div
-    style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '48px 20px',
-      gap: '12px',
-      textAlign: 'center',
-    }}
-  >
-    <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#E8EEF4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Search size={28} color="#B0BEC5" strokeWidth={1.5} />
+  <div className="flex flex-col items-center justify-center py-12 px-5 text-center">
+    <div className="w-16 h-16 rounded-full bg-gradua-forum/10 flex items-center justify-center mb-4 text-gradua-forum/50">
+      <Search size={28} strokeWidth={2} />
     </div>
-    <p style={{ fontSize: '16px', fontWeight: '700', color: '#10305F', margin: 0, fontFamily: 'Inter, sans-serif' }}>
-      Nenhum resultado encontrado
-    </p>
-    <p style={{ fontSize: '13px', color: '#9E9E9E', margin: 0, fontFamily: 'Inter, sans-serif', lineHeight: '1.5' }}>
-      {query
-        ? `Não encontramos posts com "${query}".`
-        : `Não há posts na categoria "${filter}".`}
-      <br />
-      Tente ajustar o filtro ou o termo de busca.
+    <p className="text-base font-bold text-gray-900 mb-1">Nenhum resultado encontrado</p>
+    <p className="text-sm text-gray-500 max-w-[250px]">
+      {query ? `Não encontramos posts com "${query}".` : `Não há posts na categoria "${filter}".`} Tente ajustar o filtro ou o termo de busca.
     </p>
   </div>
 );
@@ -423,30 +284,21 @@ const EmptyState = ({ query, filter }) => (
 /* ─────────────────────────────────────────
    Main Component — ForumScreen
 ───────────────────────────────────────── */
-const STORAGE_KEY = 'forum_posts_v1';
+const STORAGE_KEY = 'forum_posts_v2';
 
 const ForumScreen = ({ onNavigate }) => {
   const [posts, setPosts] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : INITIAL_POSTS;
-    } catch {
-      return INITIAL_POSTS;
-    }
+    try { const saved = localStorage.getItem(STORAGE_KEY); return saved ? JSON.parse(saved) : INITIAL_POSTS; } 
+    catch { return INITIAL_POSTS; }
   });
   const [activeFilter, setActiveFilter] = useState('todos');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Persiste no localStorage sempre que a lista mudar
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
-    } catch { /* quota excedida — ignora */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts)); } catch { }
   }, [posts]);
 
-  const handlePublish = (newPost) => {
-    setPosts((prev) => [newPost, ...prev]);
-  };
+  const handlePublish = (newPost) => setPosts((prev) => [newPost, ...prev]);
 
   const filters = [
     { id: 'todos', label: 'Todos os Tópicos' },
@@ -455,130 +307,52 @@ const ForumScreen = ({ onNavigate }) => {
     { id: 'destaque', label: 'Destaque' },
   ];
 
-  /* ── Lógica de filtragem reativa ── */
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
-      const matchesCategory =
-        activeFilter === 'todos' || post.category === activeFilter;
-
+      const matchesCategory = activeFilter === 'todos' || post.category === activeFilter;
       const q = searchQuery.trim().toLowerCase();
-      const matchesSearch =
-        !q ||
-        post.title.toLowerCase().includes(q) ||
-        post.content.toLowerCase().includes(q) ||
-        post.name.toLowerCase().includes(q) ||
-        post.tag.toLowerCase().includes(q);
-
+      const matchesSearch = !q || post.title.toLowerCase().includes(q) || post.content.toLowerCase().includes(q) || post.name.toLowerCase().includes(q);
       return matchesCategory && matchesSearch;
     });
   }, [posts, activeFilter, searchQuery]);
 
   return (
-    <div
-      style={{
-        width: '100%',
-        minHeight: '100vh',
-        backgroundColor: '#F5F5F5',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
       <Header onNavigate={onNavigate} />
 
-      {/* Scrollable Content */}
-      <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-5 pt-4">
+          <h1 className="text-2xl font-black text-gradua-forum mb-1 leading-tight">Fórum da Comunidade</h1>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-5">Comunidade Acadêmica • UFAL</p>
 
-        {/* Title Section */}
-        <div style={{ padding: '16px 20px 0' }}>
-          <h1
-            style={{
-              fontSize: '28px',
-              fontWeight: '800',
-              color: '#10305F',
-              margin: '0 0 4px',
-              fontFamily: 'Inter, sans-serif',
-              lineHeight: '1.2',
-            }}
-          >
-            Fórum de Ciência da Computação
-          </h1>
-          <p style={{ fontSize: '13px', color: '#9E9E9E', margin: '0 0 16px', fontFamily: 'Inter, sans-serif' }}>
-            Comunidade acadêmica • Maceió
-          </p>
-
-          {/* ── Campo de busca ── */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '14px',
-              padding: '11px 16px',
-              border: '1.5px solid #E0E0E0',
-              marginBottom: '14px',
-              transition: 'border-color 0.15s ease',
-            }}
-            onFocusCapture={(e) => { e.currentTarget.style.borderColor = '#10305F'; }}
-            onBlurCapture={(e) => { e.currentTarget.style.borderColor = '#E0E0E0'; }}
-          >
-            <Search size={18} color="#9E9E9E" strokeWidth={2} style={{ flexShrink: 0 }} />
+          {/* Campo de Busca */}
+          <div className="flex items-center gap-2 bg-white rounded-xl p-3 border-2 border-gray-200 mb-4 transition-colors focus-within:border-gradua-forum shadow-sm">
+            <Search size={18} className="text-gray-400" />
             <input
               type="text"
-              placeholder="Buscar posts, autores, tópicos..."
+              placeholder="Buscar posts, autores..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                flex: 1,
-                border: 'none',
-                outline: 'none',
-                fontSize: '14px',
-                fontFamily: 'Inter, sans-serif',
-                color: '#10305F',
-                backgroundColor: 'transparent',
-              }}
+              className="flex-1 outline-none text-sm text-gray-800 bg-transparent placeholder-gray-400"
             />
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9E9E9E', display: 'flex', alignItems: 'center' }}
-              >
+              <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 p-1">
                 <X size={16} />
               </button>
             )}
           </div>
 
-          {/* ── Filtros de categoria ── */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '8px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              marginBottom: '16px',
-            }}
-          >
+          {/* Filtros */}
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
             {filters.map((f) => {
               const isActive = activeFilter === f.id;
               return (
                 <button
                   key={f.id}
                   onClick={() => setActiveFilter(f.id)}
-                  style={{
-                    backgroundColor: isActive ? '#10305F' : '#E8EEF4',
-                    color: isActive ? '#FFFFFF' : '#10305F',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    padding: '10px 20px',
-                    borderRadius: '50px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    fontFamily: 'Inter, sans-serif',
-                    transition: 'all 0.15s ease',
-                  }}
+                  className={`text-[13px] font-bold px-5 py-2.5 rounded-full whitespace-nowrap transition-colors ${
+                    isActive ? 'bg-gradua-forum text-white shadow-md' : 'bg-gradua-forum/10 text-gradua-forum hover:bg-gradua-forum/20'
+                  }`}
                 >
                   {f.label}
                 </button>
@@ -588,41 +362,28 @@ const ForumScreen = ({ onNavigate }) => {
         </div>
 
         {/* Posts Feed */}
-        <div style={{ padding: '0 20px', paddingBottom: '120px' }}>
-
-          {/* Card de adição — aparece apenas em "Todos os Tópicos" */}
+        <div className="px-4 pb-28">
           {activeFilter === 'todos' && !searchQuery && <AddPostCard onPublish={handlePublish} />}
 
-          {/* Lista filtrada */}
           {filteredPosts.length > 0 ? (
-            filteredPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                avatar={post.avatar}
-                name={post.name}
-                meta={post.meta}
-                time={post.time}
-                title={post.title}
-                content={post.content}
-                initialLikes={post.likes}
-                initialDislikes={post.dislikes}
-                comments={post.comments}
-                tag={post.tag}
-                tagVariant={post.tagVariant}
-                featured={post.featured}
-              />
-            ))
+            filteredPosts.map((post) => <PostCard key={post.id} {...post} />)
           ) : (
-            <EmptyState
-              query={searchQuery}
-              filter={filters.find((f) => f.id === activeFilter)?.label}
-            />
+            <EmptyState query={searchQuery} filter={filters.find((f) => f.id === activeFilter)?.label} />
           )}
         </div>
       </div>
 
-      {/* Bottom Nav */}
       <BottomNavBar activeTab="forum" onTabChange={onNavigate} />
+
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+      `}</style>
     </div>
   );
 };

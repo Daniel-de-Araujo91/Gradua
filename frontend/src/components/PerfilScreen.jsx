@@ -1,144 +1,45 @@
 import React from 'react';
-import Header from './Header';
-import BottomNavBar from './BottomNavBar';
+import Header from '../components/Header';
+import BottomNavBar from '../components/BottomNavBar';
 import perfil from '../assets/perfil.webp';
-/* -------------------------
-   SVG Icons
-------------------------- */
-const TrendingUpIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M23 6l-9.5 9.5-5-5L1 18" stroke="#9E9E9E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    <path d="M17 6h6v6" stroke="#9E9E9E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-  </svg>
-);
-
-const ChevronRightIcon = ({ color = '#10305F' }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9 18l6-6-6-6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const DocumentIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#10305F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#10305F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const HistoryIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#10305F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-  </svg>
-);
-
-const PasswordIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="#10305F" strokeWidth="1.5" fill="none" />
-    <path d="M7 11V7a5 5 0 0110 0v4" stroke="#10305F" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
-
-const LogoutIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="#E53935" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-  </svg>
-);
-
-const VerifiedBadgeIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="14" cy="14" r="14" fill="#10305F" />
-    <path d="M8 14l4 4 8-8" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+import { TrendingUp, ChevronRight, FileText, History, KeyRound, LogOut, CheckCircle2 } from 'lucide-react';
 
 /* -------------------------
    Sub-components
 ------------------------- */
 const ProfileCard = () => (
-  <div style={{
-    backgroundColor: '#FFFFFF',
-    borderRadius: '24px',
-    padding: '24px 20px',
-    marginBottom: '16px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '12px',
-  }}>
+  <div className="bg-white rounded-3xl p-6 mb-4 flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] relative">
+    
     {/* Photo + Badge */}
-    <div style={{ position: 'relative', width: '160px', height: '190px' }}>
-      <div style={{
-        width: '100%',
-        height: '100%',
-        borderRadius: '20px',
-        overflow: 'hidden',
-        backgroundColor: '#C8E0F4',
-      }}>
+    <div className="relative w-32 h-40 sm:w-40 sm:h-48 mb-2">
+      <div className="w-full h-full rounded-2xl overflow-hidden bg-red-50 shadow-inner">
         <img
           src={perfil}
-          alt="Tester"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          alt="Foto de Perfil"
+          className="w-full h-full object-cover"
         />
       </div>
       {/* Verified badge */}
-      <div style={{
-        position: 'absolute',
-        bottom: '-8px',
-        right: '-8px',
-      }}>
-        <VerifiedBadgeIcon />
+      <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-0.5">
+        <CheckCircle2 size={28} className="text-gradua-perfil fill-gradua-perfil/10" />
       </div>
     </div>
 
-    {/* Matricula */}
-    <p style={{
-      fontSize: '11px',
-      fontWeight: '600',
-      color: '#9E9E9E',
-      letterSpacing: '1.5px',
-      margin: 0,
-      fontFamily: 'Inter, sans-serif',
-      textTransform: 'uppercase',
-      marginTop: '8px',
-    }}>
+    {/* Info */}
+    <p className="text-[11px] font-bold text-gray-400 tracking-[1.5px] uppercase mt-2">
       MATRÍCULA: xxxxxxxxx
     </p>
 
-    {/* Name */}
-    <h1 style={{
-      fontSize: '26px',
-      fontWeight: '800',
-      color: '#10305F',
-      margin: 0,
-      fontFamily: 'Inter, sans-serif',
-      textAlign: 'center',
-      lineHeight: '1.2',
-    }}>
+    <h1 className="text-2xl sm:text-3xl font-black text-gradua-perfil text-center leading-tight">
       Tester da Silva Santos
     </h1>
 
     {/* Chips */}
-    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-      <span style={{
-        backgroundColor: '#E3EBF6',
-        color: '#10305F',
-        fontSize: '12px',
-        fontWeight: '600',
-        padding: '6px 14px',
-        borderRadius: '20px',
-        fontFamily: 'Inter, sans-serif',
-      }}>
+    <div className="flex gap-2 flex-wrap justify-center mt-1">
+      <span className="bg-gradua-perfil/10 text-gradua-perfil text-xs font-bold px-4 py-1.5 rounded-full">
         Ciência da Computação
       </span>
-      <span style={{
-        backgroundColor: '#F0F0F0',
-        color: '#555555',
-        fontSize: '12px',
-        fontWeight: '600',
-        padding: '6px 14px',
-        borderRadius: '20px',
-        fontFamily: 'Inter, sans-serif',
-      }}>
+      <span className="bg-gray-100 text-gray-600 text-xs font-bold px-4 py-1.5 rounded-full">
         4º Semestre
       </span>
     </div>
@@ -146,163 +47,61 @@ const ProfileCard = () => (
 );
 
 const IRACard = () => (
-  <div style={{
-    backgroundColor: '#FFFFFF',
-    borderRadius: '20px',
-    padding: '20px',
-    marginBottom: '16px',
-    boxShadow: '0px 2px 8px rgba(0,0,0,0.05)',
-  }}>
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: '8px',
-    }}>
-      <span style={{
-        fontSize: '11px',
-        fontWeight: '700',
-        color: '#9E9E9E',
-        letterSpacing: '1.5px',
-        fontFamily: 'Inter, sans-serif',
-        textTransform: 'uppercase',
-      }}>
+  <div className="bg-white rounded-3xl p-6 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50">
+    <div className="flex justify-between items-start mb-2">
+      <span className="text-[11px] font-bold text-gray-400 tracking-[1.5px] uppercase">
         IRA GERAL
       </span>
-      <TrendingUpIcon />
+      <div className="bg-green-50 p-2 rounded-full">
+        <TrendingUp size={18} className="text-green-500" />
+      </div>
     </div>
 
-    <p style={{
-      fontSize: '60px',
-      fontWeight: '900',
-      color: '#10305F',
-      margin: 0,
-      fontFamily: 'Inter, sans-serif',
-      lineHeight: '1',
-    }}>
+    <p className="text-6xl font-black text-gradua-perfil leading-none tracking-tight">
       7.5
     </p>
 
-    <p style={{
-      fontSize: '13px',
-      color: '#757575',
-      margin: '8px 0 0',
-      fontFamily: 'Inter, sans-serif',
-    }}>
-      ✨ Top 30% da Turma
+    <p className="text-sm font-semibold text-gray-500 mt-3 flex items-center gap-1.5">
+      <span className="text-amber-500">✨</span> Top 30% da Turma
     </p>
   </div>
 );
 
 const ProgressCard = () => (
-  <div style={{
-    backgroundColor: '#FFFFFF',
-    borderRadius: '20px',
-    padding: '20px',
-    marginBottom: '16px',
-    boxShadow: '0px 2px 8px rgba(0,0,0,0.05)',
-  }}>
-    <span style={{
-      fontSize: '11px',
-      fontWeight: '700',
-      color: '#9E9E9E',
-      letterSpacing: '1.5px',
-      fontFamily: 'Inter, sans-serif',
-      textTransform: 'uppercase',
-    }}>
+  <div className="bg-white rounded-3xl p-6 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50">
+    <span className="text-[11px] font-bold text-gray-400 tracking-[1.5px] uppercase block mb-3">
       PROGRESSO DO CURSO
     </span>
 
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-end',
-      marginTop: '8px',
-    }}>
-      <p style={{
-        fontSize: '24px',
-        fontWeight: '800',
-        color: '#10305F',
-        margin: 0,
-        fontFamily: 'Inter, sans-serif',
-        lineHeight: '1.2',
-      }}>
-        Conclusão<br />Total
+    <div className="flex justify-between items-end mb-3">
+      <p className="text-xl sm:text-2xl font-black text-gradua-perfil leading-tight">
+        Conclusão Total
       </p>
-      <p style={{
-        fontSize: '36px',
-        fontWeight: '900',
-        color: '#10305F',
-        margin: 0,
-        fontFamily: 'Inter, sans-serif',
-      }}>
+      <p className="text-4xl font-black text-gradua-perfil leading-none">
         68%
       </p>
     </div>
 
     {/* Progress Bar */}
-    <div style={{
-      marginTop: '12px',
-      height: '6px',
-      backgroundColor: '#E8EEF4',
-      borderRadius: '3px',
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        width: '68%',
-        height: '100%',
-        backgroundColor: '#10305F',
-        borderRadius: '3px',
-      }} />
+    <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden mb-5">
+      <div className="h-full bg-gradua-perfil rounded-full transition-all duration-500" style={{ width: '68%' }} />
     </div>
 
-    {/* Stats */}
-    <div style={{
-      display: 'flex',
-      gap: '24px',
-      marginTop: '16px',
-    }}>
+    {/* Stats Grid */}
+    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
       <div>
-        <p style={{
-          fontSize: '10px',
-          fontWeight: '700',
-          color: '#9E9E9E',
-          letterSpacing: '1px',
-          margin: '0 0 4px',
-          fontFamily: 'Inter, sans-serif',
-          textTransform: 'uppercase',
-        }}>
+        <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
           CRÉDITOS
         </p>
-        <p style={{
-          fontSize: '18px',
-          fontWeight: '800',
-          color: '#10305F',
-          margin: 0,
-          fontFamily: 'Inter, sans-serif',
-        }}>
+        <p className="text-lg font-black text-gradua-perfil">
           164 / 240
         </p>
       </div>
       <div>
-        <p style={{
-          fontSize: '10px',
-          fontWeight: '700',
-          color: '#9E9E9E',
-          letterSpacing: '1px',
-          margin: '0 0 4px',
-          fontFamily: 'Inter, sans-serif',
-          textTransform: 'uppercase',
-        }}>
+        <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
           HORAS EXT.
         </p>
-        <p style={{
-          fontSize: '18px',
-          fontWeight: '800',
-          color: '#10305F',
-          margin: 0,
-          fontFamily: 'Inter, sans-serif',
-        }}>
+        <p className="text-lg font-black text-gradua-perfil">
           90 / 120
         </p>
       </div>
@@ -311,88 +110,34 @@ const ProgressCard = () => (
 );
 
 const CentralAlunoItem = ({ icon: Icon, title, subtitle, isRed = false }) => (
-  <div style={{
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    padding: '16px 0',
-    borderBottom: '1px solid #F5F5F5',
-    cursor: 'pointer',
-  }}>
-    <div style={{
-      width: '44px',
-      height: '44px',
-      borderRadius: '12px',
-      backgroundColor: isRed ? '#FDECEA' : '#EEF2F8',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    }}>
-      <Icon />
+  <div className="flex items-center gap-4 py-4 border-b border-gray-50 last:border-0 cursor-pointer group">
+    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isRed ? 'bg-red-50 group-hover:bg-red-100' : 'bg-gradua-perfil/5 group-hover:bg-gradua-perfil/10'}`}>
+      <Icon size={20} className={isRed ? 'text-red-500' : 'text-gradua-perfil'} />
     </div>
-    <div style={{ flex: 1 }}>
-      <p style={{
-        fontSize: '15px',
-        fontWeight: '700',
-        color: isRed ? '#E53935' : '#10305F',
-        margin: 0,
-        fontFamily: 'Inter, sans-serif',
-      }}>
+    <div className="flex-1">
+      <p className={`text-base font-bold m-0 ${isRed ? 'text-red-600' : 'text-gray-900'}`}>
         {title}
       </p>
-      <p style={{
-        fontSize: '12px',
-        color: isRed ? '#EF9A9A' : '#9E9E9E',
-        margin: '2px 0 0',
-        fontFamily: 'Inter, sans-serif',
-      }}>
+      <p className={`text-xs mt-0.5 font-medium ${isRed ? 'text-red-400' : 'text-gray-500'}`}>
         {subtitle}
       </p>
     </div>
-    <ChevronRightIcon color={isRed ? '#E53935' : '#10305F'} />
+    <ChevronRight size={20} className={isRed ? 'text-red-400' : 'text-gray-400'} />
   </div>
 );
 
 const CentralAlunoCard = () => (
-  <div style={{
-    backgroundColor: '#FFFFFF',
-    borderRadius: '20px',
-    padding: '20px',
-    marginBottom: '100px',
-    boxShadow: '0px 2px 8px rgba(0,0,0,0.05)',
-  }}>
-    <p style={{
-      fontSize: '16px',
-      fontWeight: '700',
-      color: '#10305F',
-      margin: '0 0 4px',
-      fontFamily: 'Inter, sans-serif',
-    }}>
+  <div className="bg-white rounded-3xl p-6 mb-28 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50">
+    <h3 className="text-lg font-black text-gradua-perfil mb-2">
       Central do Aluno
-    </p>
+    </h3>
 
-    <CentralAlunoItem
-      icon={DocumentIcon}
-      title="Meus Documentos"
-      subtitle="RG, CPF e Comprovante de Residência"
-    />
-    <CentralAlunoItem
-      icon={HistoryIcon}
-      title="Histórico Escolar"
-      subtitle="Emitir via PDF oficial (assinado digitalmente)"
-    />
-    <CentralAlunoItem
-      icon={PasswordIcon}
-      title="Alterar Senha"
-      subtitle="Segurança e recuperação de conta"
-    />
-    <CentralAlunoItem
-      icon={LogoutIcon}
-      title="Sair"
-      subtitle="Encerrar sessão no dispositivo"
-      isRed
-    />
+    <div className="flex flex-col">
+        <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" />
+        <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" />
+        <CentralAlunoItem icon={KeyRound} title="Alterar Senha" subtitle="Segurança e recuperação de conta" />
+        <CentralAlunoItem icon={LogOut} title="Sair da Conta" subtitle="Encerrar sessão no dispositivo" isRed />
+    </div>
   </div>
 );
 
@@ -401,18 +146,12 @@ const CentralAlunoCard = () => (
 ------------------------- */
 const PerfilScreen = ({ onNavigate }) => {
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      backgroundColor: '#F5F5F5',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      <Header />
-      <main style={{ flex: 1, maxWidth: '600px', width: '100%', margin: '0 auto', padding: '16px 20px 80px 20px', overflowY: 'auto' }}></main>
+    <div className="w-full min-h-screen bg-gray-50 flex flex-col">
+      {/* CORREÇÃO: Faltava passar onNavigate pro Header também! */}
+      <Header onNavigate={onNavigate} />
 
       {/* Scrollable Content */}
-      <main style={{ flex: 1, padding: '16px 20px', overflowY: 'auto' }}>
+      <main className="flex-1 px-4 py-5 overflow-y-auto">
         <ProfileCard />
         <IRACard />
         <ProgressCard />

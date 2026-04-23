@@ -93,7 +93,7 @@ const MySubjects = () => {
             <div className='px-4 mb-6 pb-4'> 
                 <div className='flex justify-between items-center mb-3'>
                     <h2 className='text-lg font-semibold text-gray-900'>Grade Ativa</h2>
-                    <p className='text-xs text-gray-500'>2026.1 // UFAL</p>
+                    <p className='text-xs text-gray-500'>2026.1</p>
                 </div>
                 
                 <div className='space-y-3'>
@@ -101,8 +101,7 @@ const MySubjects = () => {
                         <button
                             key={subject.id}
                             onClick={() => openModal(subject)}
-                            className='w-full bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left'
-                        >
+                            className='w-full bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left'>
                             <div className='flex justify-between items-start mb-2'>
                                 <div>
                                     <div className='flex items-center gap-2 mb-1'>

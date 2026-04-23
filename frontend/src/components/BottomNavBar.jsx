@@ -34,15 +34,15 @@ const BottomNavBar = ({ activeTab, onTabChange }) => {
     }, []); 
 
     const tabs = [
-        { id: 'home', label: 'INÍCIO', icon: Home },
-        { id: 'agenda', label: 'AGENDA', icon: Calendar },
-        { id: 'forum', label: 'FÓRUM', icon: MessageCircle },
-        { id: 'profile', label: 'PERFIL', icon: User },
+        { id: 'home', label: 'INÍCIO', icon: Home, activeColors: 'text-gradua-inicio bg-gradua-inicio/10' },
+        { id: 'agenda', label: 'AGENDA', icon: Calendar, activeColors: 'text-gradua-agenda bg-gradua-agenda/10' },
+        { id: 'forum', label: 'FÓRUM', icon: MessageCircle, activeColors: 'text-gradua-forum bg-gradua-forum/10' },
+        { id: 'profile', label: 'PERFIL', icon: User, activeColors: 'text-gradua-perfil bg-gradua-perfil/10' },
     ];
 
     return (
         <nav 
-            className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50 transition-transform duration-300 ease-in-out ${
+            className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-50 transition-transform duration-300 ease-in-out ${
                 isVisible ? 'translate-y-0' : 'translate-y-full'
             }`}
             style={{ boxShadow: '0 -4px 12px rgba(0,0,0,0.05)' }} >
@@ -56,10 +56,12 @@ const BottomNavBar = ({ activeTab, onTabChange }) => {
                             key={tab.id}
                             onClick={() => onTabChange(tab.id)}
                             className={`flex flex-col items-center gap-1 py-2 px-4 rounded-xl transition-all ${
-                                isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-500'
+                                isActive ? tab.activeColors : 'text-gray-400 hover:bg-gray-50'
                             }`} >
-                            <Icon size={22} strokeWidth={isActive ? 2 : 1.5} />
-                            <span className={`text-xs font-medium ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
+                            
+                            <Icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
+                            
+                            <span className={`text-[10px] sm:text-xs ${isActive ? 'font-bold' : 'font-medium'}`}>
                                 {tab.label}
                             </span>
                         </button>

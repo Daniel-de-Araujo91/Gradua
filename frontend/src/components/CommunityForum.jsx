@@ -64,8 +64,7 @@ const CommunityForum = ({ onNavigate }) => {
         
         <button 
           onClick={() => onNavigate('forum')}
-          className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:text-blue-900 transition-colors"
-        >
+          className="text-gradua-inicio/60 text-sm font-medium flex items-center gap-1 hover:text-gradua-inicio/90 transition-colors">
           Explorar
           <ChevronRight size={16} />
         </button>

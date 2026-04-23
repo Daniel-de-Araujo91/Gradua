@@ -40,11 +40,11 @@ const Header = ({ userName = "Tester", onNavigate }) => {
                             Olá, <span className='text-blue-900'>{userName}</span>
                         </h1>
                         <div className='flex items-center gap-2 mt-1'>
-                            <span className='px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full'>
+                            <span className='px-2 py-0.5 bg-green-200 text-green-900 text-xs font-semibold rounded-full'>
                                 ATIVO
                             </span>
-                            <span className='text-gray-500 text-sm'>
-                                CC • 2024.1
+                            <span className='text-gray-500 text-xs font-semibold'>
+                                xxxxxxxxx
                             </span>
                         </div>
                     </div>

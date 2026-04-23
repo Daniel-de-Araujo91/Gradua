@@ -68,10 +68,10 @@ const TodayAgenda = () => {
     return (
         <div className='px-4 mb-6'>
             <div className='flex justify-between items-center mb-4'>
-                <h2 className='text-xl font-bold text-gray-900'>{headerTitle}</h2>
+                <h2 className='text-xl font-bold text-gradua-inicio'>{headerTitle}</h2>
                 <button 
                     onClick={() => setShowCalendar(true)}
-                    className='text-blue-600 text-sm font-semibold flex items-center gap-1 hover:text-blue-700 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg'>
+                    className='text-gradua-inicio text-sm font-semibold flex items-center gap-1 hover:text-graduia-inicio/70 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg'>
                     Ver calendário <CalendarIcon size={16} />
                 </button>
             </div>
@@ -82,14 +82,14 @@ const TodayAgenda = () => {
                         <div key={index} className='group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5'>
                             <div className='flex items-start gap-3'>
                                 <div className='flex flex-col items-center pt-1 min-w-[56px]'>
-                                    <span className='text-lg font-bold text-gray-900'>{classItem.time}</span>
-                                    <span className='text-xs text-gray-500'>-</span>
-                                    <span className='text-sm font-semibold text-gray-700'>{classItem.endTime}</span>
+                                    <span className='text-lg font-bold text-gradua-inicio'>{classItem.time}</span>
+                                    <span className='text-xs text-gradua-inicio/50'>-</span>
+                                    <span className='text-sm font-semibold text-gradua-inicio/70'>{classItem.endTime}</span>
                                 </div>
                                 <div className='flex-1 min-w-0'>
-                                    <h3 className='text-lg font-bold text-gray-900 mb-1.5 leading-tight'>{classItem.title}</h3>
-                                    <div className='flex items-center gap-2 text-sm text-gray-600'>
-                                        <MapPin size={16} className='text-gray-400 mt-0.5' />
+                                    <h3 className='text-lg font-bold text-gradua-inicio mb-1.5 leading-tight'>{classItem.title}</h3>
+                                    <div className='flex items-center gap-2 text-sm text-gradua-inicio/60'>
+                                        <MapPin size={16} className='text-gradua-inicio/40 mt-0.5' />
                                         <span>{classItem.location}</span>
                                     </div>
                                 </div>
@@ -99,8 +99,8 @@ const TodayAgenda = () => {
                 ) : (
                     <div className='bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-8 text-center'>
                         <CalendarIcon size={32} className='text-gray-400 mx-auto mb-3' />
-                        <h3 className='text-gray-900 font-semibold'>Sem aulas programadas</h3>
-                        <p className='text-gray-500 text-sm mt-1'>Aproveite seu dia de descanso ou estudo livre!</p>
+                        <h3 className='text-gradua-inicio font-semibold'>Sem aulas programadas</h3>
+                        <p className='text-gradua-inicio/50 text-sm mt-1'>Aproveite seu dia de descanso ou estudo livre!</p>
                     </div>
                 )}
             </div>
@@ -142,8 +142,8 @@ const TodayAgenda = () => {
                                         className={`
                                             h-9 w-full rounded-full flex items-center justify-center text-sm font-medium transition-colors
                                             ${!day ? 'invisible' : 'hover:bg-gray-100 text-gray-700'}
-                                            ${isTodayDate && !isSelected ? 'border border-blue-200 text-blue-600' : ''}
-                                            ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
+                                            ${isTodayDate && !isSelected ? 'border border-gradua-inicio/20 text-gradua-inicio/60' : ''}
+                                            ${isSelected ? 'bg-gradua-inicio/60 text-white hover:bg-gradua-inicio/70' : ''}
                                         `}>
                                         {day}
                                     </button>
@@ -158,7 +158,7 @@ const TodayAgenda = () => {
                                     setCurrentMonth(new Date().getMonth());
                                     setCurrentYear(new Date().getFullYear());
                                 }}
-                                className='text-sm text-blue-600 font-semibold hover:text-blue-700'>
+                                className='text-sm text-gradua-inicio/70 font-semibold hover:text-gradua-inicio/70'>
                                 Voltar para Hoje
                             </button>
                         </div>
