@@ -10,31 +10,27 @@ import { TrendingUp, ChevronRight, FileText, History, KeyRound, LogOut, CheckCir
 const ProfileCard = () => (
   <div className="bg-white rounded-3xl p-6 mb-4 flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] relative">
     
-    {/* Photo + Badge */}
     <div className="relative w-32 h-40 sm:w-40 sm:h-48 mb-2">
-      <div className="w-full h-full rounded-2xl overflow-hidden bg-red-50 shadow-inner">
+      <div className="w-full h-full rounded-2xl overflow-hidden bg-orange-50 shadow-inner">
         <img
           src={perfil}
           alt="Foto de Perfil"
           className="w-full h-full object-cover"
         />
       </div>
-      {/* Verified badge */}
       <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-0.5">
         <CheckCircle2 size={28} className="text-gradua-perfil fill-gradua-perfil/10" />
       </div>
     </div>
 
-    {/* Info */}
     <p className="text-[11px] font-bold text-gray-400 tracking-[1.5px] uppercase mt-2">
       MATRÍCULA: xxxxxxxxx
     </p>
 
-    <h1 className="text-2xl sm:text-3xl font-black text-gradua-perfil text-center leading-tight">
+    <h1 className="text-2xl sm:text-3xl font-black text-gradua-primary text-center leading-tight">
       Tester da Silva Santos
     </h1>
 
-    {/* Chips */}
     <div className="flex gap-2 flex-wrap justify-center mt-1">
       <span className="bg-gradua-perfil/10 text-gradua-perfil text-xs font-bold px-4 py-1.5 rounded-full">
         Ciência da Computação
@@ -57,7 +53,7 @@ const IRACard = () => (
       </div>
     </div>
 
-    <p className="text-6xl font-black text-gradua-perfil leading-none tracking-tight">
+    <p className="text-6xl font-black text-gradua-primary leading-none tracking-tight">
       7.5
     </p>
 
@@ -74,26 +70,24 @@ const ProgressCard = () => (
     </span>
 
     <div className="flex justify-between items-end mb-3">
-      <p className="text-xl sm:text-2xl font-black text-gradua-perfil leading-tight">
-        Conclusão Total
+      <p className="text-xl sm:text-2xl font-black text-gradua-primary leading-tight">
+        Conclusão<br />Total
       </p>
-      <p className="text-4xl font-black text-gradua-perfil leading-none">
+      <p className="text-4xl font-black text-gradua-primary leading-none">
         68%
       </p>
     </div>
 
-    {/* Progress Bar */}
     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden mb-5">
       <div className="h-full bg-gradua-perfil rounded-full transition-all duration-500" style={{ width: '68%' }} />
     </div>
 
-    {/* Stats Grid */}
     <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
       <div>
         <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
           CRÉDITOS
         </p>
-        <p className="text-lg font-black text-gradua-perfil">
+        <p className="text-lg font-black text-gradua-primary">
           164 / 240
         </p>
       </div>
@@ -101,7 +95,7 @@ const ProgressCard = () => (
         <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
           HORAS EXT.
         </p>
-        <p className="text-lg font-black text-gradua-perfil">
+        <p className="text-lg font-black text-gradua-primary">
           90 / 120
         </p>
       </div>
@@ -109,8 +103,11 @@ const ProgressCard = () => (
   </div>
 );
 
-const CentralAlunoItem = ({ icon: Icon, title, subtitle, isRed = false }) => (
-  <div className="flex items-center gap-4 py-4 border-b border-gray-50 last:border-0 cursor-pointer group">
+const CentralAlunoItem = ({ icon: Icon, title, subtitle, isRed = false, onClick }) => (
+  <div 
+    className="flex items-center gap-4 py-4 border-b border-gray-50 last:border-0 cursor-pointer group"
+    onClick={onClick}
+  >
     <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isRed ? 'bg-red-50 group-hover:bg-red-100' : 'bg-gradua-perfil/5 group-hover:bg-gradua-perfil/10'}`}>
       <Icon size={20} className={isRed ? 'text-red-500' : 'text-gradua-perfil'} />
     </div>
@@ -126,9 +123,9 @@ const CentralAlunoItem = ({ icon: Icon, title, subtitle, isRed = false }) => (
   </div>
 );
 
-const CentralAlunoCard = () => (
+const CentralAlunoCard = ({ onNavigate }) => (
   <div className="bg-white rounded-3xl p-6 mb-28 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50">
-    <h3 className="text-lg font-black text-gradua-perfil mb-2">
+    <h3 className="text-lg font-black text-gradua-primary mb-2">
       Central do Aluno
     </h3>
 
@@ -136,7 +133,13 @@ const CentralAlunoCard = () => (
         <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" />
         <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" />
         <CentralAlunoItem icon={KeyRound} title="Alterar Senha" subtitle="Segurança e recuperação de conta" />
-        <CentralAlunoItem icon={LogOut} title="Sair da Conta" subtitle="Encerrar sessão no dispositivo" isRed />
+        <CentralAlunoItem 
+          icon={LogOut} 
+          title="Sair da Conta" 
+          subtitle="Encerrar sessão no dispositivo" 
+          isRed 
+          onClick={() => onNavigate('login')}
+        />
     </div>
   </div>
 );
@@ -147,18 +150,15 @@ const CentralAlunoCard = () => (
 const PerfilScreen = ({ onNavigate }) => {
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      {/* CORREÇÃO: Faltava passar onNavigate pro Header também! */}
       <Header onNavigate={onNavigate} />
 
-      {/* Scrollable Content */}
       <main className="flex-1 px-4 py-5 overflow-y-auto">
         <ProfileCard />
         <IRACard />
         <ProgressCard />
-        <CentralAlunoCard />
+        <CentralAlunoCard onNavigate={onNavigate} />
       </main>
 
-      {/* Bottom Nav */}
       <BottomNavBar activeTab="profile" onTabChange={onNavigate} />
     </div>
   );
