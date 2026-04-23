@@ -97,6 +97,13 @@ const LoginForm = ({ onLoginSuccess }) => {
             Esqueceu a senha?
           </button>
         </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-gradua-inicio text-white py-4 rounded-xl font-bold text-base hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-gradua-inicio/20">
+          {loading ? "Entrando..." : "Entrar na Conta"}
+        </button>
       </form>
     </div>
   );
