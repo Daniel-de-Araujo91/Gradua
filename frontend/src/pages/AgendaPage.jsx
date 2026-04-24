@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Bell, MapPin, User, BellPlus, X, Trash2 } from 'lucide-react';
+import { Tooltip, Button } from 'flowbite-react';
 import BottomNavBar from '../components/BottomNavBar';
 import Header from '../components/Header';
 
@@ -82,6 +83,8 @@ const AgendaPage = ({ onNavigate }) => {
         setNewLocation('');
     };
 
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
     return (
         <div className="w-full min-h-screen flex flex-col bg-gray-50">
             <Header onNavigate={onNavigate} />
@@ -127,13 +130,37 @@ const AgendaPage = ({ onNavigate }) => {
                 
                 {classes.map((classItem) => (
                     <div key={classItem.id} className="rounded-2xl overflow-hidden flex-shrink-0 relative group bg-white shadow-[0_2px_8px_rgba(30,58,95,0.08)]">
-                        
-                        <button 
-                            onClick={() => removeClass(classItem.id)}
-                            className="absolute top-3 right-3 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                        >
-                            <Trash2 size={16} />
-                        </button>
+                        <div className="absolute top-3 right-3">
+                            {confirmDeleteId === classItem.id ? (
+                                <div className="flex items-center gap-2 bg-red-50 rounded-full px-2 py-1 animate-fade-in">
+                                    <span className="text-[10px] font-bold text-red-600">Excluir?</span>
+                                    
+                                    <button onClick={() => removeClass(classItem.id)} className="p-1 text-white bg-red-500 hover:bg-red-600 rounded-full">
+                                        <Trash2 size={12} />
+                                    </button>
+                                    
+                                    <button onClick={() => setConfirmDeleteId(null)} className="p-1 text-gray-500 hover:bg-gray-200 bg-gray-100 rounded-full">
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="hidden md:block">
+                                        <Tooltip content='Excluir' placement='bottom'>
+                                            <button onClick={() => setConfirmDeleteId(classItem.id)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </Tooltip>
+                                    </div>
+                                    
+                                    <div className="md:hidden">
+                                        <button onClick={() => setConfirmDeleteId(classItem.id)} className="p-1.5 text-gray-300 active:text-red-500 active:bg-red-50 rounded-full transition-colors">
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
                         <div className="flex">
                             <div className="flex flex-col items-center justify-center px-4 py-5 min-w-[80px] border-r border-slate-100">
@@ -189,8 +216,7 @@ const AgendaPage = ({ onNavigate }) => {
 
                 <button 
                     onClick={() => setShowAddModal(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 mt-4 text-sm font-bold transition-opacity hover:opacity-90 shadow-sm text-white bg-gradua-agenda rounded-xl"
-                >
+                    className="w-full flex items-center justify-center gap-2 py-3 mt-4 text-sm font-bold transition-opacity hover:opacity-90 shadow-sm text-white bg-gradua-agenda rounded-xl">
                     <BellPlus size={16} />
                     Adicionar Lembrete
                 </button>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronRight, X, Clock, MapPin, User, Users, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { Tooltip, Button } from 'flowbite-react';
 
 const MySubjects = () => {
     const [selectedSubject, setSelectedSubject] = useState(null);
@@ -88,12 +89,29 @@ const MySubjects = () => {
         setSelectedSubject(null);
     };
 
+    const translateSchedule = (code) => {
+        const daysMap = {2: "Seg", 3: "Ter", 4: "Qua", 5: "Qui", 6: "Sex", 7: "Sáb", 1: "Dom"};
+        const shiftMap = {M: "Manhã", T: "Tarde", N: "Noite"};
+
+        const match = code.match(/(\d+)([MTN])(\d+)/);
+        if (!match) return code;
+
+        const [_, days, shift, hours] = match;
+        const daysText = days.split('').map(d => daysMap[d]).join(' e ');
+        const shiftText = shiftMap[shift];
+
+        return `${daysText} - ${shiftText} - Horário: ${hours.split('').join(' | ')}`;
+
+    };
+
     return (
         <>
             <div className='px-4 mb-6 pb-4'> 
                 <div className='flex justify-between items-center mb-3'>
                     <h2 className='text-lg font-semibold text-gray-900'>Grade Ativa</h2>
-                    <p className='text-xs text-gray-500'>2026.1</p>
+                    <Tooltip content='Seu período atual' placement='bottom'>
+                        <p className='text-xs text-gray-500'>2026.1</p>
+                    </Tooltip>
                 </div>
                 
                 <div className='space-y-3'>
@@ -108,7 +126,11 @@ const MySubjects = () => {
                                         <span className='text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded'>
                                             {subject.code}
                                         </span>
-                                        <span className='text-xs text-gray-500'>{subject.schedule}</span>
+                                        <Tooltip content={translateSchedule(subject.schedule)} placement='bottom'>
+                                            <span className='text-xs text-gray-500 font-medium border-b border-dashed border-gray-400 cursor-help'>
+                                                {subject.schedule}
+                                            </span>
+                                        </Tooltip>
                                     </div>
                                     <h3 className='font-semibold text-gray-900'>{subject.name}</h3>
                                 </div>
@@ -134,7 +156,11 @@ const MySubjects = () => {
                                     <span className='text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded'>
                                         {selectedSubject.code}
                                     </span>
-                                    <span className='text-xs text-gray-500'>{selectedSubject.schedule}</span>
+                                    <Tooltip content={translateSchedule(selectedSubject.schedule)} placement='bottom' >
+                                        <span className='text-xs text-gray-500 font-medium border-b border-dashed border-gray-400 cursor-help'>
+                                            {selectedSubject.schedule}
+                                            </span>
+                                    </Tooltip>
                                 </div>
                                 <h2 className='text-xl font-bold text-gray-900 mt-1'>{selectedSubject.name}</h2>
                             </div>

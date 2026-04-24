@@ -92,11 +92,6 @@ const LoginForm = ({ onLoginSuccess }) => {
           />
         </div>
 
-        <div className="flex justify-center mb-2">
-          <button type="button" className="text-sm font-bold text-gradua-inicio hover:opacity-80 transition-opacity">
-            Esqueceu a senha?
-          </button>
-        </div>
 
         <button
           type="submit"
@@ -105,6 +100,12 @@ const LoginForm = ({ onLoginSuccess }) => {
           {loading ? "Entrando..." : "Entrar na Conta"}
         </button>
       </form>
+
+        <div className="flex justify-center py-2 mb-2">
+          <button type="button" className="text-sm font-bold text-gradua-inicio hover:opacity-80 transition-opacity">
+            Esqueceu a senha?
+          </button>
+        </div>
     </div>
   );
 };
