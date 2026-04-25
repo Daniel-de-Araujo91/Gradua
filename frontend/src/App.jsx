@@ -3,7 +3,8 @@ import HomePage from './pages/HomePage';
 import AgendaPage from './pages/AgendaPage';
 import ForumScreen from './components/ForumScreen';
 import PerfilScreen from './components/PerfilScreen';
-import Login from './pages/Login'; 
+import Login from './pages/Login';
+import MeusDocumentosPage from './pages/MeusDocumentosPage';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('home');
@@ -14,7 +15,8 @@ function App() {
       'agenda': 'agenda',
       'forum': 'forum',
       'profile': 'perfil',
-      'login': 'login' 
+      'login': 'login',
+      'documentos': 'documentos',
     };
     
     setCurrentTab(tabMapping[tab] || 'home');
@@ -32,6 +34,8 @@ function App() {
         return <PerfilScreen onNavigate={handleNavigate} />;
       case 'login':
         return <Login onNavigate={handleNavigate} onLoginSuccess={() => handleNavigate('home')} />;
+      case 'documentos':
+        return <MeusDocumentosPage onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

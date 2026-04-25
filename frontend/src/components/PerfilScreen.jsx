@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import perfil from '../assets/perfil.webp';
 import { TrendingUp, ChevronRight, FileText, History, KeyRound, LogOut, CheckCircle2 } from 'lucide-react';
+import { gerarHistoricoEscolar } from '../utils/gerarHistoricoPDF';
 
 /* -------------------------
    Sub-components
@@ -130,8 +131,8 @@ const CentralAlunoCard = ({ onNavigate }) => (
     </h3>
 
     <div className="flex flex-col">
-        <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" />
-        <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" />
+        <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" onClick={() => onNavigate('documentos')} />
+        <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" onClick={gerarHistoricoEscolar} />
         <CentralAlunoItem icon={KeyRound} title="Alterar Senha" subtitle="Segurança e recuperação de conta" />
         <CentralAlunoItem 
           icon={LogOut} 
