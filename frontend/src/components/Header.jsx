@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Bell, X, Info } from 'lucide-react';
-import { Tooltip, Button } from 'flowbite-react';
+import { Tooltip } from 'flowbite-react';
 
-const Header = ({ userName = "Tester", onNavigate }) => {
+const Header = ({ userName = "Tester", onNavigate, activeTab = 'home' }) => {
     const [showNotifications, setShowNotifications] = useState(false);
 
     const [notifications, setNotifications] = useState([
@@ -25,6 +25,15 @@ const Header = ({ userName = "Tester", onNavigate }) => {
         );
     };
 
+    const themeColors = {
+        home: { text: 'text-gradua-inicio', bg: 'bg-gradua-inicio/20' },
+        agenda: { text: 'text-gradua-agenda', bg: 'bg-gradua-agenda/20' },
+        forum: { text: 'text-gradua-forum', bg: 'bg-gradua-forum/20' },
+        profile: { text: 'text-gradua-perfil', bg: 'bg-gradua-perfil/20' }
+    };
+
+    const currentTheme = themeColors[activeTab] || themeColors.home;
+
     return (
         <header className='bg-white px-4 py-2 md:py-4 relative'>
             <div className='flex justify-between items-start mb-4'>
@@ -37,17 +46,17 @@ const Header = ({ userName = "Tester", onNavigate }) => {
                         onClick={() => onNavigate('profile')} 
                     />
                     <div>
-                        <h1 className='text-2xl font-bold text-blue-900'>
-                            Olá, <span className='text-blue-900'>{userName}</span>
+                        <h1 className='text-2xl font-bold text-gray-900'>
+                            Olá, <span className={currentTheme.text}>{userName}</span>
                         </h1>
                         <div className='flex items-center gap-2 mt-1'>
                             <Tooltip content="Situação regularizada" placement='bottom'>
-                                <span className='px-2 py-0.5 bg-gradua-inicio/20 text-gradua-inicio text-xs font-semibold rounded-full'>
+                                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full cursor-help ${currentTheme.bg} ${currentTheme.text}`}>
                                     ATIVO
                                 </span>
                             </Tooltip>
                             <Tooltip content="Sua matrícula do SIGAA" placement='bottom'>
-                                <span className='text-gray-500 text-xs font-semibold'>
+                                <span className='text-gray-500 text-xs font-semibold cursor-help'>
                                     xxxxxxxxx
                                 </span>
                             </Tooltip>
@@ -74,7 +83,8 @@ const Header = ({ userName = "Tester", onNavigate }) => {
                         onClick={(e) => e.stopPropagation()}>
                         
                         <div className='sticky top-0 bg-white border-b border-gray-100 px-4 py-4 flex justify-between items-center z-10 rounded-t-2xl'>
-                            <h2 className='text-lg font-bold text-gradua-inicio'>Notificações</h2>
+                            {/* Título com a cor da página */}
+                            <h2 className={`text-lg font-bold ${currentTheme.text}`}>Notificações</h2>
                             <button onClick={() => setShowNotifications(false)} className='p-1 hover:bg-gray-100 rounded-full transition-colors'>
                                 <X size={20} className='text-gray-500' />
                             </button>
@@ -107,7 +117,7 @@ const Header = ({ userName = "Tester", onNavigate }) => {
                             <div className='border-t border-gray-100 p-3'>
                                 <button 
                                     onClick={markAllAsRead}
-                                    className='w-full text-center text-sm font-semibold text-gradua-inicio hover:text-gradua-inicio/70 p-2 transition-colors rounded-lg hover:bg-blue-50'>
+                                    className={`w-full text-center text-sm font-semibold p-2 transition-colors rounded-lg hover:bg-gray-50 ${currentTheme.text} opacity-90 hover:opacity-100`}>
                                     Marcar todas como lidas
                                 </button>
                             </div>

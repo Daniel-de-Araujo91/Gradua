@@ -148,10 +148,10 @@ const CentralAlunoCard = ({ onNavigate }) => (
 /* -------------------------
    Main Component
 ------------------------- */
-const PerfilScreen = ({ onNavigate }) => {
+const PerfilScreen = ({ onNavigate, activeTab }) => {
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <Header onNavigate={onNavigate} />
+      <Header onNavigate={onNavigate} activeTab='profile' />
 
       <main className="flex-1 px-4 py-5 overflow-y-auto">
         <ProfileCard />

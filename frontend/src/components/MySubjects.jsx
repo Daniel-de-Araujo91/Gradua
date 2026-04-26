@@ -97,11 +97,24 @@ const MySubjects = () => {
         if (!match) return code;
 
         const [_, days, shift, hours] = match;
-        const daysText = days.split('').map(d => daysMap[d]).join(' e ');
+
+        const daysArray = days.split('').map(d => daysMap[d]);
+        let daysText = daysArray[0];
+        if (daysArray.length > 1) {
+            const lastDay = daysArray.pop();
+            daysText = `${daysArray.join(', ')} e ${lastDay}`;
+        }
+
         const shiftText = shiftMap[shift];
 
-        return `${daysText} - ${shiftText} - Horário: ${hours.split('').join(' | ')}`;
+        const hoursArray = hours.split('').map(h => `${h}ª`);
+        let hoursText = hoursArray[0];
+        if (hoursArray.length > 1) {
+            const lastHour = hoursArray.pop();
+            hoursText = `${hoursArray.join(', ')} e ${lastHour}`;
+        }
 
+        return `${daysText} - ${shiftText} - ${hoursText} Aula`;
     };
 
     return (

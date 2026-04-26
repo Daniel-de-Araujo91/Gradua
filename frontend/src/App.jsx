@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import HomePage from './pages/HomePage';
 import AgendaPage from './pages/AgendaPage';
-import ForumScreen from './components/ForumScreen';
-import PerfilScreen from './components/PerfilScreen';
+import ForumScreen from './pages/ForumScreen';
+import PerfilScreen from './pages/PerfilScreen';
 import Login from './pages/Login';
 import MeusDocumentosPage from './pages/MeusDocumentosPage';
 

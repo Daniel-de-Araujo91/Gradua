@@ -286,7 +286,7 @@ const EmptyState = ({ query, filter }) => (
 ───────────────────────────────────────── */
 const STORAGE_KEY = 'forum_posts_v2';
 
-const ForumScreen = ({ onNavigate }) => {
+const ForumScreen = ({ onNavigate, activeTab }) => {
   const [posts, setPosts] = useState(() => {
     try { const saved = localStorage.getItem(STORAGE_KEY); return saved ? JSON.parse(saved) : INITIAL_POSTS; } 
     catch { return INITIAL_POSTS; }
@@ -318,7 +318,7 @@ const ForumScreen = ({ onNavigate }) => {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <Header onNavigate={onNavigate} />
+      <Header onNavigate={onNavigate} activeTab='forum' />
 
       <div className="flex-1 overflow-y-auto">
         <div className="px-5 pt-4">
