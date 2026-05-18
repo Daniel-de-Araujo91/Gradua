@@ -4,6 +4,7 @@ import AgendaPage from './pages/AgendaPage';
 import ForumScreen from './pages/ForumScreen';
 import PerfilScreen from './pages/PerfilScreen';
 import Login from './pages/Login';
+import Cadastro from './pages/Cadastro';
 import MeusDocumentosPage from './pages/MeusDocumentosPage';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
       'forum': 'forum',
       'profile': 'perfil',
       'login': 'login',
+      'cadastro': 'cadastro',
       'documentos': 'documentos',
     };
     
@@ -34,6 +36,8 @@ function App() {
         return <PerfilScreen onNavigate={handleNavigate} />;
       case 'login':
         return <Login onNavigate={handleNavigate} onLoginSuccess={() => handleNavigate('home')} />;
+      case 'cadastro':
+        return <Cadastro onNavigate={handleNavigate} onRegisterSuccess={() => handleNavigate('login')} />;
       case 'documentos':
         return <MeusDocumentosPage onNavigate={handleNavigate} />;
       default:

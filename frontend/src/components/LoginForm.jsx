@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const LoginForm = ({ onLoginSuccess }) => {
+const LoginForm = ({ onLoginSuccess, onNavigate }) => {
   const [cpf, setCpf] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -100,6 +100,18 @@ const LoginForm = ({ onLoginSuccess }) => {
           {loading ? "Entrando..." : "Entrar na Conta"}
         </button>
       </form>
+
+      <div className="text-center mt-8">
+          <p className="text-gray-500 text-sm font-medium">
+            Primeiro acesso?{" "}
+            <button
+              type="button"
+              onClick={() => onNavigate && onNavigate('cadastro')}
+              className="text-gradua-inicio font-bold hover:underline underline-offset-2 transition-all">
+              Criar minha conta
+            </button>
+          </p>
+        </div>
 
         <div className="flex justify-center py-2 mb-2">
           <button type="button" className="text-sm font-bold text-gradua-inicio hover:opacity-80 transition-opacity">
