@@ -2,7 +2,7 @@ import React from 'react';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import perfil from '../assets/perfil.webp';
-import { TrendingUp, ChevronRight, FileText, History, KeyRound, LogOut, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, ChevronRight, FileText, History, KeyRound, LogOut, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { gerarHistoricoEscolar } from '../utils/gerarHistoricoPDF';
 
 /* -------------------------
@@ -134,6 +134,11 @@ const CentralAlunoCard = ({ onNavigate }) => (
         <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" onClick={() => onNavigate('documentos')} />
         <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" onClick={gerarHistoricoEscolar} />
         <CentralAlunoItem icon={KeyRound} title="Alterar Senha" subtitle="Segurança e recuperação de conta" />
+        <CentralAlunoItem 
+          icon={ShieldAlert} 
+          title="Painel Administrativo" 
+          subtitle="Moderação de conteúdo e avisos docentes" 
+          onClick={() => onNavigate('admin')}/>
         <CentralAlunoItem 
           icon={LogOut} 
           title="Sair da Conta" 

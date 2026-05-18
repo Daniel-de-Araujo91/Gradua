@@ -6,9 +6,12 @@ import PerfilScreen from './pages/PerfilScreen';
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro';
 import MeusDocumentosPage from './pages/MeusDocumentosPage';
+import AdminScreen from './components/AdminScreen';
 
 function App() {
-  const [currentTab, setCurrentTab] = useState('home');
+  const [currentTab, setCurrentTab] = useState(() => {
+    return localStorage.getItem('gradua_current_tab') || 'home';
+  });
 
   const handleNavigate = (tab) => {
     const tabMapping = {
@@ -19,9 +22,12 @@ function App() {
       'login': 'login',
       'cadastro': 'cadastro',
       'documentos': 'documentos',
+      'admin': 'admin'
     };
     
-    setCurrentTab(tabMapping[tab] || 'home');
+    const targetTab = tabMapping[tab] || 'home';
+    setCurrentTab(targetTab);
+    localStorage.setItem('gradua_current_tab', targetTab)
   };
 
   const renderScreen = () => {
@@ -40,6 +46,8 @@ function App() {
         return <Cadastro onNavigate={handleNavigate} onRegisterSuccess={() => handleNavigate('login')} />;
       case 'documentos':
         return <MeusDocumentosPage onNavigate={handleNavigate} />;
+      case 'admin':
+        return <AdminScreen onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
