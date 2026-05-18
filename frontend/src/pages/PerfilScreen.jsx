@@ -57,10 +57,6 @@ const IRACard = () => (
     <p className="text-6xl font-black text-gradua-perfil leading-none tracking-tight">
       7.5
     </p>
-
-    <p className="text-sm font-semibold text-gray-500 mt-3 flex items-center gap-1.5">
-      <span className="text-amber-500">✨</span> Top 30% da Turma
-    </p>
   </div>
 );
 
@@ -113,7 +109,7 @@ const CentralAlunoItem = ({ icon: Icon, title, subtitle, isRed = false, onClick 
       <Icon size={20} className={isRed ? 'text-red-500' : 'text-gradua-perfil'} />
     </div>
     <div className="flex-1">
-      <p className={`text-base font-bold m-0 ${isRed ? 'text-red-600' : 'text-gray-900'}`}>
+      <p className={`text-base font-bold m-0 ${isRed ? 'text-red-600' : 'text-gradua-perfil'}`}>
         {title}
       </p>
       <p className={`text-xs mt-0.5 font-medium ${isRed ? 'text-red-400' : 'text-gray-500'}`}>
