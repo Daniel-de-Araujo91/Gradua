@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-GraduaApplication<gradua>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "br.com.ufal.gradua.GraduaApplication",
+            "projectName": "gradua",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
