@@ -1,9 +1,9 @@
 package br.com.ufal.gradua.models.forum;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.user.UserModel;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,35 +13,37 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "topic_id"})
-})
-public class ForumVoteModel {
+@Table(name = "TB_FORUM_COMMENT")
+public class ForumVoteModel implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID voteId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserModel user;
-
-    @ManyToOne
-    @JoinColumn(name = "topic_id", nullable = false)
+    @JoinColumn(name = "topic_id", nullable = true)
     private ForumTopicModel topic;
 
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    private UserModel author;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private VoteType voteType;
 
-    public enum VoteType {
-        UP, DOWN
+    private enum VoteType{
+        UP,DOWN
     }
 }

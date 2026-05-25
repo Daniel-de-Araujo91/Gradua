@@ -1,7 +1,8 @@
 package br.com.ufal.gradua.models.agenda;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.academic.ClassSectionModel;
@@ -13,31 +14,41 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-public class MonitoringSessionModel implements Serializable{
+@Table(name = "TB_MONITOR_SESSION")
+public class MonitorSessionModel implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID sessionId;
 
     @ManyToOne
-    @JoinColumn(name = "monitor_id", nullable = false)
+    @JoinColumn(name = "monitor_id")
     private MonitorModel monitor;
-
+    
     @ManyToOne
-    @JoinColumn(name = "class_id", nullable = false)
+    @JoinColumn(name = "class_id")
     private ClassSectionModel classSection;
 
-    @Column(nullable = false)
     private String topic;
 
-    @Column(nullable = false)
-    private LocalDateTime startTime;
+    private LocalDate date;
 
-    private String locationLink;
+    private LocalTime time;
+
+    @Column(nullable = true)
+    private String location;
+
 }

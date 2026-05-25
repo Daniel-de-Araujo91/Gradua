@@ -32,10 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 
-../frontend/
-
-application.properties
-
-configurations
-
-../.idea/
+.env

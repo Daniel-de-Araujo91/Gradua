@@ -1,42 +1,54 @@
 package br.com.ufal.gradua.controllers;
 
-import br.com.ufal.gradua.dtos.ForumTopicRequestDTO;
-import br.com.ufal.gradua.dtos.ForumTopicResponseDTO;
-import br.com.ufal.gradua.services.ForumTopicService;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.com.ufal.gradua.Services.ForumTopicService;
+import br.com.ufal.gradua.dtos.forum.ForumTopicRequestDTO;
+import br.com.ufal.gradua.dtos.forum.ForumTopicResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+
+
 @RestController
-@RequestMapping("/api/forum")
+@RequestMapping("/forum")
 @RequiredArgsConstructor
 public class ForumTopicController {
-    private final ForumTopicService topicService;
 
-    @PostMapping
-    public ResponseEntity<ForumTopicResponseDTO> createTopic(@Valid @RequestBody ForumTopicRequestDTO requestDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(topicService.createTopic(requestDTO));
+    private final ForumTopicService forumTopicService;
+
+    @GetMapping("/feed")
+    public ResponseEntity<List<ForumTopicResponseDTO>> feed(){
+        return ResponseEntity.ok(forumTopicService.listAll());
     }
 
-    @GetMapping
-    public ResponseEntity<List<ForumTopicResponseDTO>> getAllTopics() {
-        return ResponseEntity.ok(topicService.findAllTopics());
+    @PostMapping("/create")
+    public ResponseEntity<ForumTopicResponseDTO>  create(@RequestBody @Valid ForumTopicRequestDTO dto){
+        return ResponseEntity.status(HttpStatus.CREATED).body(forumTopicService.create(dto));
+    }
+    
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<ForumTopicResponseDTO> edit(@PathVariable UUID id, @RequestBody @Valid ForumTopicRequestDTO dto){
+        return ResponseEntity.ok(forumTopicService.update(id, dto));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ForumTopicResponseDTO> updateTopic(
-            @PathVariable UUID id,
-            @Valid @RequestBody ForumTopicRequestDTO requestDTO) {
-        return ResponseEntity.ok(topicService.updateTopic(id, requestDTO));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTopic(@PathVariable UUID id) {
-        topicService.deleteTopic(id);
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id){
+        forumTopicService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
 }

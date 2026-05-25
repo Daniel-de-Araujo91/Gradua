@@ -1,15 +1,13 @@
-package br.com.ufal.gradua.dtos;
+package br.com.ufal.gradua.dtos.forum;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-
-
 public record ForumTopicResponseDTO(
-    UUID topicId,
-    UUID authorId,
-    String title,
+    UUID id, 
+    String title, 
     String content,
-    Boolean isLockedByMod,
+    String authorName,
+    String type,
     LocalDateTime creationDate
-) {}
+){}

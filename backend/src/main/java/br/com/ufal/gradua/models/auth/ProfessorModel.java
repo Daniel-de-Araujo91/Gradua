@@ -1,44 +1,45 @@
 package br.com.ufal.gradua.models.auth;
 
+import java.io.Serializable;
+import java.util.UUID;
+
+import br.com.ufal.gradua.models.user.UserModel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
-
-
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.UUID;
-
-import br.com.ufal.gradua.models.user.UserModel;
-
 @Getter
-@Setter   
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-public class ProfessorModel{
+@Table(name = "TB_PROFESSOR")
+public class ProfessorModel implements Serializable{
+    private static final long serialVersionUID = 1L;
 
     @Id
-    private UUID professorId;
+    private UUID professorID;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "professor_id")
-    private UserModel user;
-
-    @Column(nullable = false)
     private String department;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "registration_status")
     private RegistrationStatus registrationStatus;
 
-    public enum RegistrationStatus {
+    private enum RegistrationStatus{
         PENDING, APPROVED, REJECTED
     }
 
+    @OneToOne
+    @JoinColumn(name = "professor_id")
+    private UserModel user;
 }

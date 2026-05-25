@@ -1,54 +1,59 @@
 package br.com.ufal.gradua.models.auth;
 
-import jakarta.persistence.*;
-
-import lombok.Getter;
-import lombok.Setter;
-
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.institutional.CurriculumModel;
 import br.com.ufal.gradua.models.institutional.ProgramModel;
 import br.com.ufal.gradua.models.user.UserModel;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-public class StudentModel{
+@Table(name = "TB_STUDENT")
+public class StudentModel implements Serializable{
+    private static final long serialVersionUID = 1L;
 
     @Id
-    private UUID studentId;
+    private UUID studentID;
+
+    @Column(name = "enrollment_number", unique = true)
+    private String enrollmentNumber;
+
+    private Integer currentTerm;
+
+    @Column(name = "ira",precision = 4,scale = 2)
+    private BigDecimal ira;
+
+    private Integer mandatoryHours;
+    private Integer electiveHours;
+    private Integer complementaryHours;
+    private Integer totalHours;
 
     @OneToOne
-    @MapsId 
     @JoinColumn(name = "student_id")
     private UserModel user;
 
-   @Column(nullable = false, unique = true)
-    private String enrollmentNumber;
-
-    @Column(nullable = false)
-    private Integer currentTerm;
-
-    @Column(precision = 4, scale = 2)
-    private BigDecimal gpa;
-
-    private int mandatoryHours;
-    private int opitionalHours;
-    private int supplementaryHours;
-    private int totalHours;
-
-
     @ManyToOne
-    @JoinColumn(name = "program_id", nullable = false)
+    @JoinColumn(name = "program_id")
     private ProgramModel program;
 
     @ManyToOne
-    @JoinColumn(name = "curriculum_id", nullable = false)
+    @JoinColumn(name = "curriculum_id")
     private CurriculumModel curriculum;
-
-
-
+    
 
 }

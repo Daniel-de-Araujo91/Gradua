@@ -1,7 +1,8 @@
 package br.com.ufal.gradua.models.agenda;
 
-
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.user.UserModel;
@@ -12,27 +13,39 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-public class ReminderModel {
+@Table(name = "TB_REMINDER")
+public class ReminderModel implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID reminderId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private UserModel user;
 
-    @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
-    private LocalDateTime dateTime;
+    private LocalDate date;
 
+    private LocalTime time;
+
+    @Column(nullable = true)
     private String location;
+    
+
+    
+
 }

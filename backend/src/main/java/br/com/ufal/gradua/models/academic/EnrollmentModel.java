@@ -1,10 +1,9 @@
 package br.com.ufal.gradua.models.academic;
 
-
+import java.io.Serializable;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.auth.StudentModel;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,34 +12,40 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
-
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-public class EnrollmentModel {
+@Table(name = "TB_ENROLLMENT")
+public class EnrollmentModel implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID enrollmentId;
 
     @ManyToOne
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id")
     private StudentModel student;
 
     @ManyToOne
-    @JoinColumn(name = "class_id", nullable = false)
+    @JoinColumn(name = "class_id")
     private ClassSectionModel classSection;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private EnrollmentStatus status;
+    private Status status;
 
     private Integer absences;
 
-    public enum EnrollmentStatus {
+    private enum Status {
         ENROLLED, DROPPED
     }
+
 }

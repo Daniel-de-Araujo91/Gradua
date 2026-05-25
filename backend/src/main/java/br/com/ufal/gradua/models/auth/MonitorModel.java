@@ -1,25 +1,34 @@
 package br.com.ufal.gradua.models.auth;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-import jakarta.persistence.*;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-public class MonitorModel{
+@Table(name = "TB_MONITOR")
+public class MonitorModel implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-   @Id
+    @Id
     private UUID monitorId;
 
+    private String scholarshipType;
+
     @OneToOne
-    @MapsId
     @JoinColumn(name = "monitor_id")
     private StudentModel student;
 
-    @Column(nullable = false)
-    private String scholarshipType;
 }

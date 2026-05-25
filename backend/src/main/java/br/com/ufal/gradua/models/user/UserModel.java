@@ -1,73 +1,60 @@
 package br.com.ufal.gradua.models.user;
 
-import jakarta.persistence.*;
-
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.Collection;
-import java.util.List;
+import java.io.Serializable;
 import java.util.UUID;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import br.com.ufal.gradua.models.auth.ProfessorModel;
 import br.com.ufal.gradua.models.auth.StudentModel;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Getter;
+
+import lombok.Setter;
 
 @Getter
-@Setter   
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(name = "user_model")
-public class UserModel implements UserDetails {
-    
+@Table(name = "TB_USER")
+public class UserModel implements Serializable{
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID userId;
 
-    @Column(nullable = false)
     private String firstName;
 
-    @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", unique = true)
     private String email;
 
-    @Column(nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false)
     private Boolean isForeigner;
 
-    @Column(unique = true)
+    @Column(name = "cpf", unique = true, nullable = true)
     private String cpf;
 
-    @Column(unique = true)
+    @Column(name = "passport", unique = true, nullable = true)
     private String passport;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne
+    @JoinColumn(name = "student_id")
     private StudentModel student;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne
+    @JoinColumn(name = "professor_id")
     private ProfessorModel professor;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-    }
-
-    @Override
-    public String getPassword() { return this.passwordHash; }
-
-    @Override
-    public String getUsername() {
-        return this.isForeigner ? this.passport : this.cpf;
-    }
-
-    @Override public boolean isAccountNonExpired() { return true; }
-    @Override public boolean isAccountNonLocked() { return true; }
-    @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return true; }
 }

@@ -1,38 +1,45 @@
 package br.com.ufal.gradua.models.academic;
 
-
+import java.io.Serializable;
 import java.util.UUID;
 
-import br.com.ufal.gradua.models.institutional.SubjectModel;
 import br.com.ufal.gradua.models.auth.ProfessorModel;
-import jakarta.persistence.Column;
+import br.com.ufal.gradua.models.institutional.SubjectModel;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-public class ClassSectionModel {
+@Table(name = "TB_CLASS")
+public class ClassSectionModel implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID classId;
 
     @ManyToOne
-    @JoinColumn(name = "subject_id", nullable = false)
+    @JoinColumn(name = "subject_id")
     private SubjectModel subject;
 
     @ManyToOne
-    @JoinColumn(name = "professor_id", nullable = false)
+    @JoinColumn(name = "professor_id")
     private ProfessorModel professor;
 
-    @Column(nullable = false)
     private String academicTerm;
-}
+    
 
+
+}
