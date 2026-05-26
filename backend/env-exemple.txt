@@ -1,0 +1,7 @@
+# Senha do Bando de Dados 
+DB_PASSWORD=Senha do Bando de Dados em hash(SHA1 Hash)
+DB_USER=User do Bando de Dados 
+DB_URL=URL do Bando de Dados 
+
+# Senha da API
+API_KEY=Senha da API em hash(SHA1 Hash) 
