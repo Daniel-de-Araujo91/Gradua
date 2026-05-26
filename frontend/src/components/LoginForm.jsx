@@ -1,10 +1,16 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { authService } from "../services/authService";
 
-const LoginForm = ({ onLoginSuccess, onNavigate }) => {
+const LoginForm = () => {
   const [cpf, setCpf] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleCpfChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -24,18 +30,17 @@ const LoginForm = ({ onLoginSuccess, onNavigate }) => {
     setLoading(true);
 
     try {
-      const cleanCpf = cpf.replace(/\D/g, '');
-      
-      setTimeout(() => {
-        if (onLoginSuccess) onLoginSuccess();
-      }, 1000);
-
+      const cleanDocument = cpf.replace(/\D/g, '');
+      const data = await authService.login(cleanDocument, password);
+      login({ firstName: data.firstName, lastName: data.lastName }, data.token);
+      navigate('/');
     } catch (err) {
-      setError("Erro ao conectar com o servidor. Tente novamente.");
+      setError(err.message || "Documento ou senha incorretos.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="w-full max-w-md bg-white border border-gray-200 rounded-3xl shadow-xl p-8 animate-fade-in">
@@ -101,17 +106,17 @@ const LoginForm = ({ onLoginSuccess, onNavigate }) => {
         </button>
       </form>
 
-      <div className="text-center mt-8">
-          <p className="text-gray-500 text-sm font-medium">
-            Primeiro acesso?{" "}
-            <button
-              type="button"
-              onClick={() => onNavigate && onNavigate('cadastro')}
-              className="text-gradua-inicio font-bold hover:underline underline-offset-2 transition-all">
-              Criar minha conta
-            </button>
-          </p>
-        </div>
+        <div className="text-center mt-8">
+            <p className="text-gray-500 text-sm font-medium">
+              Primeiro acesso?{" "}
+              <button
+                type="button"
+                onClick={() => navigate('/cadastro')}
+                className="text-gradua-inicio font-bold hover:underline underline-offset-2 transition-all">
+                Criar minha conta
+              </button>
+            </p>
+          </div>
 
         <div className="flex justify-center py-2 mb-2">
           <button type="button" className="text-sm font-bold text-gradua-inicio hover:opacity-80 transition-opacity">

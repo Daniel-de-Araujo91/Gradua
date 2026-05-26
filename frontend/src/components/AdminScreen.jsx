@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import BottomNavBar from './BottomNavBar';
 import { Tooltip } from 'flowbite-react';
@@ -17,7 +18,8 @@ const INITIAL_ANNOUNCEMENTS = [
   { id: 2, title: "Prazo final para renovação de matrícula", date: "Ontem", target: "Ciência da Computação" }
 ];
 
-const AdminScreen = ({ onNavigate }) => {
+const AdminScreen = () => {
+  const navigate = useNavigate();
   const [activeSubTab, setActiveSubTab] = useState('forum');
 
   const [reportedPosts, setReportedPosts] = useState(() => {
@@ -95,7 +97,7 @@ const AdminScreen = ({ onNavigate }) => {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col relative">
-      <Header onNavigate={onNavigate} activeTab="profile" />
+      <Header activeTab="profile" />
 
       <main className="flex-1 px-4 py-4 overflow-y-auto pb-28">
         <div className="mb-6">
@@ -347,7 +349,7 @@ const AdminScreen = ({ onNavigate }) => {
         </div>
       )}
 
-      <BottomNavBar activeTab="profile" onTabChange={onNavigate} />
+      <BottomNavBar activeTab="profile" />
     </div>
   );
 };

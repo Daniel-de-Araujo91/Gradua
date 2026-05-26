@@ -4,7 +4,7 @@ import { Tooltip, Button } from 'flowbite-react';
 import BottomNavBar from '../components/BottomNavBar';
 import Header from '../components/Header';
 
-const AgendaPage = ({ onNavigate, activeTab }) => {
+const AgendaPage = () => {
     const [selectedDay, setSelectedDay] = useState('SEG');
     const [showAddModal, setShowAddModal] = useState(false);
 
@@ -87,7 +87,7 @@ const AgendaPage = ({ onNavigate, activeTab }) => {
 
     return (
         <div className="w-full min-h-screen flex flex-col bg-gray-50">
-            <Header onNavigate={onNavigate} activeTab='agenda'/>
+            <Header activeTab='agenda'/>
             
             <div className="px-4 py-4 bg-gray-50">
                 <div className="flex justify-between gap-1 w-full">
@@ -222,7 +222,7 @@ const AgendaPage = ({ onNavigate, activeTab }) => {
                 </button>
             </div>
 
-            <BottomNavBar activeTab="agenda" onTabChange={onNavigate} />
+            <BottomNavBar activeTab="agenda" />
 
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
@@ -282,7 +282,7 @@ const AgendaPage = ({ onNavigate, activeTab }) => {
                 </div>
             )}
 
-            <style jsx>{`
+            <style>{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: scale(0.95); }
                     to { opacity: 1; transform: scale(1); }

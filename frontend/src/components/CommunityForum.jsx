@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
 
-const CommunityForum = ({ onNavigate }) => {
+const CommunityForum = () => {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([
     {
       id: 1,
@@ -63,7 +65,7 @@ const CommunityForum = ({ onNavigate }) => {
         <h2 className="text-lg font-semibold text-gray-900">Fórum da Comunidade</h2>
         
         <button 
-          onClick={() => onNavigate('forum')}
+          onClick={() => navigate('/forum')}
           className="text-gradua-inicio/60 text-sm font-medium flex items-center gap-1 hover:text-gradua-inicio/90 transition-colors">
           Explorar
           <ChevronRight size={16} />

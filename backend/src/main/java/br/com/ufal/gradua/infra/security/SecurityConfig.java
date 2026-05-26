@@ -29,7 +29,9 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable()).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(authorize -> {
             authorize.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
             authorize.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
+            authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
             authorize.requestMatchers("/error").permitAll();
+            authorize.requestMatchers("/admin/**").hasRole("ADMIN");
             authorize.requestMatchers("/forum/**").authenticated();
             authorize.anyRequest().authenticated();}).addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 

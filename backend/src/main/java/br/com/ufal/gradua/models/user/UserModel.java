@@ -49,6 +49,9 @@ public class UserModel implements Serializable{
     @Column(name = "passport", unique = true, nullable = true)
     private String passport;
 
+    @Column(nullable = false)
+    private String role = "USER";
+
     @OneToOne
     @JoinColumn(name = "student_id")
     private StudentModel student;

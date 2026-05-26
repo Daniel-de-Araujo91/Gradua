@@ -4,11 +4,15 @@ import java.io.IOException;
 import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.UserRepository;
@@ -27,17 +31,29 @@ public class SecurityFilter extends OncePerRequestFilter{
     UserRepository userRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException{
-           var token = this.recoverToken(request);
-           var login = tokenService.validateToken(token);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+        var rawToken = this.recoverToken(request);
 
-           if(login != null){
-                UserModel user = userRepository.findByCpfOrPassport(login).orElseThrow(() -> new RuntimeException("User not Found"));
-                var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-                var authentication = new UsernamePasswordAuthenticationToken(user, null ,authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-           }
-           filterChain.doFilter(request, response);
+        if (rawToken != null) {
+            try {
+                var login = tokenService.validateToken(rawToken);
+                if (login != null) {
+                    UserModel user = userRepository.findByCpfOrPassport(login)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+                    var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
+                    var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (Exception ex) {
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write("{\"message\": \"Token inválido ou expirado\"}");
+                return;
+            }
+        }
+
+        filterChain.doFilter(request, response);
     }
 
     private String recoverToken(HttpServletRequest request) {

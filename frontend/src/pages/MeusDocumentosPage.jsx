@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import {
@@ -233,7 +234,8 @@ const PrivacyBanner = () => (
 /* ─────────────────────────────────────────
    Componente principal
 ───────────────────────────────────────── */
-const MeusDocumentosPage = ({ onNavigate }) => {
+const MeusDocumentosPage = () => {
+  const navigate = useNavigate();
   const [docs, setDocs] = useState({}); // { rg: { name, type, url, size }, ... }
   const [preview, setPreview] = useState(null);
 
@@ -258,13 +260,13 @@ const MeusDocumentosPage = ({ onNavigate }) => {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <Header onNavigate={onNavigate} />
+      <Header activeTab="profile" />
 
       <main className="flex-1 px-4 py-5 overflow-y-auto pb-32">
         {/* cabeçalho da página */}
         <div className="flex items-center gap-3 mb-5">
           <button
-            onClick={() => onNavigate('profile')}
+            onClick={() => navigate('/perfil')}
             className="w-10 h-10 rounded-2xl bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 transition-colors active:scale-95"
           >
             <ArrowLeft size={20} className="text-gray-600" />
@@ -315,7 +317,7 @@ const MeusDocumentosPage = ({ onNavigate }) => {
         </div>
       </main>
 
-      <BottomNavBar activeTab="profile" onTabChange={onNavigate} />
+      <BottomNavBar activeTab="profile" />
 
       {/* modal de preview */}
       {preview && <PreviewModal file={preview} onClose={() => setPreview(null)} />}

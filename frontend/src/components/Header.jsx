@@ -1,8 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, X, Info } from 'lucide-react';
 import { Tooltip } from 'flowbite-react';
+import { useAuth } from '../context/AuthContext';
 
-const Header = ({ userName = "Tester", onNavigate, activeTab = 'home' }) => {
+const Header = ({ activeTab = 'home' }) => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+    const userName = user ? user.firstName : 'Usuário';
     const [showNotifications, setShowNotifications] = useState(false);
 
     const [notifications, setNotifications] = useState([
@@ -43,7 +48,7 @@ const Header = ({ userName = "Tester", onNavigate, activeTab = 'home' }) => {
                         src='/images/perfil.png' 
                         alt='Perfil' 
                         className='w-12 h-12 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity'
-                        onClick={() => onNavigate('profile')} 
+                        onClick={() => navigate('/perfil')}
                     />
                     <div>
                         <h1 className='text-2xl font-bold text-gray-900'>
@@ -127,7 +132,7 @@ const Header = ({ userName = "Tester", onNavigate, activeTab = 'home' }) => {
                 </div>
             )}
 
-            <style jsx>{`
+            <style>{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: translateY(-10px) scale(0.98); }
                     to { opacity: 1; transform: translateY(0) scale(1); }

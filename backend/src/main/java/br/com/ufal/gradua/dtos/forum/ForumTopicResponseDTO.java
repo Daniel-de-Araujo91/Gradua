@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record ForumTopicResponseDTO(
-    UUID id, 
+    UUID topicId, 
     String title, 
     String content,
     String authorName,

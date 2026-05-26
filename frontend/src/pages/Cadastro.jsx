@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { authService } from "../services/authService";
 
-const Cadastro = ({ onNavigate, onRegisterSuccess }) => {
+const Cadastro = () => {
   const [formData, setFormData] = useState({
     nome: "",
     cpf: "",
@@ -11,6 +14,9 @@ const Cadastro = ({ onNavigate, onRegisterSuccess }) => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleCpfChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -47,23 +53,28 @@ const Cadastro = ({ onNavigate, onRegisterSuccess }) => {
     setLoading(true);
 
     try {
-      const cleanCpf = formData.cpf.replace(/\D/g, '');
-      
-      setTimeout(() => {
-        alert("Conta criada com sucesso!");
-        if (onRegisterSuccess) {
-            onRegisterSuccess();
-        } else if (onNavigate) {
-            onNavigate('login');
-        }
-      }, 1000);
+      const [firstName, ...rest] = formData.nome.trim().split(' ');
+      const lastName = rest.join(' ') || '';
+      const cleanDocument = formData.cpf.replace(/\D/g, '');
 
+      const data = await authService.register({
+        firstName,
+        lastName,
+        email: formData.email,
+        document: cleanDocument,
+        password: formData.senha,
+        isForeigner: false,
+      });
+
+      login({ firstName: data.firstName, lastName: data.lastName }, data.token);
+      navigate('/');
     } catch (err) {
-      setError("Erro ao criar conta. Tente novamente.");
+      setError(err.message || "Erro ao criar conta. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-10">
@@ -183,7 +194,7 @@ const Cadastro = ({ onNavigate, onRegisterSuccess }) => {
           <p className="text-gray-500 text-sm font-medium">
             Já tem uma conta?{" "}
             <button
-              onClick={() => onNavigate && onNavigate('login')}
+              onClick={() => navigate('/login')}
               className="text-gradua-inicio font-bold hover:underline underline-offset-2 transition-all">
               Entrar
             </button>
@@ -195,4 +206,4 @@ const Cadastro = ({ onNavigate, onRegisterSuccess }) => {
   );
 };
 
-export default Cadastro;
+export default Cadastro;

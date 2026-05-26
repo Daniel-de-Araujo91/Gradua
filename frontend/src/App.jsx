@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import AgendaPage from './pages/AgendaPage';
 import ForumScreen from './pages/ForumScreen';
@@ -7,53 +7,29 @@ import Login from './pages/Login';
 import Cadastro from './pages/Cadastro';
 import MeusDocumentosPage from './pages/MeusDocumentosPage';
 import AdminScreen from './components/AdminScreen';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
-  const [currentTab, setCurrentTab] = useState(() => {
-    return localStorage.getItem('gradua_current_tab') || 'home';
-  });
+  return (
+    <Routes>
+      {/* Rotas públicas */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Cadastro />} />
 
-  const handleNavigate = (tab) => {
-    const tabMapping = {
-      'home': 'home',
-      'agenda': 'agenda',
-      'forum': 'forum',
-      'profile': 'perfil',
-      'login': 'login',
-      'cadastro': 'cadastro',
-      'documentos': 'documentos',
-      'admin': 'admin'
-    };
-    
-    const targetTab = tabMapping[tab] || 'home';
-    setCurrentTab(targetTab);
-    localStorage.setItem('gradua_current_tab', targetTab)
-  };
+      {/* Rotas privadas */}
+      <Route element={<PrivateRoute />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/agenda" element={<AgendaPage />} />
+        <Route path="/forum" element={<ForumScreen />} />
+        <Route path="/perfil" element={<PerfilScreen />} />
+        <Route path="/documentos" element={<MeusDocumentosPage />} />
+        <Route path="/admin" element={<AdminScreen />} />
+      </Route>
 
-  const renderScreen = () => {
-    switch (currentTab) {
-      case 'home':
-        return <HomePage onNavigate={handleNavigate} />;
-      case 'agenda':
-        return <AgendaPage onNavigate={handleNavigate} />;
-      case 'forum':
-        return <ForumScreen onNavigate={handleNavigate} />;
-      case 'perfil':
-        return <PerfilScreen onNavigate={handleNavigate} />;
-      case 'login':
-        return <Login onNavigate={handleNavigate} onLoginSuccess={() => handleNavigate('home')} />;
-      case 'cadastro':
-        return <Cadastro onNavigate={handleNavigate} onRegisterSuccess={() => handleNavigate('login')} />;
-      case 'documentos':
-        return <MeusDocumentosPage onNavigate={handleNavigate} />;
-      case 'admin':
-        return <AdminScreen onNavigate={handleNavigate} />;
-      default:
-        return <HomePage onNavigate={handleNavigate} />;
-    }
-  };
-
-  return <>{renderScreen()}</>;
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
-export default App;
+export default App;

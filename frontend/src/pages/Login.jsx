@@ -1,10 +1,10 @@
 import React from "react";
 import LoginForm from "../components/LoginForm";
 
-const Login = ({ onNavigate, onLoginSuccess }) => {
+const Login = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <LoginForm onNavigate={onNavigate} onLoginSuccess={onLoginSuccess} />
+      <LoginForm />
     </div>
   );
 };

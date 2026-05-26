@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import perfil from '../assets/perfil.webp';
 import { TrendingUp, ChevronRight, FileText, History, KeyRound, LogOut, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { gerarHistoricoEscolar } from '../utils/gerarHistoricoPDF';
+import { useAuth } from '../context/AuthContext';
 
 /* -------------------------
    Sub-components
@@ -120,48 +122,59 @@ const CentralAlunoItem = ({ icon: Icon, title, subtitle, isRed = false, onClick 
   </div>
 );
 
-const CentralAlunoCard = ({ onNavigate }) => (
+const CentralAlunoCard = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
   <div className="bg-white rounded-3xl p-6 mb-28 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50">
     <h3 className="text-lg font-black text-gradua-perfil mb-2">
       Central do Aluno
     </h3>
 
     <div className="flex flex-col">
-        <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" onClick={() => onNavigate('documentos')} />
+        <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" onClick={() => navigate('/documentos')} />
         <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" onClick={gerarHistoricoEscolar} />
         <CentralAlunoItem icon={KeyRound} title="Alterar Senha" subtitle="Segurança e recuperação de conta" />
         <CentralAlunoItem 
           icon={ShieldAlert} 
           title="Painel Administrativo" 
           subtitle="Moderação de conteúdo e avisos docentes" 
-          onClick={() => onNavigate('admin')}/>
+          onClick={() => navigate('/admin')}/>
         <CentralAlunoItem 
           icon={LogOut} 
           title="Sair da Conta" 
           subtitle="Encerrar sessão no dispositivo" 
           isRed 
-          onClick={() => onNavigate('login')}
+          onClick={handleLogout}
         />
     </div>
   </div>
-);
+  );
+};
 
 /* -------------------------
    Main Component
 ------------------------- */
-const PerfilScreen = ({ onNavigate, activeTab }) => {
+const PerfilScreen = () => {
+  const { user } = useAuth();
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
-      <Header onNavigate={onNavigate} activeTab='profile' />
+      <Header activeTab='profile' />
 
       <main className="flex-1 px-4 py-5 overflow-y-auto">
         <ProfileCard />
         <IRACard />
         <ProgressCard />
-        <CentralAlunoCard onNavigate={onNavigate} />
+        <CentralAlunoCard />
       </main>
 
-      <BottomNavBar activeTab="profile" onTabChange={onNavigate} />
+      <BottomNavBar activeTab="profile" />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-package br.com.ufal.gradua.Services;
+package br.com.ufal.gradua.services;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import br.com.ufal.gradua.dtos.forum.ForumTopicRequestDTO;
@@ -19,19 +20,30 @@ import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.ForumTopicRepository;
 
 @Service
+@Transactional
 public class ForumTopicService {
 
     @Autowired
     ForumTopicRepository repository;
 
-    private UserModel getUserbyToken(){
+    private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         return (UserModel) authentication.getPrincipal();
     }
 
+    private ForumTopicResponseDTO toDTO(ForumTopicModel topic) {
+        return new ForumTopicResponseDTO(
+            topic.getTopicId(),
+            topic.getTitle(),
+            topic.getContent(),
+            topic.getAuthor().getFirstName() + " " + topic.getAuthor().getLastName(),
+            topic.getType(),
+            topic.getCreationDate()
+        );
+    }
 
-    public ForumTopicResponseDTO create(ForumTopicRequestDTO dto){
-        UserModel author = getUserbyToken();
+    public ForumTopicResponseDTO create(ForumTopicRequestDTO dto) {
+        UserModel author = getUserByToken();
 
         ForumTopicModel forumTopic = new ForumTopicModel();
         forumTopic.setTitle(dto.title());
@@ -43,40 +55,47 @@ public class ForumTopicService {
 
         repository.save(forumTopic);
 
-        return new ForumTopicResponseDTO(forumTopic.getTopicId(),forumTopic.getTitle(),forumTopic.getContent(), author.getFirstName() +" "+ author.getLastName(), forumTopic.getType(), forumTopic.getCreationDate());
+        return toDTO(forumTopic);
     }
 
-    public List<ForumTopicResponseDTO> listAll(){
-        return repository.findAll().stream().map(forumTopic -> new ForumTopicResponseDTO(forumTopic.getTopicId(),forumTopic.getTitle(),forumTopic.getContent(),forumTopic.getAuthor().getFirstName() +" "+ forumTopic.getAuthor().getLastName(), forumTopic.getType(), forumTopic.getCreationDate())).collect(Collectors.toList());   
+    public List<ForumTopicResponseDTO> listAll(String type) {
+        List<ForumTopicModel> topics = (type != null && !type.isBlank())
+            ? repository.findByTypeOrderByCreationDateDesc(type)
+            : repository.findAllByOrderByCreationDateDesc();
+
+        return topics.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    public ForumTopicResponseDTO update(UUID id, ForumTopicRequestDTO dto){
-        ForumTopicModel forumTopic = repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Forum not Found"));
+    public ForumTopicResponseDTO update(UUID id, ForumTopicRequestDTO dto) {
+        ForumTopicModel forumTopic = repository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico não encontrado"));
 
-        UserModel user = getUserbyToken();
+        UserModel user = getUserByToken();
 
-        if(!forumTopic.getAuthor().getUserId().equals(user.getUserId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not Author");
+        if (!forumTopic.getAuthor().getUserId().equals(user.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode editar este tópico");
         }
 
         forumTopic.setTitle(dto.title());
         forumTopic.setContent(dto.content());
         forumTopic.setType(dto.type());
 
-        return new ForumTopicResponseDTO(forumTopic.getTopicId(),forumTopic.getTitle(),forumTopic.getContent(),forumTopic.getAuthor().getFirstName() +" "+ forumTopic.getAuthor().getLastName(), forumTopic.getType(), forumTopic.getCreationDate());
+        repository.save(forumTopic);
+
+        return toDTO(forumTopic);
     }
 
-    public void delete (UUID id){
-        ForumTopicModel forumTopic = repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Forum not Found"));
+    public void delete(UUID id) {
+        ForumTopicModel forumTopic = repository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico não encontrado"));
 
-        UserModel user = getUserbyToken();
+        UserModel user = getUserByToken();
 
-        if(!forumTopic.getAuthor().getUserId().equals(user.getUserId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not Author");
+        if (!forumTopic.getAuthor().getUserId().equals(user.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode excluir este tópico");
         }
 
         repository.delete(forumTopic);
     }
-
-
 }
+

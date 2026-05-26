@@ -3,7 +3,7 @@ package br.com.ufal.gradua.controllers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.ufal.gradua.Services.ForumTopicService;
+import br.com.ufal.gradua.services.ForumTopicService;
 import br.com.ufal.gradua.dtos.forum.ForumTopicRequestDTO;
 import br.com.ufal.gradua.dtos.forum.ForumTopicResponseDTO;
 import jakarta.validation.Valid;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 
@@ -31,8 +32,9 @@ public class ForumTopicController {
     private final ForumTopicService forumTopicService;
 
     @GetMapping("/feed")
-    public ResponseEntity<List<ForumTopicResponseDTO>> feed(){
-        return ResponseEntity.ok(forumTopicService.listAll());
+    public ResponseEntity<List<ForumTopicResponseDTO>> feed(
+            @RequestParam(required = false) String type) {
+        return ResponseEntity.ok(forumTopicService.listAll(type));
     }
 
     @PostMapping("/create")
