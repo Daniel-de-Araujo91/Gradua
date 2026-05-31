@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.ufal.gradua.dtos.LoginRequestDTO;
-import br.com.ufal.gradua.dtos.RegisterRequestDTO;
-import br.com.ufal.gradua.dtos.ResponseDTO;
+import br.com.ufal.gradua.dtos.auth.LoginRequestDTO;
+import br.com.ufal.gradua.dtos.auth.RegisterRequestDTO;
+import br.com.ufal.gradua.dtos.auth.ResponseDTO;
 import br.com.ufal.gradua.services.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

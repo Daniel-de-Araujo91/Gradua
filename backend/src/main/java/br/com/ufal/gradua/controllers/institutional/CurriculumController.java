@@ -1,11 +1,11 @@
-package br.com.ufal.gradua.controllers;
+package br.com.ufal.gradua.controllers.institutional;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.ufal.gradua.services.ForumTopicService;
-import br.com.ufal.gradua.dtos.forum.ForumTopicRequestDTO;
-import br.com.ufal.gradua.dtos.forum.ForumTopicResponseDTO;
+import br.com.ufal.gradua.dtos.institutional.CurriculumRequestDTO;
+import br.com.ufal.gradua.dtos.institutional.CurriculumResponseDTO;
+import br.com.ufal.gradua.services.institutional.CurriculumService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -25,31 +25,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-@RequestMapping("/forum")
+@RequestMapping("/institutional/curriculum")
 @RequiredArgsConstructor
-public class ForumTopicController {
+public class CurriculumController {
 
-    private final ForumTopicService forumTopicService;
+    private final CurriculumService curriculumService;
 
-    @GetMapping("/feed")
-    public ResponseEntity<List<ForumTopicResponseDTO>> feed(
-            @RequestParam(required = false) String type) {
-        return ResponseEntity.ok(forumTopicService.listAll(type));
+    @GetMapping("/list")
+    public ResponseEntity<List<CurriculumResponseDTO>> listaAll() {
+        return ResponseEntity.ok(curriculumService.listAll());
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ForumTopicResponseDTO>  create(@RequestBody @Valid ForumTopicRequestDTO dto){
-        return ResponseEntity.status(HttpStatus.CREATED).body(forumTopicService.create(dto));
+    public ResponseEntity<CurriculumResponseDTO>  create(@RequestBody @Valid CurriculumRequestDTO dto){
+        return ResponseEntity.status(HttpStatus.CREATED).body(curriculumService.create(dto));
     }
     
     @PutMapping("/edit/{id}")
-    public ResponseEntity<ForumTopicResponseDTO> edit(@PathVariable UUID id, @RequestBody @Valid ForumTopicRequestDTO dto){
-        return ResponseEntity.ok(forumTopicService.update(id, dto));
+    public ResponseEntity<CurriculumResponseDTO> edit(@PathVariable UUID id, @RequestBody @Valid CurriculumRequestDTO dto){
+        return ResponseEntity.ok(curriculumService.update(id, dto));
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id){
-        forumTopicService.delete(id);
+        curriculumService.delete(id);
         return ResponseEntity.noContent().build();
     }
 

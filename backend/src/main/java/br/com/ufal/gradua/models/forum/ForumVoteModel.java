@@ -24,7 +24,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "TB_FORUM_COMMENT")
+@Table(name = "TB_FORUM_VOTE")
 public class ForumVoteModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -40,10 +40,8 @@ public class ForumVoteModel implements Serializable {
     @JoinColumn(name = "author_id")
     private UserModel author;
 
-    @Enumerated(EnumType.STRING)
-    private VoteType voteType;
 
-    private enum VoteType{
-        UP,DOWN
-    }
+    private String voteType;
+
+    
 }

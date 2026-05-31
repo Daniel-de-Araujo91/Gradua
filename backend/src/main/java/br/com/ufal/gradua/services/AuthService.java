@@ -5,9 +5,9 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.ufal.gradua.dtos.LoginRequestDTO;
-import br.com.ufal.gradua.dtos.RegisterRequestDTO;
-import br.com.ufal.gradua.dtos.ResponseDTO;
+import br.com.ufal.gradua.dtos.auth.LoginRequestDTO;
+import br.com.ufal.gradua.dtos.auth.RegisterRequestDTO;
+import br.com.ufal.gradua.dtos.auth.ResponseDTO;
 import br.com.ufal.gradua.infra.security.TokenService;
 import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.UserRepository;

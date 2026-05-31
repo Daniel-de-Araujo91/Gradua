@@ -27,10 +27,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http.csrf(csrf -> csrf.disable()).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(authorize -> {
-            authorize.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
-            authorize.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
+            authorize.requestMatchers(HttpMethod.POST, "/**/login").permitAll();
+            authorize.requestMatchers(HttpMethod.POST, "/**/register").permitAll();
             authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
             authorize.requestMatchers("/error").permitAll();
+            authorize.requestMatchers("/institutional/**").permitAll();
             authorize.requestMatchers("/admin/**").hasRole("ADMIN");
             authorize.requestMatchers("/forum/**").authenticated();
             authorize.anyRequest().authenticated();}).addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);

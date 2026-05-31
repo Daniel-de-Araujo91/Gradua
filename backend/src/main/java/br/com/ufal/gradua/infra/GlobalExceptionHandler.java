@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
-import br.com.ufal.gradua.dtos.ErrorResponseDTO;
+import br.com.ufal.gradua.dtos.auth.ErrorResponseDTO;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {

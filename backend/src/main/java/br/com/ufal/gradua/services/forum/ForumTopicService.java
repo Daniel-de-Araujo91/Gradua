@@ -1,4 +1,4 @@
-package br.com.ufal.gradua.services;
+package br.com.ufal.gradua.services.forum;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -17,7 +17,7 @@ import br.com.ufal.gradua.dtos.forum.ForumTopicRequestDTO;
 import br.com.ufal.gradua.dtos.forum.ForumTopicResponseDTO;
 import br.com.ufal.gradua.models.forum.ForumTopicModel;
 import br.com.ufal.gradua.models.user.UserModel;
-import br.com.ufal.gradua.repositories.ForumTopicRepository;
+import br.com.ufal.gradua.repositories.forum.ForumTopicRepository;
 
 @Service
 @Transactional

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.auth.ProfessorModel;
+import br.com.ufal.gradua.models.institutional.CurriculumMatrixModel;
 import br.com.ufal.gradua.models.institutional.SubjectModel;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,7 +23,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "TB_CLASS")
+@Table(name = "TB_CLASS") //TURMA
 public class ClassSectionModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -31,14 +32,19 @@ public class ClassSectionModel implements Serializable {
     private UUID classId;
 
     @ManyToOne
-    @JoinColumn(name = "subject_id")
-    private SubjectModel subject;
+    @JoinColumn(name = "grid_id")
+    private CurriculumMatrixModel  grid;
 
     @ManyToOne
     @JoinColumn(name = "professor_id")
     private ProfessorModel professor;
 
-    private String academicTerm;
+    private String Time; //22T45
+
+    @ManyToOne
+    @JoinColumn(name = "semester_id")
+    private AcademicSemesterModel semester;
+
     
 
 

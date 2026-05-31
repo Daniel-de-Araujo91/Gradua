@@ -19,7 +19,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "TB_SUBJECT")
+@Table(name = "TB_SUBJECT") //DICIPLINA
 public class SubjectModel implements Serializable{
     private static final long serialVersionUID = 1L;
 

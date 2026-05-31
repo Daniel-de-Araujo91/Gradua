@@ -1,4 +1,4 @@
-package br.com.ufal.gradua.dtos;
+package br.com.ufal.gradua.dtos.auth;
 
 import jakarta.validation.constraints.NotBlank;
 

@@ -1,6 +1,7 @@
 package br.com.ufal.gradua.models.academic;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -12,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -35,9 +37,11 @@ public class AcademicHistoryModel implements Serializable {
     @JoinColumn(name = "student_id")
     private StudentModel student;
 
-    @ManyToOne
+    @OneToMany
     @JoinColumn(name = "subject_id")
-    private SubjectModel subject;
+    private List<AcademicRecordModel> subjectConcluded;
 
-
+    @OneToMany
+    @JoinColumn(name = "subject_id")
+    private List<EnrollmentModel> currentSubject;
 }

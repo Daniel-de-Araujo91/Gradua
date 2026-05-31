@@ -3,6 +3,7 @@ package br.com.ufal.gradua.models.institutional;
 import java.io.Serializable;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,7 +21,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "TB_CURRICULUM")
+@Table(name = "TB_CURRICULUM") // PPC
 public class CurriculumModel implements Serializable{
     private static final long serialVersionUID = 1L;
 
@@ -31,6 +32,9 @@ public class CurriculumModel implements Serializable{
     @ManyToOne
     @JoinColumn(name = "program_id")
     private ProgramModel program;
+
+    @Column(unique = true)
+    private String name;
 
     private String effectiveYear;
 
