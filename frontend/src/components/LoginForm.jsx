@@ -32,7 +32,7 @@ const LoginForm = () => {
     try {
       const cleanDocument = cpf.replace(/\D/g, '');
       const data = await authService.login(cleanDocument, password);
-      login({ firstName: data.firstName, lastName: data.lastName }, data.token);
+      login({ firstName: data.firstName, lastName: data.lastName, role: data.role }, data.token);
       navigate('/');
     } catch (err) {
       setError(err.message || "Documento ou senha incorretos.");

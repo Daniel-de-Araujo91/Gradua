@@ -19,9 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;
-
-    @Autowired
     SecurityFilter securityFilter;
 
     @Bean
@@ -32,6 +29,10 @@ public class SecurityConfig {
             authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
             authorize.requestMatchers("/error").permitAll();
             authorize.requestMatchers("/admin/**").hasRole("ADMIN");
+            // Spec Fase 4: criação de sessão restrita a perfil MONITOR
+            authorize.requestMatchers(HttpMethod.POST, "/monitoria/create").hasRole("MONITOR");
+            authorize.requestMatchers("/monitoria/**").authenticated();
+            authorize.requestMatchers("/notifications/**").authenticated();
             authorize.requestMatchers("/forum/**").authenticated();
             authorize.anyRequest().authenticated();}).addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 

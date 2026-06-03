@@ -5,8 +5,10 @@ import BottomNavBar from './BottomNavBar';
 import { Tooltip } from 'flowbite-react';
 import { 
   ShieldAlert, Megaphone, MessageSquare, CalendarDays, 
-  Trash2, Check, AlertTriangle, Send, MapPin, Info, X
+  Trash2, Check, AlertTriangle, Send, MapPin, Info, X, Loader2
 } from 'lucide-react';
+import { forumService } from '../services/forumService';
+import { apiClient } from '../services/apiClient';
 
 const INITIAL_REPORTS = [
   { id: 1, author: "Lucas Aluno", title: "Links suspeitos no material", reports: 3, content: "Galera, cliquem nesse link aqui para ganhar créditos complementares grátis..." },
@@ -55,6 +57,7 @@ const AdminScreen = () => {
   };
 
   const [newAnnounce, setNewAnnounce] = useState({ title: '', message: '', target: 'Todos os Cursos' });
+  const [announceLoading, setAnnounceLoading] = useState(false);
   const [classAlert, setClassAlert] = useState({ classTitle: 'PROG 3', reason: 'Falta do Professor', actionType: 'canceled', newRoom: '' });
 
   const handleDismissReport = (id) => {
@@ -68,16 +71,30 @@ const AdminScreen = () => {
     showToast("Postagem removida do fórum com sucesso!", "success");
   };
 
-  const handleCreateAnnouncement = (e) => {
+  const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
     if (!newAnnounce.title.trim()) return;
-    
-    setAnnouncements(prev => [
-      { id: Date.now(), title: newAnnounce.title, date: "Agora mesmo", target: newAnnounce.target },
-      ...prev
-    ]);
-    showToast("Comunicado enviado a todos os alunos!", "success");
-    setNewAnnounce({ title: '', message: '', target: 'Todos os Cursos' });
+    setAnnounceLoading(true);
+    try {
+      // Publica como tópico tipo 'aviso' no fórum — o ForumTopicService
+      // já dispara broadcastAvisoNotification para TODOS os usuários
+      await forumService.createTopic({
+        title: newAnnounce.title,
+        content: newAnnounce.message || newAnnounce.title,
+        type: 'aviso',
+      });
+      // Mantém histórico local para exibição imediata
+      setAnnouncements(prev => [
+        { id: Date.now(), title: newAnnounce.title, date: 'Agora mesmo', target: newAnnounce.target },
+        ...prev
+      ]);
+      showToast('Comunicado enviado e notificações disparadas!', 'success');
+      setNewAnnounce({ title: '', message: '', target: 'Todos os Cursos' });
+    } catch (err) {
+      showToast(err.message || 'Erro ao publicar comunicado.', 'error');
+    } finally {
+      setAnnounceLoading(false);
+    }
   };
 
   const handleDeleteAnnouncement = (id) => {
@@ -219,8 +236,10 @@ const AdminScreen = () => {
                 <div className="flex items-end">
                   <button 
                     type="submit"
-                    className="w-full bg-gradua-perfil text-white font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-95 transition-opacity shadow-md shadow-gradua-primary/10">
-                    <Send size={14} /> Publicar
+                    disabled={announceLoading}
+                    className="w-full bg-gradua-perfil text-white font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-95 transition-opacity shadow-md shadow-gradua-primary/10 disabled:opacity-60">
+                    {announceLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                    {announceLoading ? 'Enviando...' : 'Publicar'}
                   </button>
                 </div>
               </div>

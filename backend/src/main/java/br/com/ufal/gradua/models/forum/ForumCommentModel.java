@@ -44,4 +44,10 @@ public class ForumCommentModel implements Serializable {
     private String content;
 
     private LocalDateTime creationDate;
+
+    // Flag: indica se o comentário foi editado (spec 2.2)
+    private Boolean isEdited = false;
+
+    // Timestamp da última edição
+    private LocalDateTime updatedAt;
 }

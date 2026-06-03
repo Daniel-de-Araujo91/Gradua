@@ -30,7 +30,7 @@ public class AuthService {
         }
 
         String token = tokenService.generateToken(user);
-        return new ResponseDTO(user.getFirstName(), user.getLastName(), token);
+        return new ResponseDTO(user.getFirstName(), user.getLastName(), user.getRole(), token);
     }
 
     public ResponseDTO register(RegisterRequestDTO dto) {
@@ -55,6 +55,6 @@ public class AuthService {
         userRepository.save(newUser);
 
         String token = tokenService.generateToken(newUser);
-        return new ResponseDTO(newUser.getFirstName(), newUser.getLastName(), token);
+        return new ResponseDTO(newUser.getFirstName(), newUser.getLastName(), newUser.getRole(), token);
     }
 }

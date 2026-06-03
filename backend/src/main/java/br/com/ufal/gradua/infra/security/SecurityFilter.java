@@ -12,7 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.UserRepository;

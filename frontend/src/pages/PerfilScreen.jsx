@@ -122,9 +122,12 @@ const CentralAlunoItem = ({ icon: Icon, title, subtitle, isRed = false, onClick 
   </div>
 );
 
-const CentralAlunoCard = () => {
+const ADMIN_ROLES = ['ADMIN', 'MONITOR', 'PROFESSOR'];
+
+const CentralAlunoCard = ({ user }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const isPrivileged = ADMIN_ROLES.includes(user?.role?.toUpperCase() || '');
 
   const handleLogout = () => {
     logout();
@@ -141,16 +144,18 @@ const CentralAlunoCard = () => {
         <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" onClick={() => navigate('/documentos')} />
         <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" onClick={gerarHistoricoEscolar} />
         <CentralAlunoItem icon={KeyRound} title="Alterar Senha" subtitle="Segurança e recuperação de conta" />
-        <CentralAlunoItem 
-          icon={ShieldAlert} 
-          title="Painel Administrativo" 
-          subtitle="Moderação de conteúdo e avisos docentes" 
-          onClick={() => navigate('/admin')}/>
-        <CentralAlunoItem 
-          icon={LogOut} 
-          title="Sair da Conta" 
-          subtitle="Encerrar sessão no dispositivo" 
-          isRed 
+        {isPrivileged && (
+          <CentralAlunoItem
+            icon={ShieldAlert}
+            title="Painel Administrativo"
+            subtitle="Moderação de conteúdo e avisos docentes"
+            onClick={() => navigate('/admin')}/>
+        )}
+        <CentralAlunoItem
+          icon={LogOut}
+          title="Sair da Conta"
+          subtitle="Encerrar sessão no dispositivo"
+          isRed
           onClick={handleLogout}
         />
     </div>
@@ -171,7 +176,7 @@ const PerfilScreen = () => {
         <ProfileCard />
         <IRACard />
         <ProgressCard />
-        <CentralAlunoCard />
+        <CentralAlunoCard user={user} />
       </main>
 
       <BottomNavBar activeTab="profile" />
