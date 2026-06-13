@@ -16,6 +16,9 @@ public interface EnrollmentRepository extends JpaRepository<EnrollmentModel, UUI
     /** Busca matrículas de uma turma. */
     List<EnrollmentModel> findByClassSection(ClassSectionModel classSection);
 
+    /** Busca matrículas de um estudante. */
+    List<EnrollmentModel> findByStudent(br.com.ufal.gradua.models.auth.StudentModel student);
+
     /**
      * Retorna os UserModel de TODOS os alunos matriculados em uma turma.
      * Não filtra por status para evitar problemas com enum privado.
