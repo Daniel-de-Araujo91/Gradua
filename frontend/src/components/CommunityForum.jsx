@@ -1,29 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
+import { forumService } from '../services/forumService';
 
 const CommunityForum = () => {
   const navigate = useNavigate();
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      author: "Beatriz Silva",
-      time: "2h atrás",
-      content: "Alguém conseguiu resolver a questão 4 da lista de Grafos? O enunciado parece...",
-      likes: 12,
-      dislikes: 5,
-      userVote: null, 
-    },
-    {
-      id: 2,
-      author: "Ricardo M.",
-      time: "5h atrás",
-      content: "Dica: O site da biblioteca está com o acervo de Engenharia de Software liberado.",
-      likes: 8,
-      dislikes: 2,
-      userVote: null,
-    },
-  ]);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    forumService.getFeed(null).then(data => {
+      if (!mounted) return;
+      setPosts((data || []).slice(0, 3).map(p => ({ id: p.topicId, author: p.authorName, time: p.creationDate, content: p.content, likes: p.voteScore || 0, dislikes: 0, userVote: null })));
+    }).catch(() => {}).finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, []);
 
   const handleVote = (postId, voteType) => {
     setPosts(currentPosts => 

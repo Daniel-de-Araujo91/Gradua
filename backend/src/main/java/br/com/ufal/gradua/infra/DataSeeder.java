@@ -101,6 +101,10 @@ public class DataSeeder implements CommandLineRunner {
                     student.setUser(studentUser);
                     studentRepository.save(student);
 
+                    // Link student back to user so SecurityContextHolder can access user.getStudent()
+                    studentUser.setStudent(student);
+                    userRepository.save(studentUser);
+
                     // Professor user
                     UserModel profUser = new UserModel();
                     profUser.setFirstName("Maria");
@@ -109,12 +113,18 @@ public class DataSeeder implements CommandLineRunner {
                     profUser.setPasswordHash(passwordEncoder.encode("prof123"));
                     profUser.setRole("PROFESSOR");
                     profUser.setIsForeigner(false);
+                    // ensure professor can also login via CPF for tests
+                    profUser.setCpf("22222222222");
                     userRepository.save(profUser);
 
                     ProfessorModel professor = new ProfessorModel();
                     professor.setProfessorID(java.util.UUID.randomUUID());
                     professor.setUser(profUser);
                     professorRepository.save(professor);
+
+                    // link professor back to user for convenience
+                    profUser.setProfessor(professor);
+                    userRepository.save(profUser);
 
                     // Subjects
                     SubjectModel subj1 = new SubjectModel();

@@ -41,4 +41,9 @@ public class DashboardController {
     public ResponseEntity<List<Object>> agendaToday() {
         return ResponseEntity.ok(dashboardService.getAgendaForToday());
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<Object> profile() {
+        return ResponseEntity.ok(dashboardService.getProfileForCurrentUser());
+    }
 }

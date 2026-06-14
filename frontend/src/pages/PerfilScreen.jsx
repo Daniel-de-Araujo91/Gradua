@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
@@ -6,11 +6,12 @@ import perfil from '../assets/perfil.webp';
 import { TrendingUp, ChevronRight, FileText, History, KeyRound, LogOut, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { gerarHistoricoEscolar } from '../utils/gerarHistoricoPDF';
 import { useAuth } from '../context/AuthContext';
+import { apiClient } from '../services/apiClient';
 
 /* -------------------------
    Sub-components
 ------------------------- */
-const ProfileCard = () => (
+const ProfileCard = ({ profile }) => (
   <div className="bg-white rounded-3xl p-6 mb-4 flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] relative">
     
     <div className="relative w-32 h-40 sm:w-40 sm:h-48 mb-2">
@@ -27,11 +28,11 @@ const ProfileCard = () => (
     </div>
 
     <p className="text-[11px] font-bold text-gray-400 tracking-[1.5px] uppercase mt-2">
-      MATRÍCULA: xxxxxxxxx
+      MATRÍCULA: {profile?.enrollmentNumber || 'xxxxxxxxx'}
     </p>
 
     <h1 className="text-2xl sm:text-3xl font-black text-gradua-perfil text-center leading-tight">
-      Tester da Silva Santos
+      {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : 'Nome do Aluno'}
     </h1>
 
     <div className="flex gap-2 flex-wrap justify-center mt-1">
@@ -39,13 +40,13 @@ const ProfileCard = () => (
         Ciência da Computação
       </span>
       <span className="bg-gradua-perfil/10 text-gradua-perfil text-xs font-bold px-4 py-1.5 rounded-full">
-        4º Semestre
+        {profile?.currentTerm ? `${profile.currentTerm}º Semestre` : '—'}
       </span>
     </div>
   </div>
 );
 
-const IRACard = () => (
+const IRACard = ({ ira }) => (
   <div className="bg-white rounded-3xl p-6 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50">
     <div className="flex justify-between items-start mb-2">
       <span className="text-[11px] font-bold text-gray-400 tracking-[1.5px] uppercase">
@@ -57,7 +58,7 @@ const IRACard = () => (
     </div>
 
     <p className="text-6xl font-black text-gradua-perfil leading-none tracking-tight">
-      7.5
+      {ira ? ira : '—'}
     </p>
   </div>
 );
@@ -168,13 +169,22 @@ const CentralAlunoCard = ({ user }) => {
 ------------------------- */
 const PerfilScreen = () => {
   const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    apiClient.get('/dashboard/profile').then(data => {
+      if (mounted) setProfile(data);
+    }).catch(() => {}).finally(() => {});
+    return () => { mounted = false; };
+  }, []);
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col">
       <Header activeTab='profile' />
 
       <main className="flex-1 px-4 py-5 overflow-y-auto">
-        <ProfileCard />
-        <IRACard />
+        <ProfileCard profile={profile} />
+        <IRACard ira={profile?.ira} />
         <ProgressCard />
         <CentralAlunoCard user={user} />
       </main>

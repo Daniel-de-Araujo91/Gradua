@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight, X, Clock, MapPin, User, Users, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { Tooltip, Button } from 'flowbite-react';
 
@@ -6,78 +6,34 @@ const MySubjects = () => {
     const [selectedSubject, setSelectedSubject] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
-    const subjects = [
-        {
-            id: 1,
-            code: "ACE 1",
-            name: "PROJETO 1",
-            schedule: "2T34",
-            location: "Instituto de Computação",
-            type: "T-VIRTUAL",
-            professor: "Dr. Rodrigo Paes",
-            participants: 42,
-            monitors: [],
-            grades: { ab1: 8.5, ab2: null, reav: null, final: null },
-            absences: { registered: 2, remaining: 13 },
-            deliveryRate: "Em dia"
-        },
-        {
-            id: 2,
-            code: "PG2",
-            name: "PROGRAMAÇÃO 2",
-            schedule: "35T12",
-            location: "Laboratório 01",
-            type: "TEÓRICA / LAB",
-            professor: "Prof. Maria Santos",
-            participants: 38,
-            monitors: ["Carlos Eduardo"],
-            grades: { ab1: 7.0, ab2: null, reav: null, final: null },
-            absences: { registered: 1, remaining: 14 },
-            deliveryRate: "Em dia"
-        },
-        {
-            id: 3,
-            code: "PG3",
-            name: "PROGRAMAÇÃO 3",
-            schedule: "34T34",
-            location: "Laboratório 01",
-            type: "PRÁTICA / LAB",
-            professor: "Prof. Ricardo Santos",
-            participants: 35,
-            monitors: ["Fernanda Lima"],
-            grades: { ab1: 9.0, ab2: null, reav: null, final: null },
-            absences: { registered: 0, remaining: 15 },
-            deliveryRate: "Em dia"
-        },
-        {
-            id: 4,
-            code: "PAA",
-            name: "PROJETO E ANÁLISE DE ALGORITMOS",
-            schedule: "25T56",
-            location: "Sala-1 (Geral)",
-            type: "TEÓRICA",
-            professor: "Prof. Dr. Ana Beatriz",
-            participants: 40,
-            monitors: ["Rafael Souza"],
-            grades: { ab1: 6.5, ab2: null, reav: null, final: null },
-            absences: { registered: 3, remaining: 12 },
-            deliveryRate: "Atrasado"
-        },
-        {
-            id: 5,
-            code: "TDC",
-            name: "TEORIA COMPUTAÇÃO",
-            schedule: "24T12",
-            location: "Auditório CEPETEC",
-            type: "INTENSIVO",
-            professor: "Prof. Dr. Paulo Mendes",
-            participants: 45,
-            monitors: ["Juliana Costa", "Lucas Almeida"],
-            grades: { ab1: 8.0, ab2: null, reav: null, final: null },
-            absences: { registered: 1, remaining: 14 },
-            deliveryRate: "Em dia"
-        }
-    ];
+    const [subjects, setSubjects] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+        import('../services/apiClient').then(({ apiClient }) => {
+            apiClient.get('/dashboard/subjects').then(data => {
+                if (!mounted) return;
+                // map backend DTO to frontend shape expected
+                const mapped = (data || []).map(s => ({
+                    id: s.id,
+                    code: s.code,
+                    name: s.name,
+                    schedule: s.schedule,
+                    location: s.location,
+                    type: s.type,
+                    professor: s.professor,
+                    participants: s.participants,
+                    monitors: s.monitors || [],
+                    grades: s.grades || { ab1: null, ab2: null, reav: null, final: null },
+                    absences: s.absences || { registered: 0, remaining: 15 },
+                    deliveryRate: s.deliveryRate || 'Em dia'
+                }));
+                setSubjects(mapped);
+            }).catch(() => {}).finally(() => { if (mounted) setLoading(false); });
+        });
+        return () => { mounted = false; };
+    }, []);
 
     const openModal = (subject) => {
         setSelectedSubject(subject);

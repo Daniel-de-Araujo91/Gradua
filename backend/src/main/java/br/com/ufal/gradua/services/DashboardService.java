@@ -86,4 +86,20 @@ public class DashboardService {
             return sessions.stream().filter(s -> s.getDate().equals(today)).map(s -> (Object) s);
         }).collect(Collectors.toList());
     }
+
+    public Object getProfileForCurrentUser() {
+        UserModel user = getUserByToken();
+        var student = user.getStudent();
+        if (student != null) {
+            return new br.com.ufal.gradua.dtos.ProfileDTO(
+                user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole(), user.getCpf(), user.getPassport(),
+                student.getStudentID(), student.getEnrollmentNumber(), student.getCurrentTerm(), student.getIra()
+            );
+        }
+
+        return new br.com.ufal.gradua.dtos.ProfileDTO(
+            user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole(), user.getCpf(), user.getPassport(),
+            null, null, null, null
+        );
+    }
 }

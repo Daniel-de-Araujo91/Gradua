@@ -135,7 +135,7 @@ const PostCard = ({
   topicId, avatar, name, time, title, content,
   tag, tagVariant, type, isEdited,
   voteScore: initialVoteScore, commentCount: initialCommentCount,
-  currentUser, onDelete,
+  currentUser, onDelete, authorId,
 }) => {
   // Spec 2.2: robusto a maiúsculas/minúsculas vindas da API
   const isAnnouncement = (type || '').toLowerCase() === 'aviso';
@@ -159,9 +159,8 @@ const PostCard = ({
   const [commentCount, setCommentCount] = useState(initialCommentCount || 0);
   const [postingComment, setPostingComment] = useState(false);
 
-  // Comparação de autoria insensível a maiúsculas
-  const isAuthor = currentUser?.name &&
-    name?.toLowerCase().trim() === currentUser.name?.toLowerCase().trim();
+  // Verificação de autoria preferindo userId (mais robusta)
+  const isAuthor = currentUser?.id ? (authorId === currentUser.id) : (currentUser?.name && name?.toLowerCase().trim() === currentUser.name?.toLowerCase().trim());
 
   const handleVote = (voteType) => {
     if (isAnnouncement) return; // Spec 2.2: avisos não permitem votação
@@ -378,15 +377,15 @@ const PostCard = ({
               {comments.length === 0 ? (
                 <p className="text-xs text-gray-400 text-center py-3">Nenhum comentário ainda. Seja o primeiro!</p>
               ) : (
-                comments.map(c => (
-                  <CommentItem
-                    key={c.commentId}
-                    comment={c}
-                    currentUserId={null} // TODO: incluir userId no AuthContext para controle preciso
-                    onDelete={handleDeleteComment}
-                    onUpdate={handleUpdateComment}
-                  />
-                ))
+                  comments.map(c => (
+                    <CommentItem
+                      key={c.commentId}
+                      comment={c}
+                      currentUserId={currentUserId}
+                      onDelete={handleDeleteComment}
+                      onUpdate={handleUpdateComment}
+                    />
+                  ))
               )}
             </div>
           )}
@@ -564,6 +563,7 @@ const EmptyState = ({ query, filter }) => (
 const ForumScreen = () => {
   const { user } = useAuth();
   const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : null;
+  const currentUserId = user ? user.id : null;
   const { pushNotify } = useWebNotifications();
 
   const [posts, setPosts]                     = useState([]);
@@ -718,14 +718,14 @@ const ForumScreen = () => {
           ) : error ? (
             <ErrorState message={error} onRetry={() => fetchFeed(activeFilter)} />
           ) : filteredPosts.length > 0 ? (
-            filteredPosts.map((post) => (
-              <PostCard
-                key={post.topicId}
-                {...toCardProps(post)}
-                currentUser={{ name: currentUserName }}
-                onDelete={handleDelete}
-              />
-            ))
+              filteredPosts.map((post) => (
+                <PostCard
+                  key={post.topicId}
+                  {...toCardProps(post)}
+                  currentUser={{ name: currentUserName, id: currentUserId }}
+                  onDelete={handleDelete}
+                />
+              ))
           ) : (
             <EmptyState query={searchQuery} filter={filters.find((f) => f.id === activeFilter)?.label} />
           )}

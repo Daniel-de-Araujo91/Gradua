@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 const TodayAgenda = () => {
@@ -6,6 +6,8 @@ const TodayAgenda = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [currentMonth, setCurrentMonth] = useState(selectedDate.getMonth());
     const [currentYear, setCurrentYear] = useState(selectedDate.getFullYear());
+
+    const [agenda, setAgenda] = useState(null);
 
     const weeklySchedule = {
         0: [], 
@@ -30,7 +32,19 @@ const TodayAgenda = () => {
         6: []  
     };
 
-    const displayClasses = weeklySchedule[selectedDate.getDay()] || [];
+    const displayClasses = agenda && Array.isArray(agenda)
+        ? agenda.map(s => ({ time: s.startTime, endTime: s.endTime, title: s.topic || s.title || s.subjectName || 'Sessão', location: s.location || s.meetingLink || '-' }))
+        : weeklySchedule[selectedDate.getDay()] || [];
+
+    useEffect(() => {
+        let mounted = true;
+        import('../services/apiClient').then(({ apiClient }) => {
+            apiClient.get('/dashboard/agenda/today').then(data => {
+                if (mounted) setAgenda(data || []);
+            }).catch(() => {}).finally(() => {});
+        });
+        return () => { mounted = false; };
+    }, []);
 
     const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
     const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();

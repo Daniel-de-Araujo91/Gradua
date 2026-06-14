@@ -66,7 +66,7 @@ const Cadastro = () => {
         isForeigner: false,
       });
 
-      login({ firstName: data.firstName, lastName: data.lastName }, data.token);
+      login({ id: data.userId, firstName: data.firstName, lastName: data.lastName, role: data.role }, data.token);
       navigate('/');
     } catch (err) {
       setError(err.message || "Erro ao criar conta. Tente novamente.");
@@ -206,4 +206,4 @@ const Cadastro = () => {
   );
 };
 
-export default Cadastro;
+export default Cadastro;
