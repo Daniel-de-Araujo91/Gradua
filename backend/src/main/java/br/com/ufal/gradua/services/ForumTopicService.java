@@ -86,7 +86,7 @@ public class ForumTopicService {
 
     public List<ForumTopicResponseDTO> listAll(String type) {
         List<ForumTopicModel> topics = (type != null && !type.isBlank())
-            ? repository.findByTypeOrderByCreationDateDesc(type)
+            ? repository.findByTypeOrderByCreationDateDesc(type.toUpperCase())
             : repository.findAllByOrderByCreationDateDesc();
 
         return topics.stream().map(this::toDTO).collect(Collectors.toList());

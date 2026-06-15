@@ -31,11 +31,30 @@ public class DashboardService {
     }
 
     public DashboardStatsDTO getStatsForCurrentUser() {
-        // Currently returns computed/static values but sourced from backend.
-        // In future, compute from AcademicHistoryModel etc.
-        double ira = 7.5;
-        int integral = 68;
-        int hoursPending = 840;
+        // Prefer values from the StudentModel when available
+        UserModel user = getUserByToken();
+        var student = user.getStudent();
+        if (student != null) {
+            double ira = student.getIra() != null ? student.getIra().doubleValue() : 0.0;
+            // integralization percent: estimate from totalHours / (assume degree requires 240 credits)
+            int integral = 0;
+            if (student.getTotalHours() != null) {
+                int total = student.getTotalHours();
+                // assume program requirement 240 (this is a seed assumption)
+                integral = Math.min(100, (int) Math.round((total / 240.0) * 100.0));
+            }
+            int hoursPending = 0;
+            if (student.getTotalHours() != null) {
+                hoursPending = Math.max(0, 240 - student.getTotalHours());
+            }
+
+            return new DashboardStatsDTO(ira, integral, hoursPending);
+        }
+
+        // Fallback to conservative defaults
+        double ira = 0.0;
+        int integral = 0;
+        int hoursPending = 999;
         return new DashboardStatsDTO(ira, integral, hoursPending);
     }
 

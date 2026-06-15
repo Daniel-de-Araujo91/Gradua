@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import br.com.ufal.gradua.models.user.UserModel;
+import jakarta.persistence.EntityManager;
 import br.com.ufal.gradua.models.auth.StudentModel;
 import br.com.ufal.gradua.models.auth.ProfessorModel;
 import br.com.ufal.gradua.models.institutional.SubjectModel;
@@ -18,6 +19,7 @@ import br.com.ufal.gradua.models.academic.EnrollmentModel;
 import br.com.ufal.gradua.models.auth.MonitorModel;
 import br.com.ufal.gradua.models.agenda.MonitorSessionModel;
 import br.com.ufal.gradua.models.forum.ForumTopicModel;
+import br.com.ufal.gradua.models.forum.ForumCommentModel;
 import br.com.ufal.gradua.models.agenda.NotificationModel;
 import br.com.ufal.gradua.repositories.UserRepository;
 import br.com.ufal.gradua.repositories.StudentRepository;
@@ -28,6 +30,7 @@ import br.com.ufal.gradua.repositories.EnrollmentRepository;
 import br.com.ufal.gradua.repositories.MonitorRepository;
 import br.com.ufal.gradua.repositories.MonitorSessionRepository;
 import br.com.ufal.gradua.repositories.ForumTopicRepository;
+import br.com.ufal.gradua.repositories.ForumCommentRepository;
 import br.com.ufal.gradua.repositories.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,184 +50,311 @@ public class DataSeeder implements CommandLineRunner {
     private final MonitorRepository monitorRepository;
     private final MonitorSessionRepository monitorSessionRepository;
     private final ForumTopicRepository forumTopicRepository;
+    private final ForumCommentRepository forumCommentRepository;
     private final NotificationRepository notificationRepository;
+    private final br.com.ufal.gradua.repositories.AnnouncementRepository announcementRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EntityManager em;
 
     @Override
     public void run(String... args) throws Exception {
-        // Run seeding in a background thread so failures won't prevent app startup
-        java.util.concurrent.CompletableFuture.runAsync(() -> {
-            try {
-                // ADMIN (preserva comportamento anterior)
-                String adminCpf = "00000000000";
-                if (userRepository.findByCpfOrPassport(adminCpf).isEmpty()) {
-                    log.info("Criando conta de ADMIN padrão para testes...");
-                    UserModel admin = new UserModel();
-                    admin.setFirstName("Admin");
-                    admin.setLastName("Teste");
-                    admin.setEmail("admin@gradua.ufal.br");
-                    admin.setCpf(adminCpf);
-                    admin.setPasswordHash(passwordEncoder.encode("admin123"));
-                    admin.setRole("ADMIN");
-                    admin.setIsForeigner(false);
-                    userRepository.save(admin);
-                    log.info("Conta ADMIN criada: CPF={} / Senha={}", adminCpf, "admin123");
-                } else {
-                    log.info("Conta ADMIN padrão já existe.");
-                }
+        try {
+            log.info("Iniciando DataSeeder (síncrono)...");
 
-                // Cria dados de demonstração se não existirem
-                String studentCpf = "11111111111";
-                if (userRepository.findByCpfOrPassport(studentCpf).isEmpty()) {
-                    log.info("Criando dados de demonstração: Student/Professor/Subjects/Turmas...");
-
-                    // Student user
-                    UserModel studentUser = new UserModel();
-                    studentUser.setFirstName("Tester");
-                    studentUser.setLastName("Silva");
-                    studentUser.setEmail("tester@gradua.ufal.br");
-                    studentUser.setCpf(studentCpf);
-                    studentUser.setPasswordHash(passwordEncoder.encode("student123"));
-                    studentUser.setRole("USER");
-                    studentUser.setIsForeigner(false);
-                    userRepository.save(studentUser);
-
-                    StudentModel student = new StudentModel();
-                    student.setStudentID(java.util.UUID.randomUUID());
-                    student.setEnrollmentNumber("2026001");
-                    student.setCurrentTerm(4);
-                    student.setIra(new BigDecimal("7.50"));
-                    student.setMandatoryHours(180);
-                    student.setElectiveHours(20);
-                    student.setComplementaryHours(10);
-                    student.setTotalHours(210);
-                    student.setUser(studentUser);
-                    studentRepository.save(student);
-
-                    // Link student back to user so SecurityContextHolder can access user.getStudent()
-                    studentUser.setStudent(student);
-                    userRepository.save(studentUser);
-
-                    // Professor user
-                    UserModel profUser = new UserModel();
-                    profUser.setFirstName("Maria");
-                    profUser.setLastName("Santos");
-                    profUser.setEmail("maria.santos@gradua.ufal.br");
-                    profUser.setPasswordHash(passwordEncoder.encode("prof123"));
-                    profUser.setRole("PROFESSOR");
-                    profUser.setIsForeigner(false);
-                    // ensure professor can also login via CPF for tests
-                    profUser.setCpf("22222222222");
-                    userRepository.save(profUser);
-
-                    ProfessorModel professor = new ProfessorModel();
-                    professor.setProfessorID(java.util.UUID.randomUUID());
-                    professor.setUser(profUser);
-                    professorRepository.save(professor);
-
-                    // link professor back to user for convenience
-                    profUser.setProfessor(professor);
-                    userRepository.save(profUser);
-
-                    // Subjects
-                    SubjectModel subj1 = new SubjectModel();
-                    subj1.setSubjectId(java.util.UUID.randomUUID());
-                    subj1.setCode("PROG2");
-                    subj1.setName("Programação 2");
-                    subj1.setCreditHours(80);
-                    subjectRepository.save(subj1);
-
-                    SubjectModel subj2 = new SubjectModel();
-                    subj2.setSubjectId(java.util.UUID.randomUUID());
-                    subj2.setCode("TDC");
-                    subj2.setName("Teoria da Computação");
-                    subj2.setCreditHours(60);
-                    subjectRepository.save(subj2);
-
-                    // Class sections
-                    ClassSectionModel class1 = new ClassSectionModel();
-                    class1.setClassId(java.util.UUID.randomUUID());
-                    class1.setSubject(subj1);
-                    class1.setProfessor(professor);
-                    class1.setAcademicTerm("2026.1");
-                    classSectionRepository.save(class1);
-
-                    ClassSectionModel class2 = new ClassSectionModel();
-                    class2.setClassId(java.util.UUID.randomUUID());
-                    class2.setSubject(subj2);
-                    class2.setProfessor(professor);
-                    class2.setAcademicTerm("2026.1");
-                    classSectionRepository.save(class2);
-
-                    // Enrollment
-                    EnrollmentModel en1 = new EnrollmentModel();
-                    en1.setEnrollmentId(java.util.UUID.randomUUID());
-                    en1.setStudent(student);
-                    en1.setClassSection(class1);
-                    en1.setStatus(null);
-                    en1.setAbsences(1);
-                    enrollmentRepository.save(en1);
-
-                    EnrollmentModel en2 = new EnrollmentModel();
-                    en2.setEnrollmentId(java.util.UUID.randomUUID());
-                    en2.setStudent(student);
-                    en2.setClassSection(class2);
-                    en2.setStatus(null);
-                    en2.setAbsences(0);
-                    enrollmentRepository.save(en2);
-
-                    // Monitor (same student acts as monitor for class1)
-                    MonitorModel monitor = new MonitorModel();
-                    monitor.setMonitorId(java.util.UUID.randomUUID());
-                    monitor.setScholarshipType("BOLSISTA");
-                    monitor.setStudent(student);
-                    monitorRepository.save(monitor);
-
-                    // Monitor session today
-                    MonitorSessionModel session = new MonitorSessionModel();
-                    session.setSessionId(java.util.UUID.randomUUID());
-                    session.setMonitor(monitor);
-                    session.setClassSection(class1);
-                    session.setTopic("Plantão de dúvidas - Programação 2");
-                    session.setDate(LocalDate.now());
-                    session.setStartTime(LocalTime.of(15, 0));
-                    session.setEndTime(LocalTime.of(16, 0));
-                    session.setLocation("Sala 101");
-                    session.setMeetingLink(null);
-                    monitorSessionRepository.save(session);
-
-                    // Notification example for student
-                    NotificationModel notif = new NotificationModel();
-                    notif.setNotificationId(java.util.UUID.randomUUID());
-                    notif.setRecipientUser(studentUser);
-                    notif.setMonitorSession(session);
-                    notif.setMessage("Sessão de monitoria de Programação 2 marcada para hoje às 15:00.");
-                    notif.setIsRead(false);
-                    notif.setCreatedAt(java.time.LocalDateTime.now());
-                    notificationRepository.save(notif);
-
-                    // Forum aviso
-                    ForumTopicModel aviso = new ForumTopicModel();
-                    aviso.setTopicId(java.util.UUID.randomUUID());
-                    aviso.setAuthor(profUser);
-                    aviso.setTitle("Aula remota amanhã");
-                    aviso.setContent("A aula de Programação 2 de amanhã será via Google Meet.");
-                    aviso.setCreationDate(java.time.LocalDateTime.now());
-                    aviso.setType("AVISO");
-                    aviso.setIsEdited(false);
-                    aviso.setVoteScore(null);
-                    aviso.setCommentCount(0);
-                    forumTopicRepository.save(aviso);
-
-                    log.info("Dados de demonstração criados com sucesso.");
-                } else {
-                    log.info("Dados de demonstração já existem. Pulando seed adicional.");
-                }
-            } catch (Exception ex) {
-                // Top-level protection for the async runner
-                log.warn("Erro inesperado no DataSeeder (async): {}", ex.getMessage());
-                log.debug("Stacktrace do erro no DataSeeder (async):", ex);
+            // ADMIN (idempotente)
+            String adminCpf = "00000000000";
+            if (userRepository.findByCpfOrPassport(adminCpf).isEmpty()) {
+                log.info("Criando conta de ADMIN padrão para testes...");
+                UserModel admin = new UserModel();
+                admin.setFirstName("Admin");
+                admin.setLastName("Teste");
+                admin.setEmail("admin@gradua.ufal.br");
+                admin.setCpf(adminCpf);
+                admin.setPasswordHash(passwordEncoder.encode("admin123"));
+                admin.setRole("ADMIN");
+                admin.setIsForeigner(false);
+                userRepository.save(admin);
+                log.info("Conta ADMIN criada: CPF={} / Senha={}", adminCpf, "admin123");
+            } else {
+                log.info("Conta ADMIN padrão já existe.");
             }
-        });
+
+            // -------------------------
+            // Subjects (idempotente)
+            // -------------------------
+            class SubjectDef { String code; String name; int credits; SubjectDef(String c,String n,int cr){code=c;name=n;credits=cr;} }
+            SubjectDef[] subjects = new SubjectDef[] {
+                new SubjectDef("PROG1","Programação 1",80),
+                new SubjectDef("PROG2","Programação 2",80),
+                new SubjectDef("TDC","Teoria da Computação",60),
+                new SubjectDef("BD","Banco de Dados",60),
+                new SubjectDef("CALC","Cálculo",80),
+                new SubjectDef("SO","Sistemas Operacionais",60)
+            };
+
+            java.util.Map<String, SubjectModel> createdSubjects = new java.util.HashMap<>();
+            for (SubjectDef sd : subjects) {
+                java.util.Optional<SubjectModel> existing = subjectRepository.findAll().stream()
+                    .filter(s -> sd.code.equals(s.getCode()))
+                    .findFirst();
+                if (existing.isPresent()) {
+                    createdSubjects.put(sd.code, existing.get());
+                } else {
+                    SubjectModel m = new SubjectModel();
+                    m.setCode(sd.code);
+                    m.setName(sd.name);
+                    m.setCreditHours(sd.credits);
+                    subjectRepository.saveAndFlush(m);
+                    createdSubjects.put(sd.code, m);
+                    log.info("Subject created: {} - {}", sd.code, sd.name);
+                }
+            }
+
+            // -------------------------
+            // Professors (idempotente)
+            // -------------------------
+            class ProfDef { String cpf; String email; String first; String last; String pass; ProfDef(String cpf,String email,String f,String l,String p){this.cpf=cpf;this.email=email;this.first=f;this.last=l;this.pass=p;} }
+            ProfDef[] profs = new ProfDef[] {
+                new ProfDef("22222222222","maria.santos@gradua.ufal.br","Maria","Santos","prof123"),
+                new ProfDef("33333333333","joao.pereira@gradua.ufal.br","João","Pereira","prof123"),
+                new ProfDef("44444444444","ana.lima@gradua.ufal.br","Ana","Lima","prof123")
+            };
+
+            java.util.List<ProfessorModel> createdProfessors = new java.util.ArrayList<>();
+            for (ProfDef pd : profs) {
+                java.util.Optional<UserModel> uopt = userRepository.findByCpfOrPassport(pd.cpf);
+                UserModel user;
+                if (uopt.isPresent()) {
+                    user = uopt.get();
+                } else {
+                    user = new UserModel();
+                    user.setFirstName(pd.first);
+                    user.setLastName(pd.last);
+                    user.setEmail(pd.email);
+                    user.setCpf(pd.cpf);
+                    user.setPasswordHash(passwordEncoder.encode(pd.pass));
+                    user.setRole("PROFESSOR");
+                    user.setIsForeigner(false);
+                    userRepository.save(user);
+                }
+
+                if (user.getProfessor() == null) {
+                    ProfessorModel pm = new ProfessorModel();
+                    pm.setProfessorID(java.util.UUID.randomUUID());
+                    pm.setUser(user);
+                    professorRepository.save(pm);
+                    // do not set user.professor here to avoid transient/detached reference cycles
+                    createdProfessors.add(pm);
+                } else {
+                    createdProfessors.add(user.getProfessor());
+                }
+            }
+
+            // -------------------------
+            // Students (idempotente)
+            // -------------------------
+            class StudDef { String cpf; String email; String first; String last; String pass; String enrollment; int term; BigDecimal ira; StudDef(String cpf,String email,String f,String l,String p,String e,int t,BigDecimal i){this.cpf=cpf;this.email=email;this.first=f;this.last=l;this.pass=p;this.enrollment=e;this.term=t;this.ira=i;} }
+            StudDef[] studs = new StudDef[] {
+                new StudDef("11111111111","tester@gradua.ufal.br","Tester","Silva","student123","2026001",4,new BigDecimal("7.50")),
+                new StudDef("55555555555","lucas.moura@gradua.ufal.br","Lucas","Moura","student123","2026002",2,new BigDecimal("8.10")),
+                new StudDef("66666666666","mariana.ramos@gradua.ufal.br","Mariana","Ramos","student123","2026003",6,new BigDecimal("6.90")),
+                new StudDef("77777777777","pedro.alves@gradua.ufal.br","Pedro","Alves","student123","2026004",1,new BigDecimal("9.00"))
+            };
+
+            java.util.List<StudentModel> createdStudents = new java.util.ArrayList<>();
+            for (StudDef sd : studs) {
+                java.util.Optional<UserModel> uopt = userRepository.findByCpfOrPassport(sd.cpf);
+                UserModel user;
+                if (uopt.isPresent()) {
+                    user = uopt.get();
+                } else {
+                    user = new UserModel();
+                    user.setFirstName(sd.first);
+                    user.setLastName(sd.last);
+                    user.setEmail(sd.email);
+                    user.setCpf(sd.cpf);
+                    user.setPasswordHash(passwordEncoder.encode(sd.pass));
+                    user.setRole("USER");
+                    user.setIsForeigner(false);
+                    userRepository.save(user);
+                }
+
+                if (user.getStudent() == null) {
+                    StudentModel sm = new StudentModel();
+                    sm.setStudentID(java.util.UUID.randomUUID());
+                    sm.setEnrollmentNumber(sd.enrollment);
+                    sm.setCurrentTerm(sd.term);
+                    sm.setIra(sd.ira);
+                    sm.setMandatoryHours(180);
+                    sm.setElectiveHours(20);
+                    sm.setComplementaryHours(10);
+                    sm.setTotalHours(210);
+                    sm.setUser(user);
+                    studentRepository.saveAndFlush(sm);
+                    // do not set user.student here to avoid transient reference problems during flush
+                    createdStudents.add(sm);
+                } else {
+                    createdStudents.add(user.getStudent());
+                }
+            }
+
+            // -------------------------
+            // Class sections and enrollments
+            // -------------------------
+            java.util.List<ClassSectionModel> createdClasses = new java.util.ArrayList<>();
+            // create a class per subject assigned to a professor
+            int pi = 0;
+            for (String code : createdSubjects.keySet()) {
+                SubjectModel subj = createdSubjects.get(code);
+                ProfessorModel prof = createdProfessors.get(pi % createdProfessors.size());
+                pi++;
+                // check existence
+                java.util.Optional<ClassSectionModel> copt = classSectionRepository.findAll().stream()
+                    .filter(c -> c.getSubject()!=null && c.getSubject().getCode().equals(code) && "2026.1".equals(c.getAcademicTerm()))
+                    .findFirst();
+                ClassSectionModel cls;
+                if (copt.isPresent()) {
+                    cls = copt.get();
+                } else {
+                    cls = new ClassSectionModel();
+                    // let JPA generate classId
+                    cls.setSubject(subj);
+                    cls.setProfessor(prof);
+                    cls.setAcademicTerm("2026.1");
+                    classSectionRepository.saveAndFlush(cls);
+                }
+                createdClasses.add(cls);
+            }
+
+            // enroll students in first 3 classes
+            for (int i = 0; i < createdStudents.size(); i++) {
+                StudentModel s = createdStudents.get(i);
+                for (int j = 0; j < Math.min(3, createdClasses.size()); j++) {
+                    ClassSectionModel cls = createdClasses.get(j);
+                    boolean already = enrollmentRepository.findAll().stream()
+                        .anyMatch(e -> e.getStudent()!=null && e.getStudent().getStudentID().equals(s.getStudentID())
+                            && e.getClassSection()!=null && e.getClassSection().getClassId().equals(cls.getClassId()));
+                    if (!already) {
+                        EnrollmentModel em = new EnrollmentModel();
+                        // let JPA generate enrollment id
+                        em.setStudent(s);
+                        em.setClassSection(cls);
+                        em.setStatus(null);
+                        em.setAbsences(0);
+                        enrollmentRepository.saveAndFlush(em);
+                    }
+                }
+            }
+
+            // -------------------------
+            // Monitors, sessions and notifications
+            // -------------------------
+            // make first student a monitor for first class
+            if (!createdStudents.isEmpty() && !createdClasses.isEmpty()) {
+                StudentModel s = createdStudents.get(0);
+                MonitorModel mon = monitorRepository.findAll().stream()
+                    .filter(mo -> mo.getStudent()!=null && mo.getStudent().getStudentID().equals(s.getStudentID()))
+                    .findFirst().orElse(null);
+                if (mon==null) {
+                    mon = new MonitorModel();
+                    // let JPA generate monitor id
+                    mon.setScholarshipType("BOLSISTA");
+                    mon.setStudent(s);
+                    monitorRepository.saveAndFlush(mon);
+                }
+
+                // Create a few sessions
+                for (int k=0;k<2;k++) {
+                    MonitorSessionModel ms = new MonitorSessionModel();
+                    // let JPA generate session id
+                    ms.setMonitor(mon);
+                    ms.setClassSection(createdClasses.get(0));
+                    ms.setTopic(k==0?"Plantão de dúvidas - Programação 2":"Revisão - Programação 1");
+                    ms.setDate(LocalDate.now().plusDays(k));
+                    ms.setStartTime(LocalTime.of(15+k,0));
+                    ms.setEndTime(LocalTime.of(16+k,0));
+                    ms.setLocation("Sala " + (100+k));
+                    ms.setMeetingLink(k==0?null:"https://meet.example.com/session"+k);
+                    monitorSessionRepository.saveAndFlush(ms);
+
+                    // notification to the monitor student
+                    NotificationModel nm = new NotificationModel();
+                    // let JPA generate notification id
+                    nm.setRecipientUser(s.getUser());
+                    nm.setMonitorSession(ms);
+                    nm.setMessage("Monitoria: " + ms.getTopic() + " em " + ms.getLocation());
+                    nm.setIsRead(false);
+                    nm.setCreatedAt(java.time.LocalDateTime.now());
+                    notificationRepository.saveAndFlush(nm);
+                }
+            }
+
+            // -------------------------
+            // Announcements
+            // -------------------------
+            if (!createdClasses.isEmpty()) {
+                // create an announcement for the first class (idempotent)
+                br.com.ufal.gradua.models.forum.AnnouncementModel ann = new br.com.ufal.gradua.models.forum.AnnouncementModel();
+                // let JPA generate announcement id
+                ann.setAuthor(createdClasses.get(0).getProfessor().getUser());
+                ann.setClassSection(createdClasses.get(0));
+                ann.setTitle("Aviso: alteração de sala");
+                ann.setContent("A próxima aula será na sala 202.");
+                ann.setPublishDate(java.time.LocalDateTime.now());
+                // simple dedupe: check existing announcements with same title
+                boolean existsAnn = announcementRepository.findAll().stream()
+                    .anyMatch(a -> a.getTitle()!=null && a.getTitle().equals(ann.getTitle())
+                        && a.getClassSection()!=null && a.getClassSection().getClassId().equals(ann.getClassSection().getClassId()));
+                if (!existsAnn) {
+                    announcementRepository.saveAndFlush(ann);
+                }
+                // also create a forum AVISO for class
+                ForumTopicModel aviso = new ForumTopicModel();
+                // let JPA generate topic id
+                aviso.setAuthor(createdClasses.get(0).getProfessor().getUser());
+                aviso.setTitle("Aviso de turma: " + createdClasses.get(0).getSubject().getCode());
+                aviso.setContent("Aula transferida para sala 202 nesta semana.");
+                aviso.setCreationDate(java.time.LocalDateTime.now());
+                aviso.setType("AVISO");
+                aviso.setIsEdited(false);
+                aviso.setVoteScore(null);
+                aviso.setCommentCount(0);
+                forumTopicRepository.saveAndFlush(aviso);
+            }
+
+            // -------------------------
+            // Forum extra topics and comments
+            // -------------------------
+            // add a general question and a reply
+            ForumTopicModel q = new ForumTopicModel();
+            // let JPA generate topic id
+            q.setAuthor(createdStudents.get(0).getUser());
+            q.setTitle("Dúvida sobre avaliação final");
+            q.setContent("Alguém sabe como será a prova final?");
+            q.setCreationDate(java.time.LocalDateTime.now().minusDays(1));
+            q.setType("DUVIDA");
+            q.setIsEdited(false);
+            q.setVoteScore(0);
+            q.setCommentCount(0);
+            forumTopicRepository.saveAndFlush(q);
+
+            ForumCommentModel ans = new ForumCommentModel();
+            // let JPA generate comment id
+            ans.setTopic(q);
+            ans.setAuthor(createdProfessors.get(0).getUser());
+            ans.setContent("A prova terá 3 questões discursivas e 2 de múltipla escolha.");
+            ans.setCreationDate(java.time.LocalDateTime.now().minusHours(20));
+            forumCommentRepository.saveAndFlush(ans);
+
+            q.setCommentCount(1);
+            forumTopicRepository.saveAndFlush(q);
+
+            log.info("DataSeeder finalizado com sucesso.");
+        } catch (Exception ex) {
+            // Log the error but do not rethrow so the application can continue running.
+            // This mirrors the previous behavior before we added transactional rollback.
+            log.warn("Erro inesperado no DataSeeder: {}", ex.getMessage());
+            log.debug("Stacktrace do erro no DataSeeder:", ex);
+        }
     }
 }
