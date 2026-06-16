@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
@@ -48,7 +49,7 @@ public class ForumTopicModel implements Serializable {
 
     private String title;
 
-    @Lob 
+    @Column(columnDefinition = "TEXT") 
     private String content;
 
     private Boolean isLockedByMod;

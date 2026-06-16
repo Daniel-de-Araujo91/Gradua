@@ -28,6 +28,8 @@ public class SecurityConfig {
             authorize.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
             authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
             authorize.requestMatchers("/error").permitAll();
+            // Dev-only debug endpoints to inspect DB state when needed
+            authorize.requestMatchers("/internal/**").permitAll();
             authorize.requestMatchers("/admin/**").hasRole("ADMIN");
             // Spec Fase 4: criação de sessão restrita a perfil MONITOR
             authorize.requestMatchers(HttpMethod.POST, "/monitoria/create").hasRole("MONITOR");

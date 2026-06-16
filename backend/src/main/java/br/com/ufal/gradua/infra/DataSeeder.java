@@ -61,7 +61,15 @@ public class DataSeeder implements CommandLineRunner {
         try {
             log.info("Iniciando DataSeeder (síncrono)...");
 
-            // ADMIN (idempotente)
+           
+            long existingTopics = forumTopicRepository.count();
+            long existingStudents = studentRepository.count();
+            long existingSubjects = subjectRepository.count();
+            if (existingTopics > 0 || existingStudents > 0 || existingSubjects > 0) {
+                log.info("Detected existing persistent data (topics: {}, students: {}, subjects: {}). Skipping DataSeeder to preserve Supabase data.", existingTopics, existingStudents, existingSubjects);
+                return;
+            }
+
             String adminCpf = "00000000000";
             if (userRepository.findByCpfOrPassport(adminCpf).isEmpty()) {
                 log.info("Criando conta de ADMIN padrão para testes...");
@@ -143,7 +151,6 @@ public class DataSeeder implements CommandLineRunner {
                     pm.setProfessorID(java.util.UUID.randomUUID());
                     pm.setUser(user);
                     professorRepository.save(pm);
-                    // do not set user.professor here to avoid transient/detached reference cycles
                     createdProfessors.add(pm);
                 } else {
                     createdProfessors.add(user.getProfessor());
@@ -191,7 +198,6 @@ public class DataSeeder implements CommandLineRunner {
                     sm.setTotalHours(210);
                     sm.setUser(user);
                     studentRepository.saveAndFlush(sm);
-                    // do not set user.student here to avoid transient reference problems during flush
                     createdStudents.add(sm);
                 } else {
                     createdStudents.add(user.getStudent());
@@ -202,13 +208,11 @@ public class DataSeeder implements CommandLineRunner {
             // Class sections and enrollments
             // -------------------------
             java.util.List<ClassSectionModel> createdClasses = new java.util.ArrayList<>();
-            // create a class per subject assigned to a professor
             int pi = 0;
             for (String code : createdSubjects.keySet()) {
                 SubjectModel subj = createdSubjects.get(code);
                 ProfessorModel prof = createdProfessors.get(pi % createdProfessors.size());
                 pi++;
-                // check existence
                 java.util.Optional<ClassSectionModel> copt = classSectionRepository.findAll().stream()
                     .filter(c -> c.getSubject()!=null && c.getSubject().getCode().equals(code) && "2026.1".equals(c.getAcademicTerm()))
                     .findFirst();
@@ -217,7 +221,6 @@ public class DataSeeder implements CommandLineRunner {
                     cls = copt.get();
                 } else {
                     cls = new ClassSectionModel();
-                    // let JPA generate classId
                     cls.setSubject(subj);
                     cls.setProfessor(prof);
                     cls.setAcademicTerm("2026.1");
@@ -226,7 +229,6 @@ public class DataSeeder implements CommandLineRunner {
                 createdClasses.add(cls);
             }
 
-            // enroll students in first 3 classes
             for (int i = 0; i < createdStudents.size(); i++) {
                 StudentModel s = createdStudents.get(i);
                 for (int j = 0; j < Math.min(3, createdClasses.size()); j++) {
@@ -236,7 +238,6 @@ public class DataSeeder implements CommandLineRunner {
                             && e.getClassSection()!=null && e.getClassSection().getClassId().equals(cls.getClassId()));
                     if (!already) {
                         EnrollmentModel em = new EnrollmentModel();
-                        // let JPA generate enrollment id
                         em.setStudent(s);
                         em.setClassSection(cls);
                         em.setStatus(null);
@@ -249,7 +250,6 @@ public class DataSeeder implements CommandLineRunner {
             // -------------------------
             // Monitors, sessions and notifications
             // -------------------------
-            // make first student a monitor for first class
             if (!createdStudents.isEmpty() && !createdClasses.isEmpty()) {
                 StudentModel s = createdStudents.get(0);
                 MonitorModel mon = monitorRepository.findAll().stream()
@@ -257,16 +257,13 @@ public class DataSeeder implements CommandLineRunner {
                     .findFirst().orElse(null);
                 if (mon==null) {
                     mon = new MonitorModel();
-                    // let JPA generate monitor id
                     mon.setScholarshipType("BOLSISTA");
                     mon.setStudent(s);
                     monitorRepository.saveAndFlush(mon);
                 }
 
-                // Create a few sessions
                 for (int k=0;k<2;k++) {
                     MonitorSessionModel ms = new MonitorSessionModel();
-                    // let JPA generate session id
                     ms.setMonitor(mon);
                     ms.setClassSection(createdClasses.get(0));
                     ms.setTopic(k==0?"Plantão de dúvidas - Programação 2":"Revisão - Programação 1");
@@ -277,9 +274,7 @@ public class DataSeeder implements CommandLineRunner {
                     ms.setMeetingLink(k==0?null:"https://meet.example.com/session"+k);
                     monitorSessionRepository.saveAndFlush(ms);
 
-                    // notification to the monitor student
                     NotificationModel nm = new NotificationModel();
-                    // let JPA generate notification id
                     nm.setRecipientUser(s.getUser());
                     nm.setMonitorSession(ms);
                     nm.setMessage("Monitoria: " + ms.getTopic() + " em " + ms.getLocation());
@@ -293,24 +288,19 @@ public class DataSeeder implements CommandLineRunner {
             // Announcements
             // -------------------------
             if (!createdClasses.isEmpty()) {
-                // create an announcement for the first class (idempotent)
                 br.com.ufal.gradua.models.forum.AnnouncementModel ann = new br.com.ufal.gradua.models.forum.AnnouncementModel();
-                // let JPA generate announcement id
                 ann.setAuthor(createdClasses.get(0).getProfessor().getUser());
                 ann.setClassSection(createdClasses.get(0));
                 ann.setTitle("Aviso: alteração de sala");
                 ann.setContent("A próxima aula será na sala 202.");
                 ann.setPublishDate(java.time.LocalDateTime.now());
-                // simple dedupe: check existing announcements with same title
                 boolean existsAnn = announcementRepository.findAll().stream()
                     .anyMatch(a -> a.getTitle()!=null && a.getTitle().equals(ann.getTitle())
                         && a.getClassSection()!=null && a.getClassSection().getClassId().equals(ann.getClassSection().getClassId()));
                 if (!existsAnn) {
                     announcementRepository.saveAndFlush(ann);
                 }
-                // also create a forum AVISO for class
                 ForumTopicModel aviso = new ForumTopicModel();
-                // let JPA generate topic id
                 aviso.setAuthor(createdClasses.get(0).getProfessor().getUser());
                 aviso.setTitle("Aviso de turma: " + createdClasses.get(0).getSubject().getCode());
                 aviso.setContent("Aula transferida para sala 202 nesta semana.");
@@ -325,9 +315,7 @@ public class DataSeeder implements CommandLineRunner {
             // -------------------------
             // Forum extra topics and comments
             // -------------------------
-            // add a general question and a reply
             ForumTopicModel q = new ForumTopicModel();
-            // let JPA generate topic id
             q.setAuthor(createdStudents.get(0).getUser());
             q.setTitle("Dúvida sobre avaliação final");
             q.setContent("Alguém sabe como será a prova final?");
@@ -339,7 +327,6 @@ public class DataSeeder implements CommandLineRunner {
             forumTopicRepository.saveAndFlush(q);
 
             ForumCommentModel ans = new ForumCommentModel();
-            // let JPA generate comment id
             ans.setTopic(q);
             ans.setAuthor(createdProfessors.get(0).getUser());
             ans.setContent("A prova terá 3 questões discursivas e 2 de múltipla escolha.");
@@ -351,8 +338,6 @@ public class DataSeeder implements CommandLineRunner {
 
             log.info("DataSeeder finalizado com sucesso.");
         } catch (Exception ex) {
-            // Log the error but do not rethrow so the application can continue running.
-            // This mirrors the previous behavior before we added transactional rollback.
             log.warn("Erro inesperado no DataSeeder: {}", ex.getMessage());
             log.debug("Stacktrace do erro no DataSeeder:", ex);
         }
