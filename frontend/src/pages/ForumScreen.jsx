@@ -24,8 +24,8 @@ const FILTER_TO_API_TYPE = {
 const TYPE_TO_TAG = {
   pergunta: { label: 'PERGUNTA',  variant: 'perguntas' },
   aviso:    { label: 'AVISO',     variant: 'avisos'    },
-  dica:     { label: 'DICA',      variant: 'perguntas' },
-  evento:   { label: 'EVENTO',    variant: 'avisos'    },
+  dica:     { label: 'DICA',      variant: 'dicas'      },
+  evento:   { label: 'EVENTO',    variant: 'eventos'   },
 };
 
 /* ─────────────────────────────────────────
@@ -35,6 +35,8 @@ const CategoryTag = ({ label, variant }) => {
   const styles = {
     perguntas: 'bg-green-50 text-green-800',
     avisos:    'bg-blue-100 text-blue-800',
+    dicas:     'bg-yellow-50 text-yellow-800',
+    eventos:   'bg-purple-50 text-purple-800',
     destaque:  'bg-white text-gradua-forum',
   };
   return (

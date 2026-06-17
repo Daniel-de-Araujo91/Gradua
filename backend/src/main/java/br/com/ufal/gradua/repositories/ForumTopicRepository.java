@@ -9,6 +9,7 @@ import br.com.ufal.gradua.models.forum.ForumTopicModel;
 
 public interface ForumTopicRepository extends JpaRepository<ForumTopicModel, UUID> {
     List<ForumTopicModel> findByType(String type);
+    List<ForumTopicModel> findByTypeInOrderByCreationDateDesc(List<String> types);
     List<ForumTopicModel> findByTypeOrderByCreationDateDesc(String type);
     List<ForumTopicModel> findAllByOrderByCreationDateDesc();
 }

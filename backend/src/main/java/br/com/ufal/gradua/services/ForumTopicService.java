@@ -86,9 +86,18 @@ public class ForumTopicService {
     }
 
     public List<ForumTopicResponseDTO> listAll(String type) {
-        List<ForumTopicModel> topics = (type != null && !type.isBlank())
-            ? repository.findByTypeOrderByCreationDateDesc(type.toUpperCase())
-            : repository.findAllByOrderByCreationDateDesc();
+        List<ForumTopicModel> topics;
+        if (type != null && !type.isBlank()) {
+            String t = type.toLowerCase();
+            // Aceita sinônimos (ex: 'pergunta' pode ser gravado como 'PERGUNTA' ou 'DUVIDA' em seeds antigos)
+            if ("pergunta".equals(t) || "duvida".equals(t) || "duvida".equalsIgnoreCase(t)) {
+                topics = repository.findByTypeInOrderByCreationDateDesc(java.util.List.of("PERGUNTA", "DUVIDA"));
+            } else {
+                topics = repository.findByTypeOrderByCreationDateDesc(type.toUpperCase());
+            }
+        } else {
+            topics = repository.findAllByOrderByCreationDateDesc();
+        }
 
         return topics.stream().map(this::toDTO).collect(Collectors.toList());
     }
