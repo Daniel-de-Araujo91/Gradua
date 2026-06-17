@@ -1,7 +1,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
-import { ArrowUp, ArrowDown, MessageCircle, Search, Plus, BookOpen, Bell, Lightbulb, CalendarDays, X, Trash2, Loader2, Pencil, Check, ChevronDown, ChevronUp, Send } from 'lucide-react';
+import {
+  ArrowUp, ArrowDown, MessageCircle, Search, Plus, BookOpen,
+  Bell, Lightbulb, CalendarDays, X, Trash2, Loader2, Pencil,
+  Check, ChevronDown, ChevronUp, Send
+} from 'lucide-react';
 import { forumService } from '../services/forumService';
 import { useAuth } from '../context/AuthContext';
 import { apiClient } from '../services/apiClient';
@@ -33,9 +37,8 @@ const CategoryTag = ({ label, variant }) => {
     avisos:    'bg-blue-100 text-blue-800',
     destaque:  'bg-white text-gradua-forum',
   };
-  const activeStyle = styles[variant] || 'bg-gray-200 text-gray-800';
   return (
-    <span className={`text-[10px] sm:text-[11px] font-bold px-3 py-1 rounded-full tracking-wide uppercase ${activeStyle}`}>
+    <span className={`text-[10px] sm:text-[11px] font-bold px-3 py-1 rounded-full tracking-wide uppercase ${styles[variant] || 'bg-gray-200 text-gray-800'}`}>
       {label}
     </span>
   );
@@ -48,7 +51,6 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
   const [saving, setSaving] = useState(false);
-
   const isAuthor = currentUserId && comment.authorId === currentUserId;
 
   const handleSave = async () => {
@@ -74,9 +76,7 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-xs font-bold text-gray-800">{comment.authorName}</span>
-          {comment.isEdited && (
-            <span className="text-[9px] text-gray-400 italic">editado</span>
-          )}
+          {comment.isEdited && <span className="text-[9px] text-gray-400 italic">editado</span>}
         </div>
         {editing ? (
           <div className="flex gap-2 items-end">
@@ -87,17 +87,12 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
               className="flex-1 text-xs border border-gradua-forum rounded-lg p-2 outline-none resize-none focus:ring-1 focus:ring-gradua-forum"
             />
             <div className="flex flex-col gap-1">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="p-1.5 bg-gradua-forum text-white rounded-lg hover:opacity-90 disabled:opacity-60"
-              >
+              <button onClick={handleSave} disabled={saving}
+                className="p-1.5 bg-gradua-forum text-white rounded-lg hover:opacity-90 disabled:opacity-60">
                 {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
               </button>
-              <button
-                onClick={() => { setEditing(false); setEditText(comment.content); }}
-                className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200"
-              >
+              <button onClick={() => { setEditing(false); setEditText(comment.content); }}
+                className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200">
                 <X size={12} />
               </button>
             </div>
@@ -108,18 +103,12 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
       </div>
       {isAuthor && !editing && (
         <div className="flex items-center gap-1 flex-shrink-0">
-          <button
-            onClick={() => setEditing(true)}
-            className="p-1 text-gray-300 hover:text-gradua-forum hover:bg-gradua-forum/10 rounded transition-colors"
-            title="Editar comentário"
-          >
+          <button onClick={() => setEditing(true)}
+            className="p-1 text-gray-300 hover:text-gradua-forum hover:bg-gradua-forum/10 rounded transition-colors">
             <Pencil size={11} />
           </button>
-          <button
-            onClick={() => onDelete(comment.commentId)}
-            className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-            title="Excluir comentário"
-          >
+          <button onClick={() => onDelete(comment.commentId)}
+            className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
             <Trash2 size={11} />
           </button>
         </div>
@@ -129,7 +118,7 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
 };
 
 /* ─────────────────────────────────────────
-   Post Card
+   Post Card — com votos PERSISTENTES
 ───────────────────────────────────────── */
 const PostCard = ({
   topicId, avatar, name, time, title, content,
@@ -137,39 +126,58 @@ const PostCard = ({
   voteScore: initialVoteScore, commentCount: initialCommentCount,
   currentUser, onDelete, authorId,
 }) => {
-  // Spec 2.2: robusto a maiúsculas/minúsculas vindas da API
   const isAnnouncement = (type || '').toLowerCase() === 'aviso';
 
-  const [likes, setLikes]       = useState(Math.max(0, initialVoteScore || 0));
-  const [dislikes, setDislikes] = useState(0);
-  const [userVote, setUserVote] = useState(null);
-  const [featured] = useState(false);
+  // Estado de votos: carregado do back-end ao montar o card
+  // Isso garante persistência entre recarregamentos
+  const [ups, setUps]             = useState(Math.max(0, initialVoteScore || 0));
+  const [downs, setDowns]         = useState(0);
+  const [userVote, setUserVote]   = useState(null); // 'up' | 'down' | null
+  const [voteLoading, setVoteLoading] = useState(false);
 
-  // Controle de edição inline (spec 4.3)
-  const [editing, setEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(title);
+  const [editing, setEditing]         = useState(false);
+  const [editTitle, setEditTitle]     = useState(title);
   const [editContent, setEditContent] = useState(content);
-  const [editSaving, setEditSaving] = useState(false);
+  const [editSaving, setEditSaving]   = useState(false);
 
-  // Seção de comentários
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState([]);
+  const [showComments, setShowComments]     = useState(false);
+  const [comments, setComments]             = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
-  const [newComment, setNewComment] = useState('');
-  const [commentCount, setCommentCount] = useState(initialCommentCount || 0);
+  const [newComment, setNewComment]         = useState('');
+  const [commentCount, setCommentCount]     = useState(initialCommentCount || 0);
   const [postingComment, setPostingComment] = useState(false);
 
-  // Verificação de autoria preferindo userId (mais robusta)
-  const isAuthor = currentUser?.id ? (authorId === currentUser.id) : (currentUser?.name && name?.toLowerCase().trim() === currentUser.name?.toLowerCase().trim());
+  const isAuthor = currentUser?.id
+    ? authorId === currentUser.id
+    : (currentUser?.name && name?.toLowerCase().trim() === currentUser.name?.toLowerCase().trim());
 
-  const handleVote = (voteType) => {
-    if (isAnnouncement) return; // Spec 2.2: avisos não permitem votação
-    if (voteType === 'up') {
-      if (userVote === 'up') { setLikes(l => l - 1); setUserVote(null); }
-      else { setLikes(l => l + 1); if (userVote === 'down') setDislikes(d => d - 1); setUserVote('up'); }
-    } else {
-      if (userVote === 'down') { setDislikes(d => d - 1); setUserVote(null); }
-      else { setDislikes(d => d + 1); if (userVote === 'up') setLikes(l => l - 1); setUserVote('down'); }
+  // Carrega estado de voto do back-end para mostrar o voto persistido do usuário
+  useEffect(() => {
+    if (isAnnouncement) return;
+    forumService.getVoteState(topicId)
+      .then(data => {
+        setUps(Number(data.ups) || 0);
+        setDowns(Number(data.downs) || 0);
+        setUserVote(data.currentUserVote || null);
+      })
+      .catch(() => {
+        // Se falhar, mantém os valores iniciais do feed
+        setUps(Math.max(0, initialVoteScore || 0));
+      });
+  }, [topicId, isAnnouncement]);
+
+  const handleVote = async (voteType) => {
+    if (isAnnouncement || voteLoading) return;
+    setVoteLoading(true);
+    try {
+      const data = await forumService.vote(topicId, voteType);
+      setUps(Number(data.ups) || 0);
+      setDowns(Number(data.downs) || 0);
+      setUserVote(data.currentUserVote || null);
+    } catch {
+      // Silencia erro de voto
+    } finally {
+      setVoteLoading(false);
     }
   };
 
@@ -237,51 +245,38 @@ const PostCard = ({
   };
 
   return (
-    <div className={`rounded-2xl p-5 mb-4 shadow-sm transition-shadow ${featured ? 'bg-gradua-forum text-white' : 'bg-white border border-gray-100'}`}>
+    <div className="rounded-2xl p-5 mb-4 shadow-sm transition-shadow bg-white border border-gray-100">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-orange-100 flex-shrink-0">
-            <img
-              src={`https://api.dicebear.com/7.x/personas/svg?seed=${avatar}&backgroundColor=ffedd5`}
-              alt={name}
-              className="w-full h-full object-cover"
-            />
+            <img src={`https://api.dicebear.com/7.x/personas/svg?seed=${avatar}&backgroundColor=ffedd5`} alt={name} className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className={`text-sm font-bold ${featured ? 'text-white' : 'text-gray-900'}`}>{name}</p>
+            <p className="text-sm font-bold text-gray-900">{name}</p>
             <div className="flex items-center gap-1.5">
-              <p className={`text-[10px] font-medium tracking-wide uppercase ${featured ? 'text-white/70' : 'text-gray-500'}`}>{time}</p>
-              {/* Spec 2.2: indicador "editado" */}
-              {isEdited && (
-                <span className={`text-[9px] italic ${featured ? 'text-white/50' : 'text-gray-400'}`}>• editado</span>
-              )}
+              <p className="text-[10px] font-medium tracking-wide uppercase text-gray-500">{time}</p>
+              {isEdited && <span className="text-[9px] italic text-gray-400">• editado</span>}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          {/* Botão de edição — apenas para o autor (spec 4.3) */}
           {isAuthor && !editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className={`p-1.5 rounded-lg transition-colors ${featured ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gradua-forum hover:bg-gradua-forum/10'}`}
-              title="Editar tópico"
-            >
+            <button onClick={() => setEditing(true)}
+              className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-gradua-forum hover:bg-gradua-forum/10"
+              title="Editar tópico">
               <Pencil size={14} />
             </button>
           )}
           {isAuthor && (
-            <button
-              onClick={() => onDelete(topicId)}
-              className={`p-1.5 rounded-lg transition-colors ${featured ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
-              title="Excluir tópico"
-            >
+            <button onClick={() => onDelete(topicId)}
+              className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-red-500 hover:bg-red-50"
+              title="Excluir tópico">
               <Trash2 size={15} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Conteúdo — modo leitura ou edição inline */}
       {editing ? (
         <div className="mb-4">
           <input
@@ -297,65 +292,51 @@ const PostCard = ({
             className="w-full border-2 border-gradua-forum rounded-xl p-2.5 text-sm text-gray-800 outline-none resize-none focus:ring-1 focus:ring-gradua-forum"
           />
           <div className="flex gap-2 mt-2">
-            <button
-              onClick={handleSaveEdit}
-              disabled={editSaving}
-              className="px-4 py-2 bg-gradua-forum text-white text-xs font-bold rounded-lg hover:opacity-90 disabled:opacity-60 flex items-center gap-1.5"
-            >
-              {editSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-              Salvar
+            <button onClick={handleSaveEdit} disabled={editSaving}
+              className="px-4 py-2 bg-gradua-forum text-white text-xs font-bold rounded-lg hover:opacity-90 disabled:opacity-60 flex items-center gap-1.5">
+              {editSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Salvar
             </button>
-            <button
-              onClick={() => { setEditing(false); setEditTitle(title); setEditContent(content); }}
-              className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200"
-            >
+            <button onClick={() => { setEditing(false); setEditTitle(title); setEditContent(content); }}
+              className="px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200">
               Cancelar
             </button>
           </div>
         </div>
       ) : (
         <>
-          <h3 className={`text-base font-bold mb-2 leading-tight ${featured ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
-          <p className={`text-[13px] mb-4 leading-relaxed ${featured ? 'text-white/90' : 'text-gray-600'}`}>{content}</p>
+          <h3 className="text-base font-bold mb-2 leading-tight text-gray-900">{title}</h3>
+          <p className="text-[13px] mb-4 leading-relaxed text-gray-600">{content}</p>
         </>
       )}
 
       <div className="flex items-center justify-between">
         <div className="flex gap-3 items-center">
-          {/* Spec 2.2: votação oculta para AVISO, habilitada para DISCUSSÃO */}
           {!isAnnouncement && (
             <div className="flex gap-2">
               <button
                 onClick={() => handleVote('up')}
-                className={`flex items-center gap-1 px-1.5 py-1 rounded-md transition-colors ${
-                  featured
-                    ? (userVote === 'up' ? 'text-white font-black bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10')
-                    : (userVote === 'up' ? 'text-green-600 font-bold bg-green-50' : 'text-gray-500 hover:text-green-600 hover:bg-gray-50')
+                disabled={voteLoading}
+                className={`flex items-center gap-1 px-1.5 py-1 rounded-md transition-colors disabled:opacity-60 ${
+                  userVote === 'up' ? 'text-green-600 font-bold bg-green-50' : 'text-gray-500 hover:text-green-600 hover:bg-gray-50'
                 }`}
               >
                 <ArrowUp size={16} strokeWidth={userVote === 'up' ? 3 : 2} />
-                <span className="text-xs">{likes}</span>
+                <span className="text-xs">{ups}</span>
               </button>
               <button
                 onClick={() => handleVote('down')}
-                className={`flex items-center gap-1 px-1.5 py-1 rounded-md transition-colors ${
-                  featured
-                    ? (userVote === 'down' ? 'text-white font-black bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10')
-                    : (userVote === 'down' ? 'text-red-600 font-bold bg-red-50' : 'text-gray-500 hover:text-red-600 hover:bg-gray-50')
+                disabled={voteLoading}
+                className={`flex items-center gap-1 px-1.5 py-1 rounded-md transition-colors disabled:opacity-60 ${
+                  userVote === 'down' ? 'text-red-600 font-bold bg-red-50' : 'text-gray-500 hover:text-red-600 hover:bg-gray-50'
                 }`}
               >
                 <ArrowDown size={16} strokeWidth={userVote === 'down' ? 3 : 2} />
-                <span className="text-xs">{dislikes}</span>
+                <span className="text-xs">{downs}</span>
               </button>
             </div>
           )}
-          {/* Botão de comentários */}
-          <button
-            onClick={toggleComments}
-            className={`flex items-center gap-1.5 px-1.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-              featured ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-gradua-forum hover:bg-gradua-forum/10'
-            }`}
-          >
+          <button onClick={toggleComments}
+            className="flex items-center gap-1.5 px-1.5 py-1 text-xs font-semibold rounded-md transition-colors text-gray-500 hover:text-gradua-forum hover:bg-gradua-forum/10">
             <MessageCircle size={16} />
             <span>{commentCount}</span>
             {showComments ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -364,7 +345,6 @@ const PostCard = ({
         <CategoryTag label={tag} variant={tagVariant} />
       </div>
 
-      {/* Seção de comentários */}
       {showComments && (
         <div className="mt-4 pt-4 border-t border-gray-100 animate-fade-in">
           {commentsLoading ? (
@@ -377,19 +357,18 @@ const PostCard = ({
               {comments.length === 0 ? (
                 <p className="text-xs text-gray-400 text-center py-3">Nenhum comentário ainda. Seja o primeiro!</p>
               ) : (
-                  comments.map(c => (
-                    <CommentItem
-                      key={c.commentId}
-                      comment={c}
-                      currentUserId={currentUserId}
-                      onDelete={handleDeleteComment}
-                      onUpdate={handleUpdateComment}
-                    />
-                  ))
+                comments.map(c => (
+                  <CommentItem
+                    key={c.commentId}
+                    comment={c}
+                    currentUserId={currentUser?.id}
+                    onDelete={handleDeleteComment}
+                    onUpdate={handleUpdateComment}
+                  />
+                ))
               )}
             </div>
           )}
-          {/* Campo para novo comentário */}
           <div className="flex gap-2 mt-3">
             <input
               type="text"
@@ -402,8 +381,7 @@ const PostCard = ({
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim() || postingComment}
-              className="p-2 bg-gradua-forum text-white rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity"
-            >
+              className="p-2 bg-gradua-forum text-white rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity">
               {postingComment ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             </button>
           </div>
@@ -414,8 +392,7 @@ const PostCard = ({
 };
 
 /* ─────────────────────────────────────────
-   Card de Adição — categorias filtradas por perfil
-   Spec 1.2: monitor pode criar AVISO; aluno não pode
+   AddPostCard
 ───────────────────────────────────────── */
 const ALL_CATEGORIES = [
   { id: 'pergunta', label: 'Pergunta', icon: BookOpen },
@@ -430,7 +407,6 @@ const AddPostCard = ({ onPublish, loading: publishLoading, userRole }) => {
   const [title, setTitle]                       = useState('');
   const [postText, setPostText]                 = useState('');
 
-  // Spec 1.2: filtro de categorias por perfil
   const allowedCategories = userRole === 'MONITOR'
     ? ALL_CATEGORIES
     : ALL_CATEGORIES.filter(c => c.id !== 'aviso');
@@ -524,9 +500,6 @@ const AddPostCard = ({ onPublish, loading: publishLoading, userRole }) => {
   );
 };
 
-/* ─────────────────────────────────────────
-   Estados de Loading, Erro e Vazio
-───────────────────────────────────────── */
 const LoadingState = () => (
   <div className="flex flex-col items-center justify-center py-16 gap-3 text-gradua-forum/60">
     <Loader2 size={32} className="animate-spin" />
@@ -558,7 +531,7 @@ const EmptyState = ({ query, filter }) => (
 );
 
 /* ─────────────────────────────────────────
-   Main Component — ForumScreen
+   Main — ForumScreen
 ───────────────────────────────────────── */
 const ForumScreen = () => {
   const { user } = useAuth();
@@ -566,12 +539,12 @@ const ForumScreen = () => {
   const currentUserId = user ? user.id : null;
   const { pushNotify } = useWebNotifications();
 
-  const [posts, setPosts]                     = useState([]);
-  const [activeFilter, setActiveFilter]       = useState('todos');
-  const [searchQuery, setSearchQuery]         = useState('');
-  const [loading, setLoading]                 = useState(true);
-  const [publishLoading, setPublishLoading]   = useState(false);
-  const [error, setError]                     = useState(null);
+  const [posts, setPosts]                   = useState([]);
+  const [activeFilter, setActiveFilter]     = useState('todos');
+  const [searchQuery, setSearchQuery]       = useState('');
+  const [loading, setLoading]               = useState(true);
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [error, setError]                   = useState(null);
 
   const filters = [
     { id: 'todos',     label: 'Todos os Tópicos' },
@@ -585,6 +558,8 @@ const ForumScreen = () => {
     setLoading(true);
     setError(null);
     try {
+      // FILTER_TO_API_TYPE converte 'perguntas' → 'pergunta' para o back-end
+      // O back-end filtra por type, então o filtro por tópico funciona
       const apiType = FILTER_TO_API_TYPE[filter] || null;
       const data = await forumService.getFeed(apiType);
       setPosts(data || []);
@@ -604,7 +579,6 @@ const ForumScreen = () => {
     try {
       const newTopic = await forumService.createTopic({ title, content, type });
       setPosts(prev => [newTopic, ...prev]);
-      // Notificação push nativa ao publicar AVISO (spec 1.2 — exclusivo de Monitor)
       if ((type || '').toLowerCase() === 'aviso') {
         pushNotify({
           title: '📢 Novo aviso publicado',
@@ -629,6 +603,7 @@ const ForumScreen = () => {
     }
   };
 
+  // Filtro de busca local (por texto) — o filtro por categoria já é feito no back
   const filteredPosts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return posts;
@@ -640,7 +615,7 @@ const ForumScreen = () => {
   }, [posts, searchQuery]);
 
   const toCardProps = (post) => {
-    const tagInfo = TYPE_TO_TAG[post.type] || { label: post.type?.toUpperCase() || 'POST', variant: 'perguntas' };
+    const tagInfo = TYPE_TO_TAG[(post.type || '').toLowerCase()] || { label: post.type?.toUpperCase() || 'POST', variant: 'perguntas' };
     const date = post.creationDate ? new Date(post.creationDate) : null;
     const time = date
       ? date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -658,7 +633,7 @@ const ForumScreen = () => {
       isEdited:     post.isEdited || false,
       voteScore:    post.voteScore || 0,
       commentCount: post.commentCount || 0,
-      featured:     false,
+      authorId:     post.authorId,
     };
   };
 
@@ -671,7 +646,6 @@ const ForumScreen = () => {
           <h1 className="text-2xl font-black text-gradua-forum mb-1 leading-tight">Fórum da Comunidade</h1>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-5">Comunidade Acadêmica • UFAL</p>
 
-          {/* Campo de Busca */}
           <div className="flex items-center gap-2 bg-white rounded-xl p-3 border-2 border-gray-200 mb-4 transition-colors focus-within:border-gradua-forum shadow-sm">
             <Search size={18} className="text-gray-400" />
             <input
@@ -688,7 +662,7 @@ const ForumScreen = () => {
             )}
           </div>
 
-          {/* Filtros */}
+          {/* Filtros por categoria — habilitados, disparam nova busca no back-end */}
           <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
             {filters.map((f) => {
               const isActive = activeFilter === f.id;
@@ -707,7 +681,6 @@ const ForumScreen = () => {
           </div>
         </div>
 
-        {/* Posts Feed */}
         <div className="px-4 pb-28">
           {activeFilter === 'todos' && !searchQuery && (
             <AddPostCard onPublish={handlePublish} loading={publishLoading} userRole={user?.role} />
@@ -718,14 +691,14 @@ const ForumScreen = () => {
           ) : error ? (
             <ErrorState message={error} onRetry={() => fetchFeed(activeFilter)} />
           ) : filteredPosts.length > 0 ? (
-              filteredPosts.map((post) => (
-                <PostCard
-                  key={post.topicId}
-                  {...toCardProps(post)}
-                  currentUser={{ name: currentUserName, id: currentUserId }}
-                  onDelete={handleDelete}
-                />
-              ))
+            filteredPosts.map((post) => (
+              <PostCard
+                key={post.topicId}
+                {...toCardProps(post)}
+                currentUser={{ name: currentUserName, id: currentUserId }}
+                onDelete={handleDelete}
+              />
+            ))
           ) : (
             <EmptyState query={searchQuery} filter={filters.find((f) => f.id === activeFilter)?.label} />
           )}

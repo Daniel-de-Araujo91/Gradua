@@ -1,30 +1,48 @@
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { apiClient } from '../services/apiClient';
 
 const StatsCards = () => {
     const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let mounted = true;
-        apiClient.get('/dashboard/stats').then(data => {
-            if (mounted) setStats(data);
-        }).catch(() => {
-            // keep null on error
-        });
+        apiClient.get('/dashboard/stats')
+            .then(data => {
+                if (mounted) {
+                    setStats(data);
+                    setLoading(false);
+                }
+            })
+            .catch(() => {
+                // Em caso de erro, não usa fallback com valor falso — mostra '—'
+                if (mounted) setLoading(false);
+            });
         return () => { mounted = false; };
     }, []);
 
-    const ira = stats?.ira ?? 7.5;
-    const integral = stats?.integralizationPercent ?? 68;
-    const hours = stats?.hoursPending ?? 840;
+    // Mostra '—' enquanto carrega ou se o dado for null/undefined
+    // Isso evita mostrar 0% de integralização quando o dado ainda não chegou
+    const ira = stats?.ira != null ? stats.ira : null;
+    const integral = stats?.integralizationPercent != null ? stats.integralizationPercent : null;
+    const hours = stats?.hoursPending != null ? stats.hoursPending : null;
+
+    const Skeleton = () => (
+        <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
+    );
 
     return (
         <div className="grid grid-cols-2 gap-4 px-4 py-4 mb-6">
             <div className="group relative bg-gradient-to-br from-white via-white to-white border border-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/10" />
                 <p className="text-sm font-semibold text-gradua-inicio uppercase tracking-wide mb-2 z-10 relative">IRA GERAL</p>
-                <p className="text-4xl font-black text-gradua-inicio mb-1.5 z-10 relative leading-tight">{ira}</p>
+                {loading
+                    ? <div className="mb-1.5"><Skeleton /></div>
+                    : <p className="text-4xl font-black text-gradua-inicio mb-1.5 z-10 relative leading-tight">
+                        {ira !== null ? ira : '—'}
+                      </p>
+                }
                 <div className="flex items-center gap-1 text-xs font-medium text-gradua-inicio z-10 relative">
                     <TrendingUp size={14} className="text-green/50" />
                     <span>+0.4 este semestre</span>
@@ -34,11 +52,21 @@ const StatsCards = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/10" />
                 <div className="relative z-10">
                     <p className="text-sm font-semibold text-gradua-inicio uppercase tracking-wide mb-2">INTEGRALIZAÇÃO</p>
-                    <p className="text-4xl font-black text-gradua-inicio mb-3 leading-tight">{integral}%</p>
+                    {loading
+                        ? <div className="mb-3"><Skeleton /></div>
+                        : <p className="text-4xl font-black text-gradua-inicio mb-3 leading-tight">
+                            {integral !== null ? `${integral}%` : '—'}
+                          </p>
+                    }
                     <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                        <div className="bg-gradient-to-r from-gradua-inicio to-gradua-inicio/70 h-2.5 rounded-full transition-all duration-300" style={{ width: `${integral}%` }} />
+                        <div
+                            className="bg-gradient-to-r from-gradua-inicio to-gradua-inicio/70 h-2.5 rounded-full transition-all duration-500"
+                            style={{ width: `${integral ?? 0}%` }}
+                        />
                     </div>
-                    <p className="text-sm font-semibold text-gradua-inicio mt-2">{hours}h pendentes</p>
+                    <p className="text-sm font-semibold text-gradua-inicio mt-2">
+                        {hours !== null ? `${hours}h pendentes` : '—'}
+                    </p>
                 </div>
             </div>
         </div>

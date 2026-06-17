@@ -63,7 +63,8 @@ public class ForumTopicService {
         ForumTopicModel forumTopic = new ForumTopicModel();
         forumTopic.setTitle(dto.title());
         forumTopic.setContent(dto.content());
-        forumTopic.setType(dto.type());
+        // Normaliza para MAIÚSCULAS para garantir consistência no filtro
+        forumTopic.setType(dto.type() != null ? dto.type().toUpperCase() : null);
         forumTopic.setAuthor(author);
         forumTopic.setIsLockedByMod(false);
         forumTopic.setIsEdited(false);
@@ -120,8 +121,14 @@ public class ForumTopicService {
 
         UserModel user = getUserByToken();
 
-        if (!forumTopic.getAuthor().getUserId().equals(user.getUserId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode excluir este tópico");
+        // Moderadores (ADMIN, PROFESSOR) podem excluir qualquer tópico;
+        // usuário comum só pode excluir o próprio
+        boolean isAuthor = forumTopic.getAuthor().getUserId().equals(user.getUserId());
+        boolean isModerator = "ADMIN".equalsIgnoreCase(user.getRole())
+            || "PROFESSOR".equalsIgnoreCase(user.getRole());
+
+        if (!isAuthor && !isModerator) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissão para excluir este tópico");
         }
 
         repository.delete(forumTopic);

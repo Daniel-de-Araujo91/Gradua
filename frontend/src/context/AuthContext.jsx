@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { apiClient } from '../services/apiClient';
 
 const AuthContext = createContext(null);
 
@@ -10,22 +11,51 @@ export function AuthProvider({ children }) {
 
   const [token, setToken] = useState(() => localStorage.getItem('gradua_token') || null);
 
+  // Perfil enriquecido (matrícula, IRA, semestre) — carregado após login
+  const [profile, setProfile] = useState(() => {
+    const stored = localStorage.getItem('gradua_profile');
+    return stored ? JSON.parse(stored) : null;
+  });
+
+  // Busca o profile quando há token mas profile ainda não foi carregado
+  // (ex: usuário voltou à sessão após F5)
+  useEffect(() => {
+    if (token && !profile) {
+      apiClient.get('/dashboard/profile')
+        .then(data => {
+          setProfile(data);
+          localStorage.setItem('gradua_profile', JSON.stringify(data));
+        })
+        .catch(() => {}); // silencia: tela mostra '—' se falhar
+    }
+  }, [token, profile]);
+
   const login = useCallback((userData, jwt) => {
     setUser(userData);
     setToken(jwt);
     localStorage.setItem('gradua_user', JSON.stringify(userData));
     localStorage.setItem('gradua_token', jwt);
+
+    // Busca o profile logo após o login para ter matrícula disponível
+    apiClient.get('/dashboard/profile')
+      .then(data => {
+        setProfile(data);
+        localStorage.setItem('gradua_profile', JSON.stringify(data));
+      })
+      .catch(() => {});
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
     setToken(null);
+    setProfile(null);
     localStorage.removeItem('gradua_user');
     localStorage.removeItem('gradua_token');
+    localStorage.removeItem('gradua_profile');
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, profile, isAuthenticated: !!token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

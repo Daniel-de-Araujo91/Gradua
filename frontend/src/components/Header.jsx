@@ -7,14 +7,16 @@ import { notificationService } from '../services/notificationService';
 import { useWebNotifications } from '../hooks/useWebNotifications';
 
 const Header = ({ activeTab = 'home' }) => {
-    const { user, logout } = useAuth();
+    const { user, profile, logout } = useAuth();
     const navigate = useNavigate();
     const userName = user ? user.firstName : 'Usuário';
+    // Matrícula vem do profile enriquecido (buscado após login no AuthContext)
+    const matricula = profile?.enrollmentNumber || null;
+
     const [showNotifications, setShowNotifications] = useState(false);
     const { permission, requestPermission } = useWebNotifications();
     const [showPermBanner, setShowPermBanner] = useState(false);
 
-    // Estado de notificações vindas da API (spec 4.3 - Central de Notificações)
     const [notifications, setNotifications] = useState([]);
     const [loadingNotifs, setLoadingNotifs] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -39,8 +41,7 @@ const Header = ({ activeTab = 'home' }) => {
         }
     }, [showNotifications, fetchNotifications]);
 
-    // Badge: busca contagem de não lidas a cada 30s (polling leve)
-    // O polling completo de notificações com push fica no NotificationToast
+    // Badge: busca contagem de não lidas a cada 30s
     useEffect(() => {
         if (!user) return;
         const fetchCount = async () => {
@@ -54,7 +55,7 @@ const Header = ({ activeTab = 'home' }) => {
         return () => clearInterval(interval);
     }, [user]);
 
-    // Banner de solicitação de permissão após 3s se não decidiu
+    // Banner de permissão push após 3s
     useEffect(() => {
         if (permission === 'default') {
             const t = setTimeout(() => setShowPermBanner(true), 3000);
@@ -65,6 +66,7 @@ const Header = ({ activeTab = 'home' }) => {
 
     const handleMarkAsRead = async (notificationId) => {
         try {
+            // Persiste no back-end — assim o estado não volta no reload
             await notificationService.markAsRead(notificationId);
             setNotifications(prev =>
                 prev.map(n => n.notificationId === notificationId ? { ...n, isRead: true } : n)
@@ -77,6 +79,7 @@ const Header = ({ activeTab = 'home' }) => {
 
     const handleMarkAllRead = async () => {
         const unread = notifications.filter(n => !n.isRead);
+        // Persiste cada uma no back-end em paralelo
         await Promise.allSettled(unread.map(n => notificationService.markAsRead(n.notificationId)));
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
         setUnreadCount(0);
@@ -143,7 +146,8 @@ const Header = ({ activeTab = 'home' }) => {
                             </Tooltip>
                             <Tooltip content="Sua matrícula do SIGAA" placement='bottom'>
                                 <span className='text-gray-500 text-xs font-semibold cursor-help'>
-                                    xxxxxxxxx
+                                    {/* Matrícula vinda do profile — '—' enquanto carrega, valor real quando disponível */}
+                                    {matricula ?? '—'}
                                 </span>
                             </Tooltip>
                         </div>
@@ -165,7 +169,7 @@ const Header = ({ activeTab = 'home' }) => {
                 </button>
             </div>
 
-            {/* Painel de notificações (spec 4.3 - Central de Notificações) */}
+            {/* Painel de notificações */}
             {showNotifications && (
                 <div 
                     className='fixed inset-0 bg-black/20 z-[60] flex items-start justify-end p-4 sm:p-6' 
@@ -203,7 +207,6 @@ const Header = ({ activeTab = 'home' }) => {
                                         className={`p-3 mb-1 rounded-xl flex gap-3 items-start transition-colors cursor-pointer ${
                                             !notif.isRead ? 'bg-blue-50/60 hover:bg-blue-50' : 'bg-white hover:bg-gray-50'
                                         }`}>
-                                        {/* Ícone de calendário para sessões de monitoria */}
                                         <div className={`mt-1 p-2 rounded-full flex-shrink-0 ${
                                             !notif.isRead ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
                                         }`}>

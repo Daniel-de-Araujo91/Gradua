@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { apiClient } from '../services/apiClient';
 
 const TodayAgenda = () => {
     const [showCalendar, setShowCalendar] = useState(false);
@@ -7,49 +8,45 @@ const TodayAgenda = () => {
     const [currentMonth, setCurrentMonth] = useState(selectedDate.getMonth());
     const [currentYear, setCurrentYear] = useState(selectedDate.getFullYear());
 
+    // null = ainda carregando, [] = sem aulas, [...] = tem aulas
+    // Separar "carregando" de "lista vazia" evita o pulo de layout:
+    // enquanto null mostramos um skeleton com altura fixa em vez de
+    // renderizar o bloco vazio que empurra o conteúdo abaixo.
     const [agenda, setAgenda] = useState(null);
-
-    const weeklySchedule = {
-        0: [], 
-        1: [   
-            { time: "08:00", endTime: "09:40", title: "Cálculo 2", location: "Bloco A, Sala 101" },
-            { time: "10:00", endTime: "11:40", title: "Física 1", location: "Laboratório de Física" }
-        ],
-        2: [   
-            { time: "13:30", endTime: "15:10", title: "Teoria da Computação", location: "Laboratório 04" },
-            { time: "15:20", endTime: "17:20", title: "Programação 3", location: "Bloco CC, Sala 102" }
-        ],
-        3: [   
-            { time: "10:00", endTime: "11:40", title: "Álgebra Linear", location: "Bloco B, Sala 205" }
-        ],
-        4: [   
-            { time: "13:30", endTime: "15:10", title: "Banco de Dados", location: "Laboratório 02" },
-            { time: "15:20", endTime: "17:20", title: "Sistemas Operacionais", location: "Bloco Engenharias, Sala 12" }
-        ],
-        5: [   
-            { time: "15:20", endTime: "17:20", title: "Engenharia de Software", location: "Auditório Principal" }
-        ],
-        6: []  
-    };
-
-    const displayClasses = agenda && Array.isArray(agenda)
-        ? agenda.map(s => ({ time: s.startTime, endTime: s.endTime, title: s.topic || s.title || s.subjectName || 'Sessão', location: s.location || s.meetingLink || '-' }))
-        : weeklySchedule[selectedDate.getDay()] || [];
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let mounted = true;
-        import('../services/apiClient').then(({ apiClient }) => {
-            apiClient.get('/dashboard/agenda/today').then(data => {
-                if (mounted) setAgenda(data || []);
-            }).catch(() => {}).finally(() => {});
-        });
+        setLoading(true);
+        apiClient.get('/dashboard/agenda/today')
+            .then(data => {
+                if (mounted) {
+                    setAgenda(Array.isArray(data) ? data : []);
+                    setLoading(false);
+                }
+            })
+            .catch(() => {
+                if (mounted) {
+                    // Em caso de erro mostra lista vazia sem travar a tela
+                    setAgenda([]);
+                    setLoading(false);
+                }
+            });
         return () => { mounted = false; };
     }, []);
 
+    // Normaliza resposta da API para o formato { time, endTime, title, location }
+    const displayClasses = (agenda || []).map(s => ({
+        time: s.startTime,
+        endTime: s.endTime,
+        title: s.topic || s.title || s.subjectName || 'Sessão',
+        location: s.location || s.meetingLink || '-',
+    }));
+
     const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
     const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
-    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-    const weekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
+    const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const weekDays = ["D","S","T","Q","Q","S","S"];
 
     const daysInMonth = getDaysInMonth(currentYear, currentMonth);
     const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
@@ -58,40 +55,55 @@ const TodayAgenda = () => {
     );
 
     const prevMonth = () => {
-        if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(currentYear - 1); } 
+        if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(currentYear - 1); }
         else { setCurrentMonth(currentMonth - 1); }
     };
 
     const nextMonth = () => {
-        if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(currentYear + 1); } 
+        if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(currentYear + 1); }
         else { setCurrentMonth(currentMonth + 1); }
     };
 
     const handleDateSelect = (day) => {
         if (day) {
             setSelectedDate(new Date(currentYear, currentMonth, day));
-            setShowCalendar(false); 
+            setShowCalendar(false);
         }
     };
 
     const isToday = selectedDate.toDateString() === new Date().toDateString();
-    const headerTitle = isToday 
-        ? "Agenda de Hoje" 
+    const headerTitle = isToday
+        ? "Agenda de Hoje"
         : `Agenda: ${selectedDate.getDate().toString().padStart(2, '0')}/${(selectedDate.getMonth()+1).toString().padStart(2, '0')}`;
 
     return (
         <div className='px-4 mb-6'>
             <div className='flex justify-between items-center mb-4'>
                 <h2 className='text-xl font-bold text-gradua-inicio'>{headerTitle}</h2>
-                <button 
+                <button
                     onClick={() => setShowCalendar(true)}
-                    className='text-gradua-inicio text-sm font-semibold flex items-center gap-1 hover:text-graduia-inicio/70 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg'>
+                    className='text-gradua-inicio text-sm font-semibold flex items-center gap-1 hover:text-gradua-inicio/70 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg'>
                     Ver calendário <CalendarIcon size={16} />
                 </button>
             </div>
 
-            <div className='space-y-4'>
-                {displayClasses.length > 0 ? (
+            {/* Altura mínima garantida para evitar o pulo de layout.
+                O skeleton mantém o mesmo espaço que pelo menos 1 card ocupa,
+                então o conteúdo abaixo (Announcements, etc.) não se move. */}
+            <div className='space-y-4 min-h-[120px]'>
+                {loading ? (
+                    <div className='bg-white border border-gray-100 rounded-2xl p-5 shadow-sm flex items-center gap-3 animate-pulse'>
+                        <div className='flex flex-col items-center min-w-[56px] gap-1'>
+                            <div className='h-6 w-10 bg-gray-200 rounded'/>
+                            <div className='h-3 w-6 bg-gray-100 rounded'/>
+                            <div className='h-4 w-8 bg-gray-200 rounded'/>
+                        </div>
+                        <div className='flex-1 space-y-2'>
+                            <div className='h-5 bg-gray-200 rounded w-3/4'/>
+                            <div className='h-4 bg-gray-100 rounded w-1/2'/>
+                        </div>
+                    </div>
+                ) : displayClasses.length > 0 ? (
                     displayClasses.map((classItem, index) => (
                         <div key={index} className='group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5'>
                             <div className='flex items-start gap-3'>
@@ -113,12 +125,13 @@ const TodayAgenda = () => {
                 ) : (
                     <div className='bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-8 text-center'>
                         <CalendarIcon size={32} className='text-gray-400 mx-auto mb-3' />
-                        <h3 className='text-gradua-inicio font-semibold'>Sem aulas programadas</h3>
-                        <p className='text-gradua-inicio/50 text-sm mt-1'>Aproveite seu dia de descanso ou estudo livre!</p>
+                        <h3 className='text-gradua-inicio font-semibold'>Sem sessões de monitoria hoje</h3>
+                        <p className='text-gradua-inicio/50 text-sm mt-1'>Aproveite para estudar ou descansar!</p>
                     </div>
                 )}
             </div>
 
+            {/* Modal de calendário */}
             {showCalendar && (
                 <div className='fixed inset-0 bg-black/30 z-[70] flex items-center justify-center p-4' onClick={() => setShowCalendar(false)}>
                     <div className='bg-white rounded-2xl w-full max-w-[320px] p-5 shadow-2xl animate-fade-in' onClick={e => e.stopPropagation()}>
@@ -166,13 +179,13 @@ const TodayAgenda = () => {
                         </div>
                         
                         <div className='mt-5 pt-4 border-t border-gray-100 flex justify-center'>
-                            <button 
+                            <button
                                 onClick={() => {
                                     setSelectedDate(new Date());
                                     setCurrentMonth(new Date().getMonth());
                                     setCurrentYear(new Date().getFullYear());
                                 }}
-                                className='text-sm text-gradua-inicio/70 font-semibold hover:text-gradua-inicio/70'>
+                                className='text-sm text-gradua-inicio/70 font-semibold hover:text-gradua-inicio'>
                                 Voltar para Hoje
                             </button>
                         </div>
@@ -180,7 +193,7 @@ const TodayAgenda = () => {
                 </div>
             )}
 
-            <style jsx>{`
+            <style>{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: scale(0.95); }
                     to { opacity: 1; transform: scale(1); }
