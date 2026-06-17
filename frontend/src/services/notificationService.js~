@@ -11,5 +11,5 @@ export const notificationService = {
    * Marca uma notificação como lida.
    * @param {string} id - UUID da notificação
    */
-  markAsRead: (id) => apiClient.put(`/notifications/${id}/read`),
+  markAsRead: (id) => apiClient.patch(`/notifications/${id}/read`),
 };

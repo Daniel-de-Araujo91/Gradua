@@ -2,7 +2,7 @@
 
 ## Header
 - [x] Puxar a matrícula
-- [ ] Corrigir persistência das notificações
+- [x] Corrigir persistência das notificações
   - Problema: ao recarregar a página, as notificações desaparecem.
 
 ---
