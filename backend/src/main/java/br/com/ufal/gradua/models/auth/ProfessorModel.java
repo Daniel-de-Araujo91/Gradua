@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -39,7 +40,7 @@ public class ProfessorModel implements Serializable{
         PENDING, APPROVED, REJECTED
     }
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "professor_id")
     private UserModel user;
 }

@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 
 @Getter
@@ -34,11 +35,11 @@ public class MonitorSessionModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID sessionId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "monitor_id")
     private MonitorModel monitor;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
     private ClassSectionModel classSection;
 

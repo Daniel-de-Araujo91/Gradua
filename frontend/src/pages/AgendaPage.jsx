@@ -64,14 +64,14 @@ const AgendaPage = () => {
     const { user } = useAuth();
     const { pushNotify } = useWebNotifications();
     const [selectedDay, setSelectedDay] = useState(todayLabel());
-    
+
     // Modal de lembrete pessoal (todos os perfis)
     const [showAddModal, setShowAddModal] = useState(false);
     const [newTitle, setNewTitle] = useState('');
     const [newTime, setNewTime] = useState('');
     const [newLocation, setNewLocation] = useState('');
     const [editReminderId, setEditReminderId] = useState(null);
-    
+
     // Modal de agendamento de monitoria (apenas Monitor)
     const [showSessionModal, setShowSessionModal] = useState(false);
     const [sessionTopic, setSessionTopic] = useState('');
@@ -183,7 +183,7 @@ const AgendaPage = () => {
     return (
         <div className="w-full min-h-screen flex flex-col bg-gray-50">
             <Header activeTab='agenda' />
-            
+
             {/* Seletor de dias da semana */}
             <div className="px-4 py-4 bg-gray-50">
                 <div className="flex justify-between gap-1 w-full">
@@ -309,8 +309,8 @@ const AgendaPage = () => {
                                     {item.status && (
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0 ${
                                             item.statusType === 'confirmed' ? 'bg-gradua-inicio/15 text-gradua-inicio' :
-                                            item.statusType === 'lab' ? 'bg-gradua-agenda/15 text-gradua-agenda' :
-                                            'bg-gray-100 text-gray-500'
+                                                item.statusType === 'lab' ? 'bg-gradua-agenda/15 text-gradua-agenda' :
+                                                    'bg-gray-100 text-gray-500'
                                         }`}>
                                             {item.status}
                                         </span>
@@ -340,7 +340,7 @@ const AgendaPage = () => {
                 ))}
 
                 {/* Botão de adicionar lembrete pessoal */}
-                <button 
+                <button
                     onClick={() => setShowAddModal(true)}
                     className="w-full flex items-center justify-center gap-2 py-3 mt-4 text-sm font-bold transition-opacity hover:opacity-90 shadow-sm text-white bg-gradua-agenda rounded-xl">
                     <BellPlus size={16} />
@@ -349,7 +349,7 @@ const AgendaPage = () => {
 
                 {/* Botão de agendar sessão de monitoria (aparece no meio do dia também) */}
                 {isMonitor(user) && (
-                    <button 
+                    <button
                         onClick={() => setShowSessionModal(true)}
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold transition-opacity hover:opacity-90 shadow-sm text-gradua-agenda bg-gradua-agenda/10 rounded-xl border-2 border-dashed border-gradua-agenda/30">
                         <CalendarPlus size={16} />
@@ -363,7 +363,7 @@ const AgendaPage = () => {
             {/* Modal: adicionar lembrete */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-                    <div 
+                    <div
                         className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl animate-fade-in"
                         onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-4 border-b pb-3">
@@ -374,24 +374,24 @@ const AgendaPage = () => {
                         <form onSubmit={handleAddReminder} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">Título</label>
-                                <input 
+                                <input
                                     type="text" required value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
                                     placeholder="Ex: Entrega de Trabalho"
                                     className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda focus:border-gradua-agenda outline-none"
                                 />
                             </div>
-                            
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Horário</label>
-                                    <input 
+                                    <input
                                         type="time" required value={newTime} onChange={(e) => setNewTime(e.target.value)}
                                         className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda outline-none"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Local (Opcional)</label>
-                                    <input 
+                                    <input
                                         type="text" value={newLocation} onChange={(e) => setNewLocation(e.target.value)}
                                         placeholder="Ex: Lab 02"
                                         className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda outline-none"
@@ -399,7 +399,7 @@ const AgendaPage = () => {
                                 </div>
                             </div>
 
-                            <button 
+                            <button
                                 type="submit"
                                 className="w-full bg-gradua-agenda hover:opacity-90 text-white font-bold py-3 rounded-xl mt-6 transition-opacity">
                                 Salvar Lembrete
@@ -412,7 +412,7 @@ const AgendaPage = () => {
             {/* Modal: agendar sessão de monitoria (apenas Monitor — spec 4.2) */}
             {showSessionModal && isMonitor(user) && (
                 <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setShowSessionModal(false)}>
-                    <div 
+                    <div
                         className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto"
                         onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-4 border-b pb-3">
@@ -433,7 +433,7 @@ const AgendaPage = () => {
                             <form onSubmit={handleCreateSession} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Tema da Sessão *</label>
-                                    <input 
+                                    <input
                                         type="text" required value={sessionTopic} onChange={(e) => setSessionTopic(e.target.value)}
                                         placeholder="Ex: Revisão de Recursão"
                                         className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda outline-none"
@@ -442,7 +442,7 @@ const AgendaPage = () => {
 
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Data *</label>
-                                    <input 
+                                    <input
                                         type="date" required value={sessionDate} onChange={(e) => setSessionDate(e.target.value)}
                                         className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda outline-none"
                                     />
@@ -451,14 +451,14 @@ const AgendaPage = () => {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">Início *</label>
-                                        <input 
+                                        <input
                                             type="time" required value={sessionStart} onChange={(e) => setSessionStart(e.target.value)}
                                             className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda outline-none"
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">Término *</label>
-                                        <input 
+                                        <input
                                             type="time" required value={sessionEnd} onChange={(e) => setSessionEnd(e.target.value)}
                                             className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda outline-none"
                                         />
@@ -470,7 +470,7 @@ const AgendaPage = () => {
                                         <MapPin size={13} className="inline mr-1" />
                                         Local (sala física)
                                     </label>
-                                    <input 
+                                    <input
                                         type="text" value={sessionLocation} onChange={(e) => setSessionLocation(e.target.value)}
                                         placeholder="Ex: CCEN, Lab 02"
                                         className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda outline-none"
@@ -482,7 +482,7 @@ const AgendaPage = () => {
                                         <Video size={13} className="inline mr-1" />
                                         Link de videoconferência
                                     </label>
-                                    <input 
+                                    <input
                                         type="url" value={sessionLink} onChange={(e) => setSessionLink(e.target.value)}
                                         placeholder="https://meet.google.com/..."
                                         className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gradua-agenda outline-none"
@@ -493,7 +493,7 @@ const AgendaPage = () => {
                                     💡 Ao confirmar, todos os alunos matriculados na turma receberão uma notificação automática.
                                 </p>
 
-                                <button 
+                                <button
                                     type="submit"
                                     disabled={sessionLoading}
                                     className="w-full bg-gradua-agenda hover:opacity-90 disabled:opacity-60 text-white font-bold py-3 rounded-xl mt-2 transition-opacity flex items-center justify-center gap-2">

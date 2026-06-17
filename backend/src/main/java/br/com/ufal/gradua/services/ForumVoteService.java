@@ -70,6 +70,8 @@ public class ForumVoteService {
         // Recalcula voteScore (UP - DOWN) e persiste no tópico
         long ups   = voteRepository.countByTopicAndVoteType(topic, VoteType.UP);
         long downs = voteRepository.countByTopicAndVoteType(topic, VoteType.DOWN);
+        topic.setUpVoteCount((int) ups);
+        topic.setDownVoteCount((int) downs);
         topic.setVoteScore((int)(ups - downs));
         topicRepository.save(topic);
 
@@ -92,18 +94,17 @@ public class ForumVoteService {
     public Map<String, Object> getVoteState(UUID topicId) {
         UserModel user = getCurrentUser();
         ForumTopicModel topic = topicRepository.findById(topicId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico não encontrado"));
 
-        long ups   = voteRepository.countByTopicAndVoteType(topic, VoteType.UP);
-        long downs = voteRepository.countByTopicAndVoteType(topic, VoteType.DOWN);
         Optional<ForumVoteModel> current = voteRepository.findByTopicAndAuthor(topic, user);
         String currentVote = current.map(v -> v.getVoteType().name().toLowerCase()).orElse(null);
 
+        // Retornamos direto da memória do tópico, milissegundos de tempo de resposta!
         return Map.of(
-            "ups", ups,
-            "downs", downs,
-            "voteScore", (long)(ups - downs),
-            "currentUserVote", currentVote != null ? currentVote : ""
+                "ups", topic.getUpVoteCount() != null ? topic.getUpVoteCount() : 0,
+                "downs", topic.getDownVoteCount() != null ? topic.getDownVoteCount() : 0,
+                "voteScore", topic.getVoteScore() != null ? topic.getVoteScore() : 0,
+                "currentUserVote", currentVote != null ? currentVote : ""
         );
     }
 }

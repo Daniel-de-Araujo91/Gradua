@@ -1,8 +1,10 @@
 package br.com.ufal.gradua.repositories;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import br.com.ufal.gradua.models.agenda.MonitorSessionModel;
@@ -11,9 +13,30 @@ import br.com.ufal.gradua.models.academic.ClassSectionModel;
 
 public interface MonitorSessionRepository extends JpaRepository<MonitorSessionModel, UUID> {
 
-    /** Sessões de um monitor específico, ordenadas por data mais próxima. */
+    @EntityGraph(attributePaths = {
+            "classSection",
+            "classSection.subject"
+    })
     List<MonitorSessionModel> findByMonitorOrderByDateAscStartTimeAsc(MonitorModel monitor);
 
-    /** Sessões de uma turma/disciplina específica. */
+    @EntityGraph(attributePaths = {
+            "monitor",
+            "monitor.student",
+            "monitor.student.user"
+    })
     List<MonitorSessionModel> findByClassSectionOrderByDateAscStartTimeAsc(ClassSectionModel classSection);
+
+    // Este é o método usado no DashboardService!
+    // Ele traz a sessão, a disciplina e os dados do monitor de uma vez só.
+    @EntityGraph(attributePaths = {
+            "classSection",
+            "classSection.subject",
+            "monitor",
+            "monitor.student",
+            "monitor.student.user"
+    })
+    List<MonitorSessionModel> findByClassSectionInAndDateOrderByStartTimeAsc(
+            List<ClassSectionModel> classSections,
+            LocalDate date
+    );
 }

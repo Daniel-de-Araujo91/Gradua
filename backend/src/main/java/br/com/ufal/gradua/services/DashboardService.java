@@ -1,20 +1,28 @@
 package br.com.ufal.gradua.services;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
+import br.com.ufal.gradua.models.agenda.MonitorSessionModel;
+import br.com.ufal.gradua.models.institutional.CurriculumModel;
+import br.com.ufal.gradua.repositories.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.ufal.gradua.dtos.dashboard.DashboardStatsDTO;
 import br.com.ufal.gradua.dtos.dashboard.DashboardSubjectDTO;
+import br.com.ufal.gradua.models.academic.ClassSectionModel;
 import br.com.ufal.gradua.models.academic.EnrollmentModel;
-import br.com.ufal.gradua.repositories.MonitorSessionRepository;
 import br.com.ufal.gradua.models.user.UserModel;
+import br.com.ufal.gradua.repositories.AnnouncementRepository;
 import br.com.ufal.gradua.repositories.EnrollmentRepository;
+import br.com.ufal.gradua.repositories.MonitorSessionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional
@@ -24,131 +32,143 @@ public class DashboardService {
     private final EnrollmentRepository enrollmentRepository;
     private final ForumTopicService forumTopicService;
     private final MonitorSessionRepository monitorSessionRepository;
-    private final br.com.ufal.gradua.repositories.AnnouncementRepository announcementRepository;
+    private final AnnouncementRepository announcementRepository;
+    private final UserRepository userRepository;
 
     private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         return (UserModel) authentication.getPrincipal();
     }
-
+    private UserModel getUserWithStudent() {
+        UserModel user = (UserModel) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // Busca a versão com @EntityGraph, garantindo que o student não seja um proxy
+        return userRepository.findWithStudentByUserId(user.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+    }
     public DashboardStatsDTO getStatsForCurrentUser() {
-        // Prefer values from the StudentModel when available
-        UserModel user = getUserByToken();
+        UserModel user = getUserWithStudent();;
         var student = user.getStudent();
+
         if (student != null) {
             double ira = student.getIra() != null ? student.getIra().doubleValue() : 0.0;
-            // integralization percent: estimate from totalHours / (assume degree requires 240 credits)
+
+            // 2. Acessa o objeto curriculum que agora está carregado na memória
+            CurriculumModel curriculum = student.getCurriculum();
+
+            // Define o total exigido baseado no currículo, ou 240 como segurança
+            int totalHoursRequired = (curriculum != null && curriculum.getReqTotalHours() != null)
+                    ? curriculum.getReqTotalHours() : 240;
+
+            // 3. Calcula com valores dinâmicos
             int integral = 0;
-            if (student.getTotalHours() != null) {
-                int total = student.getTotalHours();
-                // assume program requirement 240 (this is a seed assumption)
-                integral = Math.min(100, (int) Math.round((total / 240.0) * 100.0));
+            if (student.getTotalHours() != null && totalHoursRequired > 0) {
+                integral = Math.min(100, (int) Math.round((student.getTotalHours() / (double) totalHoursRequired) * 100.0));
             }
+
             int hoursPending = 0;
             if (student.getTotalHours() != null) {
-                hoursPending = Math.max(0, 240 - student.getTotalHours());
+                hoursPending = Math.max(0, totalHoursRequired - student.getTotalHours());
             }
 
             return new DashboardStatsDTO(ira, integral, hoursPending);
         }
 
-        // Fallback to conservative defaults
-        double ira = 0.0;
-        int integral = 0;
-        int hoursPending = 999;
-        return new DashboardStatsDTO(ira, integral, hoursPending);
+        return new DashboardStatsDTO(0.0, 0, 999);
     }
 
     public List<DashboardSubjectDTO> getSubjectsForCurrentUser() {
         UserModel user = getUserByToken();
+        // A mágica acontece aqui: o Repository agora traz a árvore inteira via EntityGraph
         List<EnrollmentModel> enrollments = enrollmentRepository.findByStudent(user.getStudent());
 
         return enrollments.stream().map(e -> {
             var cls = e.getClassSection();
             var subj = cls.getSubject();
+
             String code = subj != null ? subj.getCode() : "-";
             String name = subj != null ? subj.getName() : "-";
             String schedule = cls.getAcademicTerm() != null ? cls.getAcademicTerm() : "2026.1";
-            String location = "Instituto de Computação";
-            String type = "Teórica";
             String professor = "-";
+
             if (cls.getProfessor() != null && cls.getProfessor().getUser() != null) {
                 var pu = cls.getProfessor().getUser();
                 professor = (pu.getFirstName() == null ? "" : pu.getFirstName()) +
-                    (pu.getLastName() == null ? "" : " " + pu.getLastName());
+                        (pu.getLastName() == null ? "" : " " + pu.getLastName());
             }
-            int participants = enrollmentRepository.findByClassSection(cls).size();
-            java.util.List<String> monitors = java.util.List.of();
-            Object grades = new Object();
-            Object absences = new Object();
-            String delivery = "Em dia";
+
+            // Aqui usamos o COUNT otimizado direto no PostgreSQL
+            int participants = enrollmentRepository.countByClassSection(cls);
 
             return new DashboardSubjectDTO(
-                cls.getClassId(),
-                code, name, schedule, location, type, professor, participants, monitors, grades, absences, delivery
+                    cls.getClassId(), code, name, schedule, "Instituto de Computação", "Teórica",
+                    professor, participants, List.of(), new Object(), new Object(), "Em dia"
             );
         }).collect(Collectors.toList());
     }
 
     public List<Object> getAnnouncements() {
-        // Prioriza AnnouncementModel (institucional). Se vazio, devolve avisos do fórum.
-        var anns = announcementRepository.findAll().stream()
-            .sorted((a,b) -> b.getPublishDate().compareTo(a.getPublishDate()))
-            .collect(Collectors.toList());
+
+        var anns = announcementRepository.findAllByOrderByPublishDateDesc();
+
         if (!anns.isEmpty()) {
-            return anns.stream().map(a -> (Object) a).collect(Collectors.toList());
+            return new ArrayList<>(anns);
         }
 
-        return forumTopicService.listAll("aviso").stream().map(t -> (Object) t).collect(Collectors.toList());
+        return new ArrayList<>(forumTopicService.listAll("aviso"));
     }
 
-    public List<Object> getAgendaForToday() {
-        UserModel user = getUserByToken();
-        var enrollments = enrollmentRepository.findByStudent(user.getStudent());
-        var today = java.time.LocalDate.now();
+    public List<Object> getAgenda(LocalDate date) {
+        UserModel user = getUserWithStudent(); // Garante o Student carregado
+        List<EnrollmentModel> enrollments = enrollmentRepository.findByStudent(user.getStudent());
 
-        // Colete sessões de monitoria para hoje vinculadas às turmas do estudante
-        java.util.List<Object> results = new java.util.ArrayList<>();
+        List<Object> agendaList = new ArrayList<>();
 
+        // 1. Adiciona as Aulas (Turmas matriculadas)
         for (var e : enrollments) {
             var cls = e.getClassSection();
-            var sessions = monitorSessionRepository.findByClassSectionOrderByDateAscStartTimeAsc(cls);
-            var todays = sessions.stream().filter(s -> s.getDate().equals(today)).collect(Collectors.toList());
-            if (!todays.isEmpty()) {
-                todays.forEach(s -> results.add((Object) s));
-            } else {
-                // Sem sessões de monitoria hoje: retornar uma entrada representando a aula oficial
-                // (poucos dados disponíveis atualmente — inclui subjectName e academicTerm)
-                var subj = cls.getSubject();
-                java.util.Map<String, Object> classEntry = new java.util.HashMap<>();
-                classEntry.put("type", "CLASS");
-                classEntry.put("subjectName", subj != null ? subj.getName() : "-" );
-                classEntry.put("academicTerm", cls.getAcademicTerm());
-                classEntry.put("classSectionId", cls.getClassId());
-                // startTime/endTime não disponíveis sem modelagem adicional
-                classEntry.put("startTime", null);
-                classEntry.put("endTime", null);
-                classEntry.put("location", null);
-                results.add(classEntry);
+            var subj = cls.getSubject();
+
+            java.util.Map<String, Object> aula = new java.util.HashMap<>();
+            aula.put("type", "CLASS");
+            aula.put("title", subj != null ? subj.getName() : "-");
+            aula.put("startTime", cls); // Ajuste conforme seu model
+            aula.put("location", cls);
+            agendaList.add(aula);
+        }
+
+        // 2. Adiciona as Monitorias (via MonitorSessionRepository)
+        List<ClassSectionModel> userClasses = enrollments.stream()
+                .map(EnrollmentModel::getClassSection)
+                .collect(Collectors.toList());
+
+        if (!userClasses.isEmpty()) {
+            var monitorias = monitorSessionRepository.findByClassSectionInAndDateOrderByStartTimeAsc(userClasses, date);
+            for (var m : monitorias) {
+                java.util.Map<String, Object> monitoria = new java.util.HashMap<>();
+                monitoria.put("type", "MONITORIA");
+                monitoria.put("title", "Monitoria: " + m.getTopic());
+                monitoria.put("startTime", m.getStartTime());
+                monitoria.put("location", m.getLocation());
+                agendaList.add(monitoria);
             }
         }
 
-        return results;
+        return agendaList;
     }
-
     public Object getProfileForCurrentUser() {
         UserModel user = getUserByToken();
         var student = user.getStudent();
+
         if (student != null) {
             return new br.com.ufal.gradua.dtos.ProfileDTO(
-                user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole(), user.getCpf(), user.getPassport(),
-                student.getStudentID(), student.getEnrollmentNumber(), student.getCurrentTerm(), student.getIra()
+                    user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole(), user.getCpf(), user.getPassport(),
+                    student.getStudentID(), student.getEnrollmentNumber(), student.getCurrentTerm(), student.getIra()
             );
         }
 
         return new br.com.ufal.gradua.dtos.ProfileDTO(
-            user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole(), user.getCpf(), user.getPassport(),
-            null, null, null, null
+                user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole(), user.getCpf(), user.getPassport(),
+                null, null, null, null
         );
     }
 }

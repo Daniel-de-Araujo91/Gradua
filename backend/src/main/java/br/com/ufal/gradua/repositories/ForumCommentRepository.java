@@ -1,18 +1,28 @@
 package br.com.ufal.gradua.repositories;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import br.com.ufal.gradua.models.forum.ForumCommentModel;
 import br.com.ufal.gradua.models.forum.ForumTopicModel;
 
 public interface ForumCommentRepository extends JpaRepository<ForumCommentModel, UUID> {
 
-    /** Comentários de um tópico, ordenados cronologicamente (mais antigos primeiro). */
-    List<ForumCommentModel> findByTopicOrderByCreationDateAsc(ForumTopicModel topic);
+    @Query("SELECT c FROM ForumCommentModel c JOIN FETCH c.author WHERE c.topic = :topic ORDER BY c.creationDate ASC")
+    List<ForumCommentModel> findByTopicOrderByCreationDateAsc(@Param("topic") ForumTopicModel topic);
 
-    /** Contagem de comentários de um tópico. */
     long countByTopic(ForumTopicModel topic);
+
+    // CORREÇÃO AQUI:
+    // 1. Usamos @EntityGraph para carregar o tópico junto
+    // 2. Usamos @Query para deixar explícito que buscamos pelo campo 'commentId'
+    @EntityGraph(attributePaths = {"topic"})
+    @Query("SELECT c FROM ForumCommentModel c WHERE c.commentId = :commentId")
+    Optional<ForumCommentModel> findWithTopicById(@Param("commentId") UUID commentId);
 }

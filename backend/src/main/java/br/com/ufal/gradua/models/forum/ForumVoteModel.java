@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -34,11 +35,11 @@ public class ForumVoteModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID voteId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id", nullable = true)
     private ForumTopicModel topic;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private UserModel author;
 

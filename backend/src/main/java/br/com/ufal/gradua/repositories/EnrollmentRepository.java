@@ -3,6 +3,7 @@ package br.com.ufal.gradua.repositories;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,11 @@ public interface EnrollmentRepository extends JpaRepository<EnrollmentModel, UUI
     List<EnrollmentModel> findByClassSection(ClassSectionModel classSection);
 
     /** Busca matrículas de um estudante. */
+    @EntityGraph(attributePaths = {
+            "classSection",
+            "classSection.subject",
+            "classSection.professor.user"
+    })
     List<EnrollmentModel> findByStudent(br.com.ufal.gradua.models.auth.StudentModel student);
 
     /**
@@ -26,4 +32,6 @@ public interface EnrollmentRepository extends JpaRepository<EnrollmentModel, UUI
      */
     @Query("SELECT e.student.user FROM EnrollmentModel e WHERE e.classSection = :classSection")
     List<UserModel> findEnrolledUsersByClassSection(@Param("classSection") ClassSectionModel classSection);
+
+    int countByClassSection(ClassSectionModel classSection);
 }

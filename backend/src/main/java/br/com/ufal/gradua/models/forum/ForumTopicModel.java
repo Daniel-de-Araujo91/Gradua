@@ -8,19 +8,12 @@ import java.util.UUID;
 import br.com.ufal.gradua.models.institutional.ProgramModel;
 import br.com.ufal.gradua.models.institutional.SubjectModel;
 import br.com.ufal.gradua.models.user.UserModel;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -35,15 +28,15 @@ public class ForumTopicModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID topicId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private UserModel author;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id", nullable = true)
     private SubjectModel subject;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "program_id", nullable = true)
     private ProgramModel program;
 
@@ -66,5 +59,8 @@ public class ForumTopicModel implements Serializable {
 
     // Contador de comentários vinculados ao tópico
     private Integer commentCount = 0;
+
+    private Integer upVoteCount = 0;
+    private Integer downVoteCount = 0;
 
 }

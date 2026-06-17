@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -32,7 +33,7 @@ public class ReminderModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID reminderId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserModel user;
 

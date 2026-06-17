@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -34,15 +35,15 @@ public class AnnouncementModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID annoucementId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private UserModel author;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", nullable = true)
     private ClassSectionModel classSection;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "program_id", nullable = true)
     private ProgramModel program;
 

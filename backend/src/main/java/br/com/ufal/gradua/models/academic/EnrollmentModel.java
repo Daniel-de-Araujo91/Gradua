@@ -1,6 +1,7 @@
 package br.com.ufal.gradua.models.academic;
 
 import java.io.Serializable;
+import java.time.LocalTime;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.auth.StudentModel;
@@ -17,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -31,11 +33,11 @@ public class EnrollmentModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID enrollmentId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     private StudentModel student;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
     private ClassSectionModel classSection;
 

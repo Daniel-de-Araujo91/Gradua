@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Getter;
 
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -52,11 +53,11 @@ public class UserModel implements Serializable{
     @Column(nullable = false)
     private String role = "USER";
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     private StudentModel student;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "professor_id")
     private ProfessorModel professor;
 

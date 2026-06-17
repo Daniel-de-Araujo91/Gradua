@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -28,7 +29,7 @@ public class CurriculumModel implements Serializable{
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID curriculumId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "program_id")
     private ProgramModel program;
 

@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 @Getter
 @Setter
 @AllArgsConstructor
@@ -43,15 +44,15 @@ public class StudentModel implements Serializable{
     private Integer complementaryHours;
     private Integer totalHours;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     private UserModel user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "program_id")
     private ProgramModel program;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "curriculum_id")
     private CurriculumModel curriculum;
     

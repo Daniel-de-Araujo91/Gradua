@@ -1,11 +1,14 @@
 package br.com.ufal.gradua.controllers;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,9 +40,9 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getAnnouncements());
     }
 
-    @GetMapping("/agenda/today")
-    public ResponseEntity<List<Object>> agendaToday() {
-        return ResponseEntity.ok(dashboardService.getAgendaForToday());
+    @GetMapping("/agenda/{date}")
+    public ResponseEntity<List<Object>> agendaToday(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(dashboardService.getAgenda(date));
     }
 
     @GetMapping("/profile")

@@ -6,19 +6,12 @@ import java.util.UUID;
 
 
 import br.com.ufal.gradua.models.user.UserModel;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -33,11 +26,11 @@ public class ForumCommentModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID commentId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id", nullable = true)
     private ForumTopicModel topic;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private UserModel author;
 
@@ -51,4 +44,6 @@ public class ForumCommentModel implements Serializable {
 
     // Timestamp da última edição
     private LocalDateTime updatedAt;
+
+
 }

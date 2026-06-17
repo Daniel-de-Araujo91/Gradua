@@ -8,32 +8,32 @@ const TodayAgenda = () => {
     const [currentMonth, setCurrentMonth] = useState(selectedDate.getMonth());
     const [currentYear, setCurrentYear] = useState(selectedDate.getFullYear());
 
-    // null = ainda carregando, [] = sem aulas, [...] = tem aulas
-    // Separar "carregando" de "lista vazia" evita o pulo de layout:
-    // enquanto null mostramos um skeleton com altura fixa em vez de
-    // renderizar o bloco vazio que empurra o conteúdo abaixo.
     const [agenda, setAgenda] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let mounted = true;
+        const controller = new AbortController();
         setLoading(true);
-        apiClient.get('/dashboard/agenda/today')
+
+        // Formata a data (YYYY-MM-DD)
+        const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+
+        // Injeta a data direto na URL! Fica algo como: /dashboard/agenda/2026-06-17
+        apiClient.get(`/dashboard/agenda/${formattedDate}`, {
+            signal: controller.signal
+        })
             .then(data => {
-                if (mounted) {
-                    setAgenda(Array.isArray(data) ? data : []);
-                    setLoading(false);
-                }
+                setAgenda(Array.isArray(data) ? data : []);
+                setLoading(false);
             })
-            .catch(() => {
-                if (mounted) {
-                    // Em caso de erro mostra lista vazia sem travar a tela
-                    setAgenda([]);
-                    setLoading(false);
-                }
+            .catch((error) => {
+                if (error.name === 'CanceledError' || error.name === 'AbortError') return;
+                setAgenda([]);
+                setLoading(false);
             });
-        return () => { mounted = false; };
-    }, []);
+
+        return () => { controller.abort(); };
+    }, [selectedDate]); // 3. IMPORTANTE: RE-EXECUTA SEMPRE QUE selectedDate MUDAR
 
     // Normaliza resposta da API para o formato { time, endTime, title, location }
     const displayClasses = (agenda || []).map(s => ({
@@ -87,9 +87,6 @@ const TodayAgenda = () => {
                 </button>
             </div>
 
-            {/* Altura mínima garantida para evitar o pulo de layout.
-                O skeleton mantém o mesmo espaço que pelo menos 1 card ocupa,
-                então o conteúdo abaixo (Announcements, etc.) não se move. */}
             <div className='space-y-4 min-h-[120px]'>
                 {loading ? (
                     <div className='bg-white border border-gray-100 rounded-2xl p-5 shadow-sm flex items-center gap-3 animate-pulse'>
@@ -125,17 +122,17 @@ const TodayAgenda = () => {
                 ) : (
                     <div className='bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-8 text-center'>
                         <CalendarIcon size={32} className='text-gray-400 mx-auto mb-3' />
-                        <h3 className='text-gradua-inicio font-semibold'>Sem sessões de monitoria hoje</h3>
-                        <p className='text-gradua-inicio/50 text-sm mt-1'>Aproveite para estudar ou descansar!</p>
+                        <h3 className='text-gradua-inicio font-semibold'>Sem sessões de monitoria nesta data</h3>
+                        <p className='text-gradua-inicio/50 text-sm mt-1'>Aproveite para focar em outras disciplinas!</p>
                     </div>
                 )}
             </div>
 
-            {/* Modal de calendário */}
+            {/* Modal de calendário permanece inalterado */}
             {showCalendar && (
                 <div className='fixed inset-0 bg-black/30 z-[70] flex items-center justify-center p-4' onClick={() => setShowCalendar(false)}>
                     <div className='bg-white rounded-2xl w-full max-w-[320px] p-5 shadow-2xl animate-fade-in' onClick={e => e.stopPropagation()}>
-                        
+
                         <div className='flex items-center justify-between mb-4'>
                             <button onClick={prevMonth} className='p-1.5 hover:bg-gray-100 rounded-full transition-colors'>
                                 <ChevronLeft size={20} className='text-gray-600' />
@@ -177,7 +174,7 @@ const TodayAgenda = () => {
                                 );
                             })}
                         </div>
-                        
+
                         <div className='mt-5 pt-4 border-t border-gray-100 flex justify-center'>
                             <button
                                 onClick={() => {

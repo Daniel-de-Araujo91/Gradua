@@ -98,8 +98,9 @@ public class ForumCommentService {
     }
 
     public void delete(UUID commentId) {
-        ForumCommentModel comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentário não encontrado"));
+        // Agora buscamos o comentário E o tópico associado de uma só vez
+        ForumCommentModel comment = commentRepository.findWithTopicById(commentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentário não encontrado"));
 
         UserModel user = getUserByToken();
 
@@ -107,7 +108,7 @@ public class ForumCommentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode excluir este comentário");
         }
 
-        // Decrementar contador no tópico
+        // Agora o 'topic' já está na memória e carregado pelo @EntityGraph
         ForumTopicModel topic = comment.getTopic();
         if (topic != null && topic.getCommentCount() != null && topic.getCommentCount() > 0) {
             topic.setCommentCount(topic.getCommentCount() - 1);

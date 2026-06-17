@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import br.com.ufal.gradua.models.auth.ProfessorModel;
 import br.com.ufal.gradua.models.institutional.SubjectModel;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.FetchType;
 
 @Getter
 @Setter
@@ -30,16 +32,24 @@ public class ClassSectionModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID classId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     private SubjectModel subject;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "professor_id")
     private ProfessorModel professor;
 
     private String academicTerm;
-    
 
+    // --- Novos campos adicionados para a Agenda ---
+
+    // Guarda o código de horários da UFAL (ex: "23T34")
+    @Column(name = "schedule")
+    private String schedule;
+
+    // Guarda o local da turma (ex: "Sala 201, Bloco A")
+    @Column(name = "location")
+    private String location;
 
 }
