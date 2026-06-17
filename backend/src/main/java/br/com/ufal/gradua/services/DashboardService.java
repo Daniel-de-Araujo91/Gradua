@@ -24,6 +24,7 @@ public class DashboardService {
     private final EnrollmentRepository enrollmentRepository;
     private final ForumTopicService forumTopicService;
     private final MonitorSessionRepository monitorSessionRepository;
+    private final br.com.ufal.gradua.repositories.AnnouncementRepository announcementRepository;
 
     private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -90,7 +91,14 @@ public class DashboardService {
     }
 
     public List<Object> getAnnouncements() {
-        // Reuse forum service to fetch AVISO-type topics
+        // Prioriza AnnouncementModel (institucional). Se vazio, devolve avisos do fórum.
+        var anns = announcementRepository.findAll().stream()
+            .sorted((a,b) -> b.getPublishDate().compareTo(a.getPublishDate()))
+            .collect(Collectors.toList());
+        if (!anns.isEmpty()) {
+            return anns.stream().map(a -> (Object) a).collect(Collectors.toList());
+        }
+
         return forumTopicService.listAll("aviso").stream().map(t -> (Object) t).collect(Collectors.toList());
     }
 
@@ -99,11 +107,33 @@ public class DashboardService {
         var enrollments = enrollmentRepository.findByStudent(user.getStudent());
         var today = java.time.LocalDate.now();
 
-        return enrollments.stream().flatMap(e -> {
+        // Colete sessões de monitoria para hoje vinculadas às turmas do estudante
+        java.util.List<Object> results = new java.util.ArrayList<>();
+
+        for (var e : enrollments) {
             var cls = e.getClassSection();
             var sessions = monitorSessionRepository.findByClassSectionOrderByDateAscStartTimeAsc(cls);
-            return sessions.stream().filter(s -> s.getDate().equals(today)).map(s -> (Object) s);
-        }).collect(Collectors.toList());
+            var todays = sessions.stream().filter(s -> s.getDate().equals(today)).collect(Collectors.toList());
+            if (!todays.isEmpty()) {
+                todays.forEach(s -> results.add((Object) s));
+            } else {
+                // Sem sessões de monitoria hoje: retornar uma entrada representando a aula oficial
+                // (poucos dados disponíveis atualmente — inclui subjectName e academicTerm)
+                var subj = cls.getSubject();
+                java.util.Map<String, Object> classEntry = new java.util.HashMap<>();
+                classEntry.put("type", "CLASS");
+                classEntry.put("subjectName", subj != null ? subj.getName() : "-" );
+                classEntry.put("academicTerm", cls.getAcademicTerm());
+                classEntry.put("classSectionId", cls.getClassId());
+                // startTime/endTime não disponíveis sem modelagem adicional
+                classEntry.put("startTime", null);
+                classEntry.put("endTime", null);
+                classEntry.put("location", null);
+                results.add(classEntry);
+            }
+        }
+
+        return results;
     }
 
     public Object getProfileForCurrentUser() {

@@ -43,6 +43,7 @@ const Header = ({ activeTab = 'home' }) => {
 
     // Badge: busca contagem de não lidas a cada 30s
     useEffect(() => {
+        // Buscar a contagem assim que o usuário/profile estiver disponível
         if (!user) return;
         const fetchCount = async () => {
             try {
@@ -53,7 +54,7 @@ const Header = ({ activeTab = 'home' }) => {
         fetchCount();
         const interval = setInterval(fetchCount, 30000);
         return () => clearInterval(interval);
-    }, [user]);
+    }, [user, profile]);
 
     // Banner de permissão push após 3s
     useEffect(() => {
@@ -68,10 +69,14 @@ const Header = ({ activeTab = 'home' }) => {
         try {
             // Persiste no back-end — assim o estado não volta no reload
             await notificationService.markAsRead(notificationId);
-            setNotifications(prev =>
-                prev.map(n => n.notificationId === notificationId ? { ...n, isRead: true } : n)
-            );
-            setUnreadCount(prev => Math.max(0, prev - 1));
+            // Atualiza o estado local e recarrega a contagem do servidor para garantir sincronização
+            setNotifications(prev => prev.map(n => n.notificationId === notificationId ? { ...n, isRead: true } : n));
+            try {
+                const newCount = await notificationService.getUnreadCount();
+                setUnreadCount(typeof newCount === 'number' ? newCount : 0);
+            } catch {
+                setUnreadCount(prev => Math.max(0, prev - 1));
+            }
         } catch {
             // Silencia erro de marcação
         }
@@ -82,7 +87,12 @@ const Header = ({ activeTab = 'home' }) => {
         // Persiste cada uma no back-end em paralelo
         await Promise.allSettled(unread.map(n => notificationService.markAsRead(n.notificationId)));
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-        setUnreadCount(0);
+        try {
+            const newCount = await notificationService.getUnreadCount();
+            setUnreadCount(typeof newCount === 'number' ? newCount : 0);
+        } catch {
+            setUnreadCount(0);
+        }
     };
 
     const themeColors = {
