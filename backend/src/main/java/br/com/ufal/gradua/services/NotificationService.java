@@ -73,20 +73,17 @@ public class NotificationService {
         );
     }
 
-    /** Retorna todas as notificações do usuário logado, mais recentes primeiro. */
     public List<NotificationResponseDTO> listMyNotifications() {
         UserModel user = getUserByToken();
         return notificationRepository.findByRecipientUserOrderByCreatedAtDesc(user)
             .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    /** Retorna contagem de notificações não lidas (usado pelo badge na Header). */
     public long countUnread() {
         UserModel user = getUserByToken();
         return notificationRepository.countByRecipientUserAndIsReadFalse(user);
     }
 
-    /** Marca uma notificação como lida. Valida que pertence ao usuário logado. */
     public void markAsRead(UUID notificationId) {
         UserModel user = getUserByToken();
         NotificationModel notif = notificationRepository.findById(notificationId)

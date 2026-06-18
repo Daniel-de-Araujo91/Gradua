@@ -137,3 +137,40 @@ Com a nova arquitetura baseada em variáveis de ambiente, os passos a seguir dev
 ---
 
 *Documentação gerada com base nas revisões de código dos últimos commits do projeto.*
+
+## ─── 4. COMO UTILIZAR O DOCKER PARA COMPILAR A APLICAÇÃO ───
+
+- É necessário ter o **Docker Desktop** instalado e ativo na máquina.
+- Certifique-se que os **.envs** estão configurados corretamente.
+
+Com isso é muito simples, basta seguir o passo a passo a seguir:
+
+### 1. No terminal dentro do projeto, rode para criar o container:
+```powershell
+docker compose --env-file backend/.env up -d --build   
+```
+ou 
+
+```powershell
+docker compose up -d --build      
+```
+
+### 2. No seu navegador procure pelo endereço `http://localhost/`
+
+### 3. Para parar a aplicação, use (vai permanecer no disco):
+
+```poweshell
+docker compose stop
+```
+
+Se desejar reativar, basta executar:
+
+```powershell
+docker compose start
+```
+
+### 4. Caso queira encerrar completamente o processo, use:
+
+```powershell
+docker compose down     
+```

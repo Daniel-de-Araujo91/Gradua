@@ -15,7 +15,6 @@ const BottomNavBar = ({ activeTab: activeProp }) => {
     const [isVisible, setIsVisible] = useState(true);
     const lastScrollY = useRef(0);
 
-    // Detecta a aba ativa pelo pathname atual
     const activeTab = activeProp || Object.keys(TAB_ROUTES).find(
       (key) => pathname === TAB_ROUTES[key]
     ) || 'home';
@@ -81,4 +80,4 @@ const BottomNavBar = ({ activeTab: activeProp }) => {
     );
 };
 
-export default BottomNavBar;
+export default BottomNavBar;

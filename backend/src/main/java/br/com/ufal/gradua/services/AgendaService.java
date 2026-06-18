@@ -45,7 +45,6 @@ public class AgendaService {
     public AgendaDiaDTO getAgendaDoDia(LocalDate date) {
         UserModel user = getUser();
 
-        // 1. Aulas (Matrículas)
         List<EnrollmentModel> enrollments = enrollmentRepository.findByStudent(user.getStudent());
         List<ClassSectionModel> turmas = enrollments.stream()
                 .map(EnrollmentModel::getClassSection).toList();
@@ -58,7 +57,6 @@ public class AgendaService {
                 t.getLocation()
         )).toList();
 
-        // 2. Monitorias da data
         List<MonitorSessionModel> sessoesModel = new ArrayList<>();
         if (!turmas.isEmpty()) {
             sessoesModel = monitorSessionRepository.findByClassSectionInAndDateOrderByStartTimeAsc(turmas, date);
@@ -77,7 +75,6 @@ public class AgendaService {
             );
         }).toList();
 
-        // 3. Lembretes da data (Persistidos na TB_REMINDER)
         List<ReminderModel> lembretesModel = reminderRepository.findByUserAndDateOrderByTimeAsc(user, date);
         List<ReminderResponseDTO> reminders = lembretesModel.stream().map(l -> new ReminderResponseDTO(
                 l.getReminderId(), l.getTitle(), l.getDate(), l.getTime(), l.getLocation()

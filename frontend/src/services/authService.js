@@ -1,9 +1,6 @@
 import { apiClient } from './apiClient';
 
 export const authService = {
-  /**
-   * Faz login e retorna { firstName, lastName, token }
-   */
   login: (document, password) =>
     apiClient.post('/auth/login', { document, password }),
 

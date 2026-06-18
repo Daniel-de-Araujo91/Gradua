@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
-@ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(name = "APP_SEED_ENABLED", havingValue = "true", matchIfMissing = false)
 @RequiredArgsConstructor
 @Slf4j
 public class DataSeeder implements CommandLineRunner {
@@ -320,7 +320,6 @@ public class DataSeeder implements CommandLineRunner {
             q.setTitle("Dúvida sobre avaliação final");
             q.setContent("Alguém sabe como será a prova final?");
             q.setCreationDate(java.time.LocalDateTime.now().minusDays(1));
-            // Normaliza para o vocabulário canônico usado pela UI/backend
             q.setType("PERGUNTA");
             q.setIsEdited(false);
             q.setVoteScore(0);

@@ -16,14 +16,12 @@ const StatsCards = () => {
                 }
             })
             .catch(() => {
-                // Em caso de erro, não usa fallback com valor falso — mostra '—'
                 if (mounted) setLoading(false);
             });
         return () => { mounted = false; };
     }, []);
 
-    // Mostra '—' enquanto carrega ou se o dado for null/undefined
-    // Isso evita mostrar 0% de integralização quando o dado ainda não chegou
+   
     const ira = stats?.ira != null ? stats.ira : null;
     const integral = stats?.integralizationPercent != null ? stats.integralizationPercent : null;
     const hours = stats?.hoursPending != null ? stats.hoursPending : null;

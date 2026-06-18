@@ -67,30 +67,21 @@ public class MonitorSessionService {
         );
     }
 
-    /**
-     * Cria uma sessão de monitoria e dispara notificações em lote para todos
-     * os alunos matriculados na turma (spec 4.2 e Fase 2).
-     * Apenas usuários com role MONITOR podem chamar este método.
-     */
     public MonitorSessionResponseDTO createSession(MonitorSessionRequestDTO dto) {
         UserModel user = getUserByToken();
 
-        // Validação de autorização: apenas MONITOR pode criar sessões (spec 1.2)
         if (!"MONITOR".equalsIgnoreCase(user.getRole())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                 "Apenas monitores podem agendar sessões de monitoria.");
         }
 
-        // Buscar entidade MonitorModel vinculada ao usuário
         MonitorModel monitor = monitorRepository.findByStudent(user.getStudent())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
                 "Usuário não possui cadastro de monitor ativo."));
 
-        // Buscar turma
         ClassSectionModel classSection = classSectionRepository.findById(dto.classSectionId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Turma não encontrada."));
 
-        // Criar sessão
         MonitorSessionModel session = new MonitorSessionModel();
         session.setMonitor(monitor);
         session.setClassSection(classSection);
@@ -102,7 +93,6 @@ public class MonitorSessionService {
         session.setMeetingLink(dto.meetingLink());
         sessionRepository.save(session);
 
-        // Spec 4.2 + Fase 2: buscar todos os alunos matriculados e gerar notificações em lote
         List<UserModel> enrolledUsers = enrollmentRepository.findEnrolledUsersByClassSection(classSection);
         String subjectName = classSection.getSubject() != null ? classSection.getSubject().getName() : "Monitoria";
         String message = String.format("Nova sessão de monitoria de %s agendada para %s das %s às %s. Local: %s",
@@ -129,7 +119,6 @@ public class MonitorSessionService {
         return toDTO(session);
     }
 
-    /** Lista sessões do monitor autenticado. */
     public List<MonitorSessionResponseDTO> listMySessionsAsMonitor() {
         UserModel user = getUserByToken();
         if (!"MONITOR".equalsIgnoreCase(user.getRole())) {
@@ -142,7 +131,6 @@ public class MonitorSessionService {
             .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    /** Lista todas as sessões de uma turma (visível para alunos e monitores). */
     public List<MonitorSessionResponseDTO> listByClassSection(UUID classSectionId) {
         ClassSectionModel classSection = classSectionRepository.findById(classSectionId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Turma não encontrada."));

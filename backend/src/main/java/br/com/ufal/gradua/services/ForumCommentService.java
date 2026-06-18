@@ -70,7 +70,6 @@ public class ForumCommentService {
 
         commentRepository.save(comment);
 
-        // Incrementar contador de comentários no tópico
         topic.setCommentCount((topic.getCommentCount() != null ? topic.getCommentCount() : 0) + 1);
         topicRepository.save(topic);
 
@@ -83,13 +82,11 @@ public class ForumCommentService {
 
         UserModel user = getUserByToken();
 
-        // Spec 4.3: verificar autoria antes de habilitar edição
         if (!comment.getAuthor().getUserId().equals(user.getUserId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode editar este comentário");
         }
 
         comment.setContent(dto.content());
-        // Spec 2.2: ativar marcador lógico de modificação
         comment.setIsEdited(true);
         comment.setUpdatedAt(LocalDateTime.now(ZoneOffset.of("-3")));
 
@@ -98,7 +95,6 @@ public class ForumCommentService {
     }
 
     public void delete(UUID commentId) {
-        // Agora buscamos o comentário E o tópico associado de uma só vez
         ForumCommentModel comment = commentRepository.findWithTopicById(commentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentário não encontrado"));
 
@@ -108,7 +104,6 @@ public class ForumCommentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode excluir este comentário");
         }
 
-        // Agora o 'topic' já está na memória e carregado pelo @EntityGraph
         ForumTopicModel topic = comment.getTopic();
         if (topic != null && topic.getCommentCount() != null && topic.getCommentCount() > 0) {
             topic.setCommentCount(topic.getCommentCount() - 1);

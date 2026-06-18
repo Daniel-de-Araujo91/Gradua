@@ -20,13 +20,11 @@ async function request(path, options = {}) {
 
   if (response.status === 401) {
     if (token) {
-      // Tinha token mas o servidor rejeitou (expirado ou inválido) → limpa e redireciona
       localStorage.removeItem('gradua_token');
       localStorage.removeItem('gradua_user');
       window.location.href = '/login';
       return;
     }
-    // Sem token → lança erro para o componente tratar adequadamente
     throw new Error('É necessário fazer login para acessar este conteúdo.');
   }
 

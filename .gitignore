@@ -23,4 +23,26 @@ dist/
 build/
 .DS_Store
 *.log
-/frontend/yarn.lock
+
+# OpenCode
+.opencode/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+backend_stderr.log
+
+# Banco de dados
+*.db
+*.sqlite
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Graphify outputs
+graphify-out/

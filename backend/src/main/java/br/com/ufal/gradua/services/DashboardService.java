@@ -41,7 +41,6 @@ public class DashboardService {
     }
     private UserModel getUserWithStudent() {
         UserModel user = (UserModel) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        // Busca a versão com @EntityGraph, garantindo que o student não seja um proxy
         return userRepository.findWithStudentByUserId(user.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
     }
@@ -52,14 +51,11 @@ public class DashboardService {
         if (student != null) {
             double ira = student.getIra() != null ? student.getIra().doubleValue() : 0.0;
 
-            // 2. Acessa o objeto curriculum que agora está carregado na memória
             CurriculumModel curriculum = student.getCurriculum();
 
-            // Define o total exigido baseado no currículo, ou 240 como segurança
             int totalHoursRequired = (curriculum != null && curriculum.getReqTotalHours() != null)
                     ? curriculum.getReqTotalHours() : 240;
 
-            // 3. Calcula com valores dinâmicos
             int integral = 0;
             if (student.getTotalHours() != null && totalHoursRequired > 0) {
                 integral = Math.min(100, (int) Math.round((student.getTotalHours() / (double) totalHoursRequired) * 100.0));
@@ -78,7 +74,6 @@ public class DashboardService {
 
     public List<DashboardSubjectDTO> getSubjectsForCurrentUser() {
         UserModel user = getUserByToken();
-        // A mágica acontece aqui: o Repository agora traz a árvore inteira via EntityGraph
         List<EnrollmentModel> enrollments = enrollmentRepository.findByStudent(user.getStudent());
 
         return enrollments.stream().map(e -> {
@@ -96,7 +91,6 @@ public class DashboardService {
                         (pu.getLastName() == null ? "" : " " + pu.getLastName());
             }
 
-            // Aqui usamos o COUNT otimizado direto no PostgreSQL
             int participants = enrollmentRepository.countByClassSection(cls);
 
             return new DashboardSubjectDTO(
@@ -123,7 +117,6 @@ public class DashboardService {
 
         List<Object> agendaList = new ArrayList<>();
 
-        // 1. Adiciona as Aulas (Turmas matriculadas)
         for (var e : enrollments) {
             var cls = e.getClassSection();
             var subj = cls.getSubject();
@@ -136,7 +129,6 @@ public class DashboardService {
             agendaList.add(aula);
         }
 
-        // 2. Adiciona as Monitorias (via MonitorSessionRepository)
         List<ClassSectionModel> userClasses = enrollments.stream()
                 .map(EnrollmentModel::getClassSection)
                 .collect(Collectors.toList());

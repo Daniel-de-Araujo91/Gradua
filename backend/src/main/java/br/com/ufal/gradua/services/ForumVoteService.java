@@ -29,19 +29,11 @@ public class ForumVoteService {
         return (UserModel) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
-    /**
-     * Registra ou alterna o voto do usuário logado num tópico.
-     * Lógica: se já votou com mesmo tipo → remove (toggle off).
-     *         se votou com tipo diferente → troca.
-     *         se não votou → cria.
-     * Retorna o novo voteScore do tópico junto com os totais de up/down.
-     */
     public Map<String, Object> vote(UUID topicId, String voteTypeStr) {
         UserModel user = getCurrentUser();
         ForumTopicModel topic = topicRepository.findById(topicId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico não encontrado"));
 
-        // Avisos não permitem votação
         if ("AVISO".equalsIgnoreCase(topic.getType())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Avisos não permitem votação");
         }
@@ -52,10 +44,8 @@ public class ForumVoteService {
         if (existing.isPresent()) {
             ForumVoteModel vote = existing.get();
             if (vote.getVoteType() == incoming) {
-                // Toggle off: remove o voto
                 voteRepository.delete(vote);
             } else {
-                // Troca o voto
                 vote.setVoteType(incoming);
                 voteRepository.save(vote);
             }
@@ -67,7 +57,6 @@ public class ForumVoteService {
             voteRepository.save(vote);
         }
 
-        // Recalcula voteScore (UP - DOWN) e persiste no tópico
         long ups   = voteRepository.countByTopicAndVoteType(topic, VoteType.UP);
         long downs = voteRepository.countByTopicAndVoteType(topic, VoteType.DOWN);
         topic.setUpVoteCount((int) ups);
@@ -75,7 +64,6 @@ public class ForumVoteService {
         topic.setVoteScore((int)(ups - downs));
         topicRepository.save(topic);
 
-        // Retorna o voto atual do usuário (null se removeu, "up" ou "down")
         Optional<ForumVoteModel> current = voteRepository.findByTopicAndAuthor(topic, user);
         String currentVote = current.map(v -> v.getVoteType().name().toLowerCase()).orElse(null);
 
@@ -87,10 +75,6 @@ public class ForumVoteService {
         );
     }
 
-    /**
-     * Retorna o estado de voto do usuário logado para um tópico.
-     * Usado ao carregar o feed para mostrar se já votou.
-     */
     public Map<String, Object> getVoteState(UUID topicId) {
         UserModel user = getCurrentUser();
         ForumTopicModel topic = topicRepository.findById(topicId)
@@ -99,7 +83,6 @@ public class ForumVoteService {
         Optional<ForumVoteModel> current = voteRepository.findByTopicAndAuthor(topic, user);
         String currentVote = current.map(v -> v.getVoteType().name().toLowerCase()).orElse(null);
 
-        // Retornamos direto da memória do tópico, milissegundos de tempo de resposta!
         return Map.of(
                 "ups", topic.getUpVoteCount() != null ? topic.getUpVoteCount() : 0,
                 "downs", topic.getDownVoteCount() != null ? topic.getDownVoteCount() : 0,

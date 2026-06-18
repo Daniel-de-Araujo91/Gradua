@@ -1,15 +1,8 @@
-/**
- * useWebNotifications.js
- *
- * Hook para gerenciar notificações push nativas do navegador (Web Notifications API).
- * Persiste IDs "já vistos" no localStorage para evitar re-disparar em reloads.
- */
 import { useState, useEffect, useCallback } from 'react';
 
 const ICON_URL = '/images/icon-192.png';
 const STORAGE_KEY = 'gradua_seen_notif_ids';
 
-/** Carrega set de IDs já vistos do localStorage */
 function loadSeenIds() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -19,7 +12,6 @@ function loadSeenIds() {
     }
 }
 
-/** Persiste set de IDs vistos no localStorage (mantém últimos 200) */
 function saveSeenIds(set) {
     try {
         const arr = [...set].slice(-200);

@@ -8,7 +8,6 @@ export const monitorService = {
    */
   createSession: (data) => apiClient.post('/monitoria/create', data),
 
-  /** Lista sessões do monitor autenticado. */
   getMySessions: () => apiClient.get('/monitoria/minhas-sessoes'),
 
   /**

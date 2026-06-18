@@ -36,7 +36,6 @@ public class DashboardController {
 
     @GetMapping("/announcements")
     public ResponseEntity<List<Object>> announcements() {
-        // proxy to forum feed for "aviso"
         return ResponseEntity.ok(dashboardService.getAnnouncements());
     }
 

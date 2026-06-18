@@ -10,7 +10,6 @@ const Header = ({ activeTab = 'home' }) => {
     const { user, profile, logout } = useAuth();
     const navigate = useNavigate();
     const userName = user ? user.firstName : 'Usuário';
-    // Matrícula vem do profile enriquecido (buscado após login no AuthContext)
     const matricula = profile?.enrollmentNumber || null;
 
     const [showNotifications, setShowNotifications] = useState(false);
@@ -28,22 +27,18 @@ const Header = ({ activeTab = 'home' }) => {
             setNotifications(data || []);
             setUnreadCount((data || []).filter(n => !n.isRead).length);
         } catch {
-            // Silencia erros de notificação para não prejudicar a experiência
         } finally {
             setLoadingNotifs(false);
         }
     }, []);
 
-    // Busca notificações ao abrir o painel
     useEffect(() => {
         if (showNotifications) {
             fetchNotifications();
         }
     }, [showNotifications, fetchNotifications]);
 
-    // Badge: busca contagem de não lidas a cada 30s
     useEffect(() => {
-        // Buscar a contagem assim que o usuário/profile estiver disponível
         if (!user) return;
         const fetchCount = async () => {
             try {
@@ -56,7 +51,6 @@ const Header = ({ activeTab = 'home' }) => {
         return () => clearInterval(interval);
     }, [user, profile]);
 
-    // Banner de permissão push após 3s
     useEffect(() => {
         if (permission === 'default') {
             const t = setTimeout(() => setShowPermBanner(true), 3000);
@@ -67,9 +61,7 @@ const Header = ({ activeTab = 'home' }) => {
 
     const handleMarkAsRead = async (notificationId) => {
         try {
-            // Persiste no back-end — assim o estado não volta no reload
             await notificationService.markAsRead(notificationId);
-            // Atualiza o estado local e recarrega a contagem do servidor para garantir sincronização
             setNotifications(prev => prev.map(n => n.notificationId === notificationId ? { ...n, isRead: true } : n));
             try {
                 const newCount = await notificationService.getUnreadCount();
@@ -84,7 +76,6 @@ const Header = ({ activeTab = 'home' }) => {
 
     const handleMarkAllRead = async () => {
         const unread = notifications.filter(n => !n.isRead);
-        // Persiste cada uma no back-end em paralelo
         await Promise.allSettled(unread.map(n => notificationService.markAsRead(n.notificationId)));
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
         try {

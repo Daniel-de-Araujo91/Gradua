@@ -42,13 +42,10 @@ public class ClassSectionModel implements Serializable {
 
     private String academicTerm;
 
-    // --- Novos campos adicionados para a Agenda ---
 
-    // Guarda o código de horários da UFAL (ex: "23T34")
     @Column(name = "schedule")
     private String schedule;
 
-    // Guarda o local da turma (ex: "Sala 201, Bloco A")
     @Column(name = "location")
     private String location;
 

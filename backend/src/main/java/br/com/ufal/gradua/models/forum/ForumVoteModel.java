@@ -26,7 +26,6 @@ import jakarta.persistence.FetchType;
 @NoArgsConstructor
 @Entity
 @Table(name = "TB_FORUM_VOTE",
-    // Garante que cada usuário vota no máximo 1 vez por tópico
     uniqueConstraints = @UniqueConstraint(columnNames = {"topic_id", "author_id"}))
 public class ForumVoteModel implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -46,7 +45,6 @@ public class ForumVoteModel implements Serializable {
     @Enumerated(EnumType.STRING)
     private VoteType voteType;
 
-    // Público para que o repositório possa referenciar em queries tipadas
     public enum VoteType {
         UP, DOWN
     }

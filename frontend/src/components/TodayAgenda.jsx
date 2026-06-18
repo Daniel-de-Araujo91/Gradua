@@ -15,10 +15,8 @@ const TodayAgenda = () => {
         const controller = new AbortController();
         setLoading(true);
 
-        // Formata a data (YYYY-MM-DD)
         const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
 
-        // Injeta a data direto na URL! Fica algo como: /dashboard/agenda/2026-06-17
         apiClient.get(`/dashboard/agenda/${formattedDate}`, {
             signal: controller.signal
         })
@@ -33,9 +31,8 @@ const TodayAgenda = () => {
             });
 
         return () => { controller.abort(); };
-    }, [selectedDate]); // 3. IMPORTANTE: RE-EXECUTA SEMPRE QUE selectedDate MUDAR
+    }, [selectedDate]); 
 
-    // Normaliza resposta da API para o formato { time, endTime, title, location }
     const displayClasses = (agenda || []).map(s => ({
         time: s.startTime,
         endTime: s.endTime,

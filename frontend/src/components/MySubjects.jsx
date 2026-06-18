@@ -14,7 +14,6 @@ const MySubjects = () => {
         import('../services/apiClient').then(({ apiClient }) => {
             apiClient.get('/dashboard/subjects').then(data => {
                 if (!mounted) return;
-                // map backend DTO to frontend shape expected
                 const mapped = (data || []).map(s => ({
                     id: s.id,
                     code: s.code,

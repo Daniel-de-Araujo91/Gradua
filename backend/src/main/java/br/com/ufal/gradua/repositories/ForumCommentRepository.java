@@ -19,9 +19,6 @@ public interface ForumCommentRepository extends JpaRepository<ForumCommentModel,
 
     long countByTopic(ForumTopicModel topic);
 
-    // CORREÇÃO AQUI:
-    // 1. Usamos @EntityGraph para carregar o tópico junto
-    // 2. Usamos @Query para deixar explícito que buscamos pelo campo 'commentId'
     @EntityGraph(attributePaths = {"topic"})
     @Query("SELECT c FROM ForumCommentModel c WHERE c.commentId = :commentId")
     Optional<ForumCommentModel> findWithTopicById(@Param("commentId") UUID commentId);

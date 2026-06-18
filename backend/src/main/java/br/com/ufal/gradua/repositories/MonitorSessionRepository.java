@@ -26,8 +26,6 @@ public interface MonitorSessionRepository extends JpaRepository<MonitorSessionMo
     })
     List<MonitorSessionModel> findByClassSectionOrderByDateAscStartTimeAsc(ClassSectionModel classSection);
 
-    // Este é o método usado no DashboardService!
-    // Ele traz a sessão, a disciplina e os dados do monitor de uma vez só.
     @EntityGraph(attributePaths = {
             "classSection",
             "classSection.subject",

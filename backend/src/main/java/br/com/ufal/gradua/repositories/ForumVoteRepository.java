@@ -12,6 +12,5 @@ import br.com.ufal.gradua.models.user.UserModel;
 public interface ForumVoteRepository extends JpaRepository<ForumVoteModel, UUID> {
     Optional<ForumVoteModel> findByTopicAndAuthor(ForumTopicModel topic, UserModel author);
 
-    // Conta votos UP e DOWN para um tópico
     long countByTopicAndVoteType(ForumTopicModel topic, ForumVoteModel.VoteType voteType);
 }

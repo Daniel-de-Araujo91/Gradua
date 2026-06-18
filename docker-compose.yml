@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   backend:
     build:
@@ -8,9 +9,12 @@ services:
       DB_URL: ${DB_URL}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      API_KEY: ${API_KEY:-dev_default_api_key_change_me}
+      API_KEY: ${API_KEY}
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:80}
-      APP_SEED_ENABLED: ${app.seed.enabled:-false}
+      APP_SEED_ENABLED: ${APP_SEED_ENABLED:-false}
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -24,5 +28,3 @@ services:
     ports:
       - "80:80"
     restart: unless-stopped
-
-

@@ -10,6 +10,5 @@ import br.com.ufal.gradua.models.auth.StudentModel;
 
 public interface MonitorRepository extends JpaRepository<MonitorModel, UUID> {
 
-    /** Busca o MonitorModel associado ao StudentModel do usuário logado. */
     Optional<MonitorModel> findByStudent(StudentModel student);
 }

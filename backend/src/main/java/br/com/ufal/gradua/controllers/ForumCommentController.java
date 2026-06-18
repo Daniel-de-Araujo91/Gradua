@@ -27,13 +27,11 @@ public class ForumCommentController {
 
     private final ForumCommentService forumCommentService;
 
-    /** Lista comentários de um tópico, ordenados cronologicamente. */
     @GetMapping("/topic/{topicId}")
     public ResponseEntity<List<ForumCommentResponseDTO>> listByTopic(@PathVariable UUID topicId) {
         return ResponseEntity.ok(forumCommentService.listByTopic(topicId));
     }
 
-    /** Cria comentário em um tópico. */
     @PostMapping("/topic/{topicId}")
     public ResponseEntity<ForumCommentResponseDTO> create(
             @PathVariable UUID topicId,
@@ -41,10 +39,7 @@ public class ForumCommentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(forumCommentService.create(topicId, dto));
     }
 
-    /**
-     * Edita um comentário (apenas o autor).
-     * Valida autoria e ativa flag isEdited (spec 2.2 e 4.3).
-     */
+    
     @PutMapping("/{commentId}")
     public ResponseEntity<ForumCommentResponseDTO> update(
             @PathVariable UUID commentId,
@@ -52,7 +47,6 @@ public class ForumCommentController {
         return ResponseEntity.ok(forumCommentService.update(commentId, dto));
     }
 
-    /** Remove um comentário (apenas o autor). */
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> delete(@PathVariable UUID commentId) {
         forumCommentService.delete(commentId);

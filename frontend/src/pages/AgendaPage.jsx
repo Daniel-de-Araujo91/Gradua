@@ -38,17 +38,14 @@ const SCHEDULE_2026_1 = {
 ───────────────────────────────────────── */
 const isMonitor = (user) => user?.role === 'MONITOR';
 
-/** Retorna a abreviação do dia de hoje (DOM, SEG, ...) */
 const todayLabel = () => {
     const labels = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
     return labels[new Date().getDay()];
 };
 
-/** Calcula os 7 dias da semana atual (DOM→SAB) com datas reais */
 const getCurrentWeekDays = () => {
     const labels = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
     const today = new Date();
-    // Início da semana = domingo
     const sunday = new Date(today);
     sunday.setDate(today.getDate() - today.getDay());
     return labels.map((label, i) => {
@@ -65,14 +62,12 @@ const AgendaPage = () => {
     const { pushNotify } = useWebNotifications();
     const [selectedDay, setSelectedDay] = useState(todayLabel());
 
-    // Modal de lembrete pessoal (todos os perfis)
     const [showAddModal, setShowAddModal] = useState(false);
     const [newTitle, setNewTitle] = useState('');
     const [newTime, setNewTime] = useState('');
     const [newLocation, setNewLocation] = useState('');
     const [editReminderId, setEditReminderId] = useState(null);
 
-    // Modal de agendamento de monitoria (apenas Monitor)
     const [showSessionModal, setShowSessionModal] = useState(false);
     const [sessionTopic, setSessionTopic] = useState('');
     const [sessionDate, setSessionDate] = useState('');
@@ -83,7 +78,6 @@ const AgendaPage = () => {
     const [sessionLoading, setSessionLoading] = useState(false);
     const [sessionSuccess, setSessionSuccess] = useState(false);
 
-    // Lembretes adicionados pelo usuário (agora persistidos)
     const [reminders, setReminders] = useState(() => {
         const saved = localStorage.getItem('gradua_agenda_reminders');
         return saved ? JSON.parse(saved) : [];
@@ -94,7 +88,6 @@ const AgendaPage = () => {
         localStorage.setItem('gradua_agenda_reminders', JSON.stringify(reminders));
     }, [reminders]);
 
-    // Semana atual com datas reais (recalculado uma vez no mount)
     const [weekDays] = useState(() => getCurrentWeekDays());
 
     const dayNames = {
@@ -102,7 +95,6 @@ const AgendaPage = () => {
         QUI: 'Quinta-feira', SEX: 'Sexta-feira', SAB: 'Sábado'
     };
 
-    // Aulas fixas do dia + lembretes pessoais combinados
     const fixedClasses = SCHEDULE_2026_1[selectedDay] || [];
     const dayReminders = reminders.filter(r => r.day === selectedDay);
     const allItems = [...fixedClasses, ...dayReminders].sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -158,10 +150,9 @@ const AgendaPage = () => {
                 endTime: sessionEnd,
                 location: sessionLocation || null,
                 meetingLink: sessionLink || null,
-                classSectionId: null, // TODO: implementar seleção de turma quando houver listagem de turmas
+                classSectionId: null, 
             });
             setSessionSuccess(true);
-            // Notificação push nativa do navegador para o monitor
             pushNotify({
                 title: '✅ Sessão agendada com sucesso!',
                 body: `"${sessionTopic}" em ${sessionDate} das ${sessionStart} às ${sessionEnd}. Alunos foram notificados.`,

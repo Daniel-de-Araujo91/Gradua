@@ -11,7 +11,6 @@ import br.com.ufal.gradua.models.user.UserModel;
 
 public interface NotificationRepository extends JpaRepository<NotificationModel, UUID> {
 
-    /** Todas as notificações do usuário, mais recentes primeiro. */
     @EntityGraph(attributePaths = {
             "monitorSession",
             "monitorSession.monitor.student.user",
@@ -19,14 +18,12 @@ public interface NotificationRepository extends JpaRepository<NotificationModel,
     })
     List<NotificationModel> findByRecipientUserOrderByCreatedAtDesc(UserModel recipientUser);
 
-    /** Apenas notificações não lidas do usuário. */
-    @EntityGraph(attributePaths = {         // <-- Adicionado para segurança!
+    @EntityGraph(attributePaths = {         
             "monitorSession",
             "monitorSession.monitor.student.user",
             "monitorSession.classSection.subject"
     })
     List<NotificationModel> findByRecipientUserAndIsReadFalse(UserModel recipientUser);
 
-    /** Contagem de notificações não lidas (para badge na interface). */
     long countByRecipientUserAndIsReadFalse(UserModel recipientUser);
 }

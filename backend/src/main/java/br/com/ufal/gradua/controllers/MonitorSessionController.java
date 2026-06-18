@@ -25,22 +25,16 @@ public class MonitorSessionController {
 
     private final MonitorSessionService monitorSessionService;
 
-    /**
-     * Cria sessão de monitoria e dispara notificações para alunos (spec 4.2).
-     * Restrito a MONITOR via SecurityConfig.
-     */
     @PostMapping("/create")
     public ResponseEntity<MonitorSessionResponseDTO> create(@RequestBody @Valid MonitorSessionRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(monitorSessionService.createSession(dto));
     }
 
-    /** Lista sessões do monitor autenticado. */
     @GetMapping("/minhas-sessoes")
     public ResponseEntity<List<MonitorSessionResponseDTO>> listMySessions() {
         return ResponseEntity.ok(monitorSessionService.listMySessionsAsMonitor());
     }
 
-    /** Lista sessões de uma turma específica (alunos e monitores). */
     @GetMapping("/turma/{classSectionId}")
     public ResponseEntity<List<MonitorSessionResponseDTO>> listByClass(@PathVariable UUID classSectionId) {
         return ResponseEntity.ok(monitorSessionService.listByClassSection(classSectionId));

@@ -76,14 +76,11 @@ const AdminScreen = () => {
     if (!newAnnounce.title.trim()) return;
     setAnnounceLoading(true);
     try {
-      // Publica como tópico tipo 'aviso' no fórum — o ForumTopicService
-      // já dispara broadcastAvisoNotification para TODOS os usuários
       await forumService.createTopic({
         title: newAnnounce.title,
         content: newAnnounce.message || newAnnounce.title,
         type: 'aviso',
       });
-      // Mantém histórico local para exibição imediata
       setAnnouncements(prev => [
         { id: Date.now(), title: newAnnounce.title, date: 'Agora mesmo', target: newAnnounce.target },
         ...prev

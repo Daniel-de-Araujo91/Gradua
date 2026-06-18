@@ -1,13 +1,3 @@
-/**
- * NotificationToast.jsx
- *
- * Toast in-app que aparece quando uma nova notificação não lida é detectada.
- * Detecta dois tipos:
- *  - AVISO do fórum (monitorSession == null)  → ícone de megafone
- *  - Sessão de monitoria (monitorSession != null) → ícone de calendário
- *
- * Polling a cada 20s. Persiste IDs vistos no localStorage para não re-disparar.
- */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Bell, X, Calendar, Megaphone } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
@@ -62,7 +52,6 @@ const NotificationToast = () => {
     const fetchAndNotify = useCallback(async () => {
         if (!user) return;
 
-        // Inicializa o set de IDs na primeira chamada
         if (seenIdsRef.current === null) {
             seenIdsRef.current = loadSeenIds();
         }
@@ -71,14 +60,11 @@ const NotificationToast = () => {
             const data = await notificationService.getAll();
             const list = data || [];
 
-            // IDs não lidas ainda desconhecidas localmente
             const newOnes = list.filter(
                 n => !n.isRead && !seenIdsRef.current.has(n.notificationId)
             );
 
             if (isFirstFetch.current) {
-                // Na primeira carga, marcamos TUDO como "visto" sem disparar toast
-                // (o usuário pode ver pelo painel de notificações)
                 list.forEach(n => seenIdsRef.current.add(n.notificationId));
                 saveSeenIds(seenIdsRef.current);
                 isFirstFetch.current = false;
@@ -86,14 +72,12 @@ const NotificationToast = () => {
             }
 
             if (newOnes.length > 0) {
-                // Adicionar até 3 toasts simultâneos
                 setToasts(prev => {
                     const slots = 3 - prev.length;
                     if (slots <= 0) return prev;
                     return [...newOnes.slice(0, slots).reverse(), ...prev].slice(0, 3);
                 });
 
-                // Push nativa do navegador para cada nova notificação
                 newOnes.forEach(n => {
                     const isAviso = !n.session;
                     pushNotify({
@@ -102,11 +86,9 @@ const NotificationToast = () => {
                         tag: `notif-${n.notificationId}`,
                     });
 
-                    // Auto-dismiss
                     setTimeout(() => dismissToast(n.notificationId), TOAST_DURATION);
                 });
 
-                // Marcar como vistas
                 newOnes.forEach(n => seenIdsRef.current.add(n.notificationId));
                 saveSeenIds(seenIdsRef.current);
             }
@@ -118,7 +100,7 @@ const NotificationToast = () => {
     useEffect(() => {
         if (!user) return;
 
-        fetchAndNotify(); // carga inicial (marca como vistas, sem toast)
+        fetchAndNotify(); 
         const interval = setInterval(fetchAndNotify, POLL_INTERVAL);
         return () => clearInterval(interval);
     }, [user, fetchAndNotify]);

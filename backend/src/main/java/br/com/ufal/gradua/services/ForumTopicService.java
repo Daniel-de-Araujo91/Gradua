@@ -53,7 +53,6 @@ public class ForumTopicService {
     public ForumTopicResponseDTO create(ForumTopicRequestDTO dto) {
         UserModel author = getUserByToken();
 
-        // Spec 1.2 / Fase 4: apenas monitores, admins e professores podem criar posts do tipo AVISO
         if ("AVISO".equalsIgnoreCase(dto.type()) && 
             !("MONITOR".equalsIgnoreCase(author.getRole()) || "ADMIN".equalsIgnoreCase(author.getRole()) || "PROFESSOR".equalsIgnoreCase(author.getRole()))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -63,7 +62,6 @@ public class ForumTopicService {
         ForumTopicModel forumTopic = new ForumTopicModel();
         forumTopic.setTitle(dto.title());
         forumTopic.setContent(dto.content());
-        // Normaliza para MAIÚSCULAS para garantir consistência no filtro
         forumTopic.setType(dto.type() != null ? dto.type().toUpperCase() : null);
         forumTopic.setAuthor(author);
         forumTopic.setIsLockedByMod(false);
@@ -74,7 +72,6 @@ public class ForumTopicService {
 
         repository.save(forumTopic);
 
-        // Spec 1.2: ao publicar AVISO, notificar TODOS os usuários cadastrados
         if ("aviso".equalsIgnoreCase(dto.type())) {
             String authorName = author.getFirstName() + " " + author.getLastName();
             String message = String.format("📢 Novo aviso de %s: \"%s\"",
@@ -89,7 +86,6 @@ public class ForumTopicService {
         List<ForumTopicModel> topics;
         if (type != null && !type.isBlank()) {
             String t = type.toLowerCase();
-            // Aceita sinônimos (ex: 'pergunta' pode ser gravado como 'PERGUNTA' ou 'DUVIDA' em seeds antigos)
             if ("pergunta".equals(t) || "duvida".equals(t) || "duvida".equalsIgnoreCase(t)) {
                 topics = repository.findByTypeInOrderByCreationDateDesc(java.util.List.of("PERGUNTA", "DUVIDA"));
             } else {
@@ -108,7 +104,6 @@ public class ForumTopicService {
 
         UserModel user = getUserByToken();
 
-        // Spec 4.3: verificação de autoria antes de habilitar edição
         if (!forumTopic.getAuthor().getUserId().equals(user.getUserId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode editar este tópico");
         }
@@ -116,7 +111,6 @@ public class ForumTopicService {
         forumTopic.setTitle(dto.title());
         forumTopic.setContent(dto.content());
         forumTopic.setType(dto.type());
-        // Spec 2.2: ativar marcador lógico de modificação
         forumTopic.setIsEdited(true);
 
         repository.save(forumTopic);
@@ -130,8 +124,6 @@ public class ForumTopicService {
 
         UserModel user = getUserByToken();
 
-        // Moderadores (ADMIN, PROFESSOR) podem excluir qualquer tópico;
-        // usuário comum só pode excluir o próprio
         boolean isAuthor = forumTopic.getAuthor().getUserId().equals(user.getUserId());
         boolean isModerator = "ADMIN".equalsIgnoreCase(user.getRole())
             || "PROFESSOR".equalsIgnoreCase(user.getRole());

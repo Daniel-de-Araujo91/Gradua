@@ -11,14 +11,11 @@ export function AuthProvider({ children }) {
 
   const [token, setToken] = useState(() => localStorage.getItem('gradua_token') || null);
 
-  // Perfil enriquecido (matrícula, IRA, semestre) — carregado após login
   const [profile, setProfile] = useState(() => {
     const stored = localStorage.getItem('gradua_profile');
     return stored ? JSON.parse(stored) : null;
   });
 
-  // Busca o profile quando há token mas profile ainda não foi carregado
-  // (ex: usuário voltou à sessão após F5)
   useEffect(() => {
     if (token && !profile) {
       apiClient.get('/dashboard/profile')
@@ -26,7 +23,7 @@ export function AuthProvider({ children }) {
           setProfile(data);
           localStorage.setItem('gradua_profile', JSON.stringify(data));
         })
-        .catch(() => {}); // silencia: tela mostra '—' se falhar
+        .catch(() => {}); 
     }
   }, [token, profile]);
 
@@ -36,7 +33,6 @@ export function AuthProvider({ children }) {
     localStorage.setItem('gradua_user', JSON.stringify(userData));
     localStorage.setItem('gradua_token', jwt);
 
-    // Busca o profile logo após o login para ter matrícula disponível
     apiClient.get('/dashboard/profile')
       .then(data => {
         setProfile(data);

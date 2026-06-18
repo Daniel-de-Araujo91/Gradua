@@ -12,8 +12,6 @@ import br.com.ufal.gradua.models.user.UserModel;
 @Repository
 public interface UserRepository extends JpaRepository<UserModel, UUID> {
 
-    // --- MÉTODO ADICIONADO PARA A AGENDA (e Dashboard) ---
-    // Ele carrega o usuário e os dados do estudante associado na mesma consulta.
     @EntityGraph(attributePaths = {"student"})
     Optional<UserModel> findWithStudentByUserId(UUID userId);
 

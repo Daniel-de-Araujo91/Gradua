@@ -51,13 +51,10 @@ public class ForumTopicModel implements Serializable {
 
     private String type;
 
-    // Flag: indica se o tópico foi editado após criação (spec 2.2 - Edição no Fórum)
     private Boolean isEdited = false;
 
-    // Contador agregado de votos (positivos - negativos), nulo para posts do tipo AVISO
     private Integer voteScore = 0;
 
-    // Contador de comentários vinculados ao tópico
     private Integer commentCount = 0;
 
     private Integer upVoteCount = 0;

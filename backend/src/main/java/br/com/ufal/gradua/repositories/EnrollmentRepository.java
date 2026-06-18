@@ -14,10 +14,8 @@ import br.com.ufal.gradua.models.user.UserModel;
 
 public interface EnrollmentRepository extends JpaRepository<EnrollmentModel, UUID> {
 
-    /** Busca matrículas de uma turma. */
     List<EnrollmentModel> findByClassSection(ClassSectionModel classSection);
 
-    /** Busca matrículas de um estudante. */
     @EntityGraph(attributePaths = {
             "classSection",
             "classSection.subject",
@@ -25,11 +23,6 @@ public interface EnrollmentRepository extends JpaRepository<EnrollmentModel, UUI
     })
     List<EnrollmentModel> findByStudent(br.com.ufal.gradua.models.auth.StudentModel student);
 
-    /**
-     * Retorna os UserModel de TODOS os alunos matriculados em uma turma.
-     * Não filtra por status para evitar problemas com enum privado.
-     * Usado pelo MonitorSessionService para disparar notificações em lote.
-     */
     @Query("SELECT e.student.user FROM EnrollmentModel e WHERE e.classSection = :classSection")
     List<UserModel> findEnrolledUsersByClassSection(@Param("classSection") ClassSectionModel classSection);
 

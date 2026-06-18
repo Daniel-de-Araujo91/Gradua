@@ -47,16 +47,13 @@ public class MonitorSessionModel implements Serializable {
 
     private LocalDate date;
 
-    // Horário de início da sessão (spec 4.2 - obrigatório)
     private LocalTime startTime;
 
-    // Horário de término da sessão (spec 4.2 - obrigatório)
     private LocalTime endTime;
 
     @Column(nullable = true)
     private String location;
 
-    // Link de videoconferência alternativo (spec 1.2 e 4.2)
     @Column(nullable = true)
     private String meetingLink;
 

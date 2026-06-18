@@ -19,10 +19,6 @@ import lombok.Getter;
 import lombok.Setter;
 import jakarta.persistence.FetchType;
 
-/**
- * Registro de eventos gerados por monitores ao criar sessões de monitoria.
- * Mapeado por ID de aluno destinatário para consumo no dashboard (spec 2.1).
- */
 @Getter
 @Setter
 @AllArgsConstructor
@@ -36,21 +32,17 @@ public class NotificationModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID notificationId;
 
-    // Aluno destinatário da notificação (spec 2.1 - mapeado por ID de aluno)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_user_id")
     private UserModel recipientUser;
 
-    // Sessão de monitoria que originou esta notificação
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id")
     private MonitorSessionModel monitorSession;
 
-    // Mensagem descritiva da notificação
     @Column(nullable = false)
     private String message;
 
-    // Flag de leitura: false = nova notificação; true = já visualizada
     @Column(nullable = false)
     private Boolean isRead = false;
 

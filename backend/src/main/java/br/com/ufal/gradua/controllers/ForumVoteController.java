@@ -21,10 +21,6 @@ public class ForumVoteController {
 
     private final ForumVoteService forumVoteService;
 
-    /**
-     * Vota num tópico. ?type=up ou ?type=down
-     * Toggle: votar igual ao voto atual o remove.
-     */
     @PostMapping("/{topicId}")
     public ResponseEntity<Map<String, Object>> vote(
             @PathVariable UUID topicId,
@@ -32,7 +28,6 @@ public class ForumVoteController {
         return ResponseEntity.ok(forumVoteService.vote(topicId, type));
     }
 
-    /** Retorna o estado de voto do usuário logado para um tópico. */
     @GetMapping("/{topicId}")
     public ResponseEntity<Map<String, Object>> getState(@PathVariable UUID topicId) {
         return ResponseEntity.ok(forumVoteService.getVoteState(topicId));

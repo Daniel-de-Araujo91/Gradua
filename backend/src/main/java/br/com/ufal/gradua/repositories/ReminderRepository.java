@@ -12,6 +12,5 @@ import br.com.ufal.gradua.models.user.UserModel;
 
 @Repository
 public interface ReminderRepository extends JpaRepository<ReminderModel, UUID> {
-    /** Busca lembretes de um usuário específico em uma determinada data. */
     List<ReminderModel> findByUserAndDateOrderByTimeAsc(UserModel user, LocalDate date);
 }
