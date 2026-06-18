@@ -1,0 +1,52 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gradua}
+      POSTGRES_USER: ${POSTGRES_USER:-gradua}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gradua_pass}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - gradua-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gradua} -d ${POSTGRES_DB:-gradua}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-gradua}
+      DB_USER: ${POSTGRES_USER:-gradua}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-gradua_pass}
+      API_KEY: ${API_KEY:-dev_default_api_key_change_me}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - gradua-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - gradua-net
+    restart: unless-stopped
+
+volumes:
+  db-data:
+
+networks:
+  gradua-net:
+    driver: bridge
