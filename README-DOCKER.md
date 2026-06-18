@@ -32,6 +32,27 @@ Notes and tips:
 - The frontend is built with Node (npm run build) and served with nginx for production. For local development using Vite's dev server, consider running `npm install` and `npm run dev` inside frontend/ instead of using Docker for hot reload.
 - If the backend jar name differs from the default artifact pattern, the Dockerfile uses a wildcard to copy the jar; verify the jar is present in target/ after a local Maven build.
 
+Docker required
+
+- The above commands require Docker (and Docker Compose) installed and the Docker daemon running on your machine. If you see connection errors, start Docker Desktop (Windows/Mac) or the docker service (Linux):
+
+  - Windows: start Docker Desktop
+  - Mac: start Docker Desktop
+  - Linux: sudo systemctl start docker
+
+- To verify Docker is available, run: `docker version` and `docker compose version`.
+
+Testing builds locally without Docker
+
+- If you don't have Docker available, you can still test the services individually:
+
+  - Backend: build and run locally
+    - From backend/: `./mvnw package` then `java -jar target/*.jar` (or `mvn spring-boot:run`)
+
+  - Frontend: run Vite dev server
+    - From frontend/: `npm install` then `npm run dev` and open http://localhost:5173
+
+
 Advanced ideas:
 
 - Add healthcheck for the backend (expose /actuator/health via Spring Actuator) and add depends_on health for more robust orchestration.
