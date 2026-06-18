@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  # This override config makes the backend use an external Supabase DB instead of the local Postgres service.
+  backend:
+    environment:
+      # Read DB_URL/DB_USER/DB_PASSWORD from the environment/.env file in the repo root when starting compose.
+      # Example values are available at backend/.env.supabase.example
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      API_KEY: ${API_KEY}
+      # Keep CORS as needed
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:80}
+      APP_SEED_ENABLED: ${app.seed.enabled:-false}
+    # do not depend on local db service when using Supabase
+    depends_on: []

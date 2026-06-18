@@ -1,38 +1,18 @@
 version: "3.8"
 services:
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-gradua}
-      POSTGRES_USER: ${POSTGRES_USER:-gradua}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gradua_pass}
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    networks:
-      - gradua-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gradua} -d ${POSTGRES_DB:-gradua}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-gradua}
-      DB_USER: ${POSTGRES_USER:-gradua}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-gradua_pass}
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       API_KEY: ${API_KEY:-dev_default_api_key_change_me}
-      CORS_ALLOWED_ORIGINS: http://localhost,http://localhost:80
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:80}
+      APP_SEED_ENABLED: ${app.seed.enabled:-false}
     ports:
       - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - gradua-net
     restart: unless-stopped
 
   frontend:
@@ -43,15 +23,6 @@ services:
         - VITE_API_URL=http://localhost:8080
     ports:
       - "80:80"
-    depends_on:
-      - backend
-    networks:
-      - gradua-net
     restart: unless-stopped
 
-volumes:
-  db-data:
 
-networks:
-  gradua-net:
-    driver: bridge
