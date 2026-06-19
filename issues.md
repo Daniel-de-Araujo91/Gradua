@@ -36,8 +36,7 @@
     - Atualmente demora alguns segundos para exibir os comentários.
 - [x] Corrigir persistência de likes e dislikes
   - Problema: são perdidos ao recarregar a página.
-- [ ] Corrigir filtro por tópicos
-  - Tentativa anterior não funcionou.
+- [x] Corrigir filtro por tópicos
 
 ---
 
