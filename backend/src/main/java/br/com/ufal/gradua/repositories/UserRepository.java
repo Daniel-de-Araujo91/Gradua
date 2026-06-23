@@ -23,4 +23,6 @@ public interface UserRepository extends JpaRepository<UserModel, UUID> {
     }
 
     Optional<UserModel> findByCpfOrPassport(String cpf, String passport);
+
+    Optional<UserModel> findByEmail(String email);
 }

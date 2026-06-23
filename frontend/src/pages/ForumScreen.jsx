@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
+import ConfirmModal from '../components/ConfirmModal';
+import ReportDialog from '../components/ReportDialog';
 import {
   ArrowUp, ArrowDown, MessageCircle, Search, Plus, BookOpen,
   Bell, Lightbulb, CalendarDays, X, Trash2, Loader2, Pencil,
@@ -8,6 +10,7 @@ import {
 } from 'lucide-react';
 import { forumService } from '../services/forumService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { apiClient } from '../services/apiClient';
 import { useWebNotifications } from '../hooks/useWebNotifications';
 
@@ -66,10 +69,8 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate, onReport, onV
     }
   };
 
-  const handleReport = async () => {
-    const reason = window.prompt('Motivo do report:');
-    if (!reason || !reason.trim()) return;
-    await onReport(comment.commentId, reason.trim());
+  const handleReport = () => {
+    onReport(comment.commentId);
   };
 
   return (
@@ -175,6 +176,7 @@ const PostCard = ({
   tag, tagVariant, type, isEdited,
   voteScore: initialVoteScore, commentCount: initialCommentCount,
   currentUser, onDelete, onReport, authorId,
+  onShowToast, onConfirmRequest, onReportRequest,
 }) => {
   const isAnnouncement = (type || '').toLowerCase() === 'aviso';
 
@@ -242,7 +244,7 @@ const PostCard = ({
       await forumService.updateTopic(topicId, { title: editTitle, content: editContent, type });
       setEditing(false);
     } catch (err) {
-      alert(err.message || 'Erro ao editar.');
+      onShowToast(err.message || 'Erro ao editar.', 'error');
     } finally {
       setEditSaving(false);
     }
@@ -276,35 +278,30 @@ const PostCard = ({
       setCommentCount(c => c + 1);
       setNewComment('');
     } catch (err) {
-      alert(err.message || 'Erro ao comentar.');
+      onShowToast(err.message || 'Erro ao comentar.', 'error');
     } finally {
       setPostingComment(false);
     }
   };
 
-  const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Excluir comentário?')) return;
-    try {
-      await apiClient.delete(`/forum/comment/${commentId}`);
-      setComments(prev => prev.filter(c => c.commentId !== commentId));
-      setCommentCount(c => Math.max(0, c - 1));
-    } catch (err) {
-      alert(err.message || 'Erro ao excluir.');
-    }
+  const handleDeleteComment = (commentId) => {
+    onConfirmRequest({
+      open: true,
+      message: 'Excluir comentário?',
+      onConfirm: async () => {
+        try {
+          await apiClient.delete(`/forum/comment/${commentId}`);
+          setComments(prev => prev.filter(c => c.commentId !== commentId));
+          setCommentCount(c => Math.max(0, c - 1));
+        } catch (err) {
+          onShowToast(err.message || 'Erro ao excluir.', 'error');
+        }
+      }
+    });
   };
 
-  const handleReportComment = async (commentId, reason) => {
-    try {
-      const data = await forumService.reportComment(commentId, reason);
-      if (data.deleted) {
-        setComments(prev => prev.filter(c => c.commentId !== commentId));
-        setCommentCount(c => Math.max(0, c - 1));
-        return;
-      }
-      alert('Comentário reportado com sucesso.');
-    } catch (err) {
-      alert(err.message || 'Erro ao reportar.');
-    }
+  const handleReportComment = (commentId) => {
+    onReportRequest({ open: true, targetId: commentId, type: 'comment' });
   };
 
   const handleUpdateComment = async (commentId, newContent) => {
@@ -328,14 +325,12 @@ const PostCard = ({
         currentUserVote: data.currentUserVote || null
       } : c));
     } catch (err) {
-      alert(err.message || 'Erro ao votar no comentário.');
+      onShowToast(err.message || 'Erro ao votar no comentário.', 'error');
     }
   };
 
-  const handleReportTopic = async () => {
-    const reason = window.prompt('Motivo do report:');
-    if (!reason || !reason.trim()) return;
-    onReport(topicId, reason.trim());
+  const handleReportTopic = () => {
+    onReportRequest({ open: true, targetId: topicId, type: 'topic' });
   };
 
   return (
@@ -638,6 +633,7 @@ const EmptyState = ({ query, filter }) => (
 ───────────────────────────────────────── */
 const ForumScreen = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : null;
   const currentUserId = user ? user.id : null;
   const { pushNotify } = useWebNotifications();
@@ -648,6 +644,8 @@ const ForumScreen = () => {
   const [loading, setLoading]               = useState(true);
   const [publishLoading, setPublishLoading] = useState(false);
   const [error, setError]                   = useState(null);
+  const [confirmState, setConfirmState]     = useState({ open: false, message: '', onConfirm: null });
+  const [reportState, setReportState]       = useState({ open: false, targetId: null, type: 'topic' });
 
   const filters = [
     { id: 'todos',     label: 'Todos os Tópicos' },
@@ -690,20 +688,26 @@ const ForumScreen = () => {
         });
       }
     } catch (err) {
-      alert(err.message || 'Erro ao publicar. Tente novamente.');
+      showToast(err.message || 'Erro ao publicar. Tente novamente.', 'error');
     } finally {
       setPublishLoading(false);
     }
   };
 
   const handleDelete = async (topicId) => {
-    if (!window.confirm('Deseja excluir este tópico?')) return;
-    try {
-      await forumService.deleteTopic(topicId);
-      setPosts(prev => prev.filter(p => p.topicId !== topicId));
-    } catch (err) {
-      alert(err.message || 'Erro ao excluir o tópico.');
-    }
+    setConfirmState({
+      open: true,
+      message: 'Deseja excluir este tópico?',
+      onConfirm: async () => {
+        try {
+          await forumService.deleteTopic(topicId);
+          setPosts(prev => prev.filter(p => p.topicId !== topicId));
+          showToast('Tópico excluído com sucesso.', 'success');
+        } catch (err) {
+          showToast(err.message || 'Erro ao excluir o tópico.', 'error');
+        }
+      }
+    });
   };
 
   const handleReport = async (topicId, reason) => {
@@ -713,9 +717,9 @@ const ForumScreen = () => {
         setPosts(prev => prev.filter(p => p.topicId !== topicId));
         return;
       }
-      alert('Tópico reportado com sucesso.');
+      showToast('Tópico reportado com sucesso.', 'success');
     } catch (err) {
-      alert(err.message || 'Erro ao reportar.');
+      showToast(err.message || 'Erro ao reportar.', 'error');
     }
   };
 
@@ -814,6 +818,9 @@ const ForumScreen = () => {
                 currentUser={{ name: currentUserName, id: currentUserId }}
                 onDelete={handleDelete}
                 onReport={handleReport}
+                onShowToast={showToast}
+                onConfirmRequest={(s) => setConfirmState(s)}
+                onReportRequest={(s) => setReportState(s)}
               />
             ))
           ) : (
@@ -823,6 +830,45 @@ const ForumScreen = () => {
       </div>
 
       <BottomNavBar activeTab="forum" />
+
+      <ConfirmModal
+        open={confirmState.open}
+        title="Confirmar"
+        message={confirmState.message}
+        danger
+        confirmLabel="Excluir"
+        onConfirm={() => { confirmState.onConfirm?.(); setConfirmState({ open: false, message: '', onConfirm: null }); }}
+        onCancel={() => setConfirmState({ open: false, message: '', onConfirm: null })}
+      />
+
+      <ReportDialog
+        open={reportState.open}
+        title={reportState.type === 'comment' ? 'Reportar Comentário' : 'Reportar Tópico'}
+        onConfirm={async (reason) => {
+          try {
+            let data;
+            if (reportState.type === 'comment') {
+              data = await forumService.reportComment(reportState.targetId, reason);
+              if (data.deleted) {
+                setPosts(prev => prev.map(p => ({
+                  ...p,
+                  commentCount: Math.max(0, (p.commentCount || 0) - 1)
+                })));
+              }
+            } else {
+              data = await forumService.reportTopic(reportState.targetId, reason);
+              if (data.deleted) {
+                setPosts(prev => prev.filter(p => p.topicId !== reportState.targetId));
+              }
+            }
+            showToast('Reportado com sucesso.', 'success');
+          } catch (err) {
+            showToast(err.message || 'Erro ao reportar.', 'error');
+          }
+          setReportState({ open: false, targetId: null, type: 'topic' });
+        }}
+        onCancel={() => setReportState({ open: false, targetId: null, type: 'topic' })}
+      />
 
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }

@@ -1,17 +1,26 @@
 package br.com.ufal.gradua.services;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import br.com.ufal.gradua.dtos.UpdateProfileRequestDTO;
 import br.com.ufal.gradua.models.agenda.MonitorSessionModel;
 import br.com.ufal.gradua.models.institutional.CurriculumModel;
 import br.com.ufal.gradua.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.com.ufal.gradua.dtos.dashboard.DashboardStatsDTO;
 import br.com.ufal.gradua.dtos.dashboard.DashboardSubjectDTO;
@@ -34,6 +43,10 @@ public class DashboardService {
     private final MonitorSessionRepository monitorSessionRepository;
     private final AnnouncementRepository announcementRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Value("${api.upload.dir:uploads}")
+    private String uploadDir;
 
     private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -154,13 +167,70 @@ public class DashboardService {
         if (student != null) {
             return new br.com.ufal.gradua.dtos.ProfileDTO(
                     user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole(), user.getCpf(), user.getPassport(),
-                    student.getStudentID(), student.getEnrollmentNumber(), student.getCurrentTerm(), student.getIra()
+                    student.getStudentID(), student.getEnrollmentNumber(), student.getCurrentTerm(), student.getIra(), user.getProfilePhoto()
             );
         }
 
         return new br.com.ufal.gradua.dtos.ProfileDTO(
                 user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole(), user.getCpf(), user.getPassport(),
-                null, null, null, null
+                null, null, null, null, user.getProfilePhoto()
         );
+    }
+
+    public Object updateProfile(UpdateProfileRequestDTO dto) {
+        UserModel user = getUserByToken();
+
+        if (dto.currentPassword() == null || dto.currentPassword().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha atual é obrigatória");
+        }
+
+        if (!passwordEncoder.matches(dto.currentPassword(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha atual incorreta");
+        }
+
+        if (dto.email() != null && !dto.email().isBlank()) {
+            userRepository.findByEmail(dto.email()).ifPresent(existing -> {
+                if (!existing.getUserId().equals(user.getUserId())) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já está em uso");
+                }
+            });
+            user.setEmail(dto.email());
+        }
+
+        if (dto.newPassword() != null && !dto.newPassword().isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        }
+
+        userRepository.save(user);
+        return getProfileForCurrentUser();
+    }
+
+    public Object uploadProfilePhoto(MultipartFile file) {
+        UserModel user = getUserByToken();
+
+        if (file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
+        }
+
+        try {
+            String originalName = file.getOriginalFilename();
+            String extension = "";
+            if (originalName != null && originalName.contains(".")) {
+                extension = originalName.substring(originalName.lastIndexOf("."));
+            }
+            String fileName = "profile_" + user.getUserId() + extension;
+            Path uploadPath = Paths.get(uploadDir, "profiles");
+            Files.createDirectories(uploadPath);
+            Path filePath = uploadPath.resolve(fileName);
+            file.transferTo(filePath.toFile());
+
+            String photoUrl = "/uploads/profiles/" + fileName;
+            user.setProfilePhoto(photoUrl);
+            userRepository.save(user);
+
+            return java.util.Map.of("photoUrl", photoUrl);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao salvar foto");
+        }
     }
 }

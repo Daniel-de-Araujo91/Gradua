@@ -3,6 +3,7 @@ import { Bell, MapPin, User, BellPlus, X, Trash2, Video, CalendarPlus, Loader2, 
 import BottomNavBar from '../components/BottomNavBar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { monitorService } from '../services/monitorService';
 import { useWebNotifications } from '../hooks/useWebNotifications';
 import { agendaService } from '../services/agendaService';
@@ -38,6 +39,7 @@ const formatDate = (fullDate) => {
 
 const AgendaPage = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const { pushNotify } = useWebNotifications();
   const [selectedDay, setSelectedDay] = useState(todayLabel());
 
@@ -46,6 +48,7 @@ const AgendaPage = () => {
   const [newTime, setNewTime] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [editReminderId, setEditReminderId] = useState(null);
+  const [editReminderDate, setEditReminderDate] = useState(null);
 
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [sessionTopic, setSessionTopic] = useState('');
@@ -103,8 +106,8 @@ const AgendaPage = () => {
 
   const sessionsOnDay = agendaData.monitorSessions.map(s => ({
     id: `session-${s.sessionId}`,
-    startTime: s.startTime,
-    endTime: s.endTime,
+    startTime: s.startTime ? s.startTime.substring(0, 5) : '',
+    endTime: s.endTime ? s.endTime.substring(0, 5) : '',
     title: s.topic,
     abbr: s.subjectName,
     location: s.location,
@@ -116,7 +119,7 @@ const AgendaPage = () => {
 
   const remindersOnDay = agendaData.reminders.map(r => ({
     id: `rem-${r.reminderId}`,
-    startTime: r.time,
+    startTime: r.time ? r.time.substring(0, 5) : '',
     endTime: '',
     title: r.title,
     status: 'LEMBRETE',
@@ -124,6 +127,7 @@ const AgendaPage = () => {
     location: r.location || 'A definir',
     isReminder: true,
     reminderId: r.reminderId,
+    date: r.date,
   }));
 
   const allItems = [...classesOnDay, ...sessionsOnDay, ...remindersOnDay]
@@ -141,19 +145,20 @@ const AgendaPage = () => {
     if (!newTitle || !newTime) return;
 
     const selectedDate = weekDays.find(d => d.label === selectedDay)?.fullDate || new Date();
+    const targetDate = editReminderId && editReminderDate ? editReminderDate : formatDate(selectedDate);
 
     try {
       if (editReminderId) {
         await agendaService.updateReminder(editReminderId, {
           title: newTitle,
-          date: formatDate(selectedDate),
+          date: targetDate,
           time: newTime,
           location: newLocation || null,
         });
       } else {
         await agendaService.createReminder({
           title: newTitle,
-          date: formatDate(selectedDate),
+          date: targetDate,
           time: newTime,
           location: newLocation || null,
         });
@@ -163,11 +168,13 @@ const AgendaPage = () => {
 
     setShowAddModal(false);
     setEditReminderId(null);
+    setEditReminderDate(null);
     setNewTitle(''); setNewTime(''); setNewLocation('');
   };
 
   const openEditModal = (reminder) => {
     setEditReminderId(reminder.reminderId);
+    setEditReminderDate(reminder.date);
     setNewTitle(reminder.title);
     setNewTime(reminder.startTime);
     setNewLocation(reminder.location !== 'A definir' ? reminder.location : '');
@@ -202,7 +209,7 @@ const AgendaPage = () => {
         fetchAgenda();
       }, 2000);
     } catch (err) {
-      alert(err.message || 'Erro ao agendar sessão. Tente novamente.');
+      showToast(err.message || 'Erro ao agendar sessão. Tente novamente.', 'error');
     } finally {
       setSessionLoading(false);
     }
@@ -416,13 +423,13 @@ const AgendaPage = () => {
 
       {/* Modal: adicionar lembrete */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
+        <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => { setShowAddModal(false); setEditReminderId(null); setEditReminderDate(null); }}>
           <div
             className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl animate-fade-in"
             onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4 border-b pb-3">
               <h3 className="text-lg font-bold text-gray-900">{editReminderId ? 'Editar Lembrete' : 'Novo Lembrete'}</h3>
-              <button type="button" onClick={() => { setShowAddModal(false); setEditReminderId(null); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <button type="button" onClick={() => { setShowAddModal(false); setEditReminderId(null); setEditReminderDate(null); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
 
             <form onSubmit={handleAddReminder} className="space-y-4">

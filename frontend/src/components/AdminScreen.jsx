@@ -111,7 +111,7 @@ const AdminScreen = () => {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col relative">
-      <Header activeTab="profile" />
+      <Header activeTab="home" />
 
       <main className="flex-1 px-4 py-4 overflow-y-auto pb-28">
         <div className="mb-6">
@@ -365,7 +365,7 @@ const AdminScreen = () => {
         </div>
       )}
 
-      <BottomNavBar activeTab="profile" />
+      <BottomNavBar activeTab="home" />
     </div>
   );
 };

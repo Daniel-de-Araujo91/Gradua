@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, X, Info, Calendar, Loader2, BellRing } from 'lucide-react';
+import { Bell, X, Info, Calendar, Loader2, BellRing, User } from 'lucide-react';
 import { Tooltip } from 'flowbite-react';
 import { useAuth } from '../context/AuthContext';
 import { notificationService } from '../services/notificationService';
@@ -8,6 +8,7 @@ import { useWebNotifications } from '../hooks/useWebNotifications';
 
 const Header = ({ activeTab = 'home' }) => {
     const { user, profile, logout } = useAuth();
+    const profilePhoto = profile?.profilePhoto || '/images/perfil.png';
     const navigate = useNavigate();
     const userName = user ? user.firstName : 'Usuário';
     const matricula = profile?.enrollmentNumber || null;
@@ -129,12 +130,21 @@ const Header = ({ activeTab = 'home' }) => {
             <div className='flex justify-between items-start mb-4'>
                 
                 <div className='flex items-center gap-3'>
-                    <img 
-                        src='/images/perfil.png' 
-                        alt='Perfil' 
-                        className='w-12 h-12 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity'
-                        onClick={() => navigate('/perfil')}
-                    />
+                    {profile?.profilePhoto ? (
+                        <img 
+                            src={profilePhoto}
+                            alt='Perfil' 
+                            className='w-12 h-12 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity'
+                            onClick={() => navigate('/perfil')}
+                        />
+                    ) : (
+                        <div 
+                            className='w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity'
+                            onClick={() => navigate('/perfil')}
+                        >
+                            <User size={24} className='text-gray-300' />
+                        </div>
+                    )}
                     <div>
                         <h1 className='text-2xl font-bold text-gray-900'>
                             Olá, <span className={currentTheme.text}>{userName}</span>
@@ -214,10 +224,10 @@ const Header = ({ activeTab = 'home' }) => {
                                             <Calendar size={16} />
                                         </div>
                                         <div className='flex-1 min-w-0'>
-                                            <h3 className={`text-sm leading-snug ${
+                                                <h3 className={`text-sm leading-snug ${
                                                 !notif.isRead ? 'font-bold text-gray-900' : 'font-medium text-gray-700'
                                             }`}>
-                                                Sessão de Monitoria
+                                                {notif.session ? 'Sessão de Monitoria' : 'Comunicado'}
                                                 {notif.session?.subjectName && (
                                                     <span className='font-normal text-gray-500'> — {notif.session.subjectName}</span>
                                                 )}

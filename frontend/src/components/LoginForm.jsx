@@ -33,7 +33,12 @@ const LoginForm = () => {
       const cleanDocument = cpf.replace(/\D/g, '');
       const data = await authService.login(cleanDocument, password);
       login({ id: data.userId, firstName: data.firstName, lastName: data.lastName, role: data.role }, data.token);
-      navigate('/');
+      const role = data.role?.toUpperCase();
+      if (role === 'ADMIN' || role === 'PROFESSOR') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.message || "Documento ou senha incorretos.");
     } finally {

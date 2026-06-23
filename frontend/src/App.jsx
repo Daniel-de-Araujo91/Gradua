@@ -9,11 +9,13 @@ import MeusDocumentosPage from './pages/MeusDocumentosPage';
 import AdminScreen from './components/AdminScreen';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
+import RedirectHome from './components/RedirectHome';
 import NotificationToast from './components/NotificationToast';
+import { ToastProvider } from './context/ToastContext';
 
 function App() {
   return (
-    <>
+    <ToastProvider>
       {/* Toast global de notificações — aparece em todas as páginas autenticadas */}
       <NotificationToast />
 
@@ -24,7 +26,7 @@ function App() {
 
         {/* Rotas privadas */}
         <Route element={<PrivateRoute />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<RedirectHome />} />
           <Route path="/agenda" element={<AgendaPage />} />
           <Route path="/forum" element={<ForumScreen />} />
           <Route path="/perfil" element={<PerfilScreen />} />
@@ -39,7 +41,7 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </ToastProvider>
   );
 }
 

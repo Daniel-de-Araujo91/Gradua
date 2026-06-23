@@ -1,19 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Calendar, MessageCircle, User } from 'lucide-react';
-
-const TAB_ROUTES = {
-  home:    '/',
-  agenda:  '/agenda',
-  forum:   '/forum',
-  profile: '/perfil',
-};
+import { Home, Calendar, MessageCircle, User, ShieldAlert } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const BottomNavBar = ({ activeTab: activeProp }) => {
     const navigate    = useNavigate();
     const { pathname } = useLocation();
+    const { user } = useAuth();
     const [isVisible, setIsVisible] = useState(true);
     const lastScrollY = useRef(0);
+
+    const isPrivileged = ['ADMIN', 'PROFESSOR'].includes(user?.role?.toUpperCase() || '');
+
+    const TAB_ROUTES = {
+      home:    isPrivileged ? '/admin' : '/',
+      agenda:  '/agenda',
+      forum:   '/forum',
+      profile: '/perfil',
+    };
 
     const activeTab = activeProp || Object.keys(TAB_ROUTES).find(
       (key) => pathname === TAB_ROUTES[key]
@@ -42,7 +46,7 @@ const BottomNavBar = ({ activeTab: activeProp }) => {
     }, []);
 
     const tabs = [
-        { id: 'home',    label: 'INÍCIO', icon: Home,          activeColors: 'text-gradua-inicio bg-gradua-inicio/10' },
+        { id: 'home',    label: isPrivileged ? 'PAINEL' : 'INÍCIO', icon: isPrivileged ? ShieldAlert : Home, activeColors: isPrivileged ? 'text-gradua-perfil bg-gradua-perfil/10' : 'text-gradua-inicio bg-gradua-inicio/10' },
         { id: 'agenda',  label: 'AGENDA', icon: Calendar,      activeColors: 'text-gradua-agenda bg-gradua-agenda/10' },
         { id: 'forum',   label: 'FÓRUM',  icon: MessageCircle, activeColors: 'text-gradua-forum bg-gradua-forum/10' },
         { id: 'profile', label: 'PERFIL', icon: User,          activeColors: 'text-gradua-perfil bg-gradua-perfil/10' },

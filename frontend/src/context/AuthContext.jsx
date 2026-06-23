@@ -1,7 +1,29 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { apiClient } from '../services/apiClient';
 
 const AuthContext = createContext(null);
+
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token) {
+  const payload = parseJwt(token);
+  if (!payload || !payload.exp) return true;
+  return Date.now() >= payload.exp * 1000;
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
@@ -16,6 +38,9 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
 
+  const isTypingRef = useRef(false);
+  const logoutRef = useRef(null);
+
   useEffect(() => {
     if (token && !profile) {
       apiClient.get('/dashboard/profile')
@@ -23,9 +48,64 @@ export function AuthProvider({ children }) {
           setProfile(data);
           localStorage.setItem('gradua_profile', JSON.stringify(data));
         })
-        .catch(() => {}); 
+        .catch(() => {});
     }
   }, [token, profile]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const handleFocusIn = (e) => {
+      const tag = e.target.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') {
+        isTypingRef.current = true;
+      }
+    };
+
+    const handleFocusOut = (e) => {
+      const tag = e.target.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') {
+        isTypingRef.current = false;
+      }
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const checkExpiration = () => {
+      if (!isTokenExpired(token)) return;
+
+      if (isTypingRef.current) {
+        if (!logoutRef.current) {
+          logoutRef.current = setTimeout(() => {
+            logout();
+            window.location.href = '/login';
+          }, 30000);
+        }
+        return;
+      }
+
+      if (logoutRef.current) {
+        clearTimeout(logoutRef.current);
+        logoutRef.current = null;
+      }
+
+      logout();
+      window.location.href = '/login';
+    };
+
+    const interval = setInterval(checkExpiration, 10000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   const login = useCallback((userData, jwt) => {
     setUser(userData);
