@@ -1,6 +1,7 @@
 package br.com.ufal.gradua.models.academic;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 
@@ -34,5 +35,15 @@ public class AcademicHistoryModel implements Serializable {
     @JoinColumn(name = "subject_id")
     private SubjectModel subject;
 
+    private String academicTerm;
 
+    private BigDecimal finalGrade;
+
+    private String status;
+
+    private String professorName;
+
+    private Integer frequency;
+
+    private String subjectType;
 }

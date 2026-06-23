@@ -97,6 +97,27 @@ public class NotificationService {
         notificationRepository.save(notif);
     }
 
+    public void delete(UUID notificationId) {
+        UserModel user = getUserByToken();
+        NotificationModel notif = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notificação não encontrada."));
+
+        if (!notif.getRecipientUser().getUserId().equals(user.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissão para excluir esta notificação.");
+        }
+
+        notificationRepository.delete(notif);
+    }
+
+    public void deleteAllRead() {
+        UserModel user = getUserByToken();
+        List<NotificationModel> all = notificationRepository.findByRecipientUserOrderByCreatedAtDesc(user);
+        List<NotificationModel> toDelete = all.stream()
+            .filter(n -> n.getIsRead() != null && n.getIsRead())
+            .collect(Collectors.toList());
+        notificationRepository.deleteAll(toDelete);
+    }
+
     /**
      * Cria uma notificação de AVISO para todos os usuários cadastrados,
      * exceto o próprio autor do aviso.

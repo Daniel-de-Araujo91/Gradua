@@ -4,33 +4,26 @@ import Header from './Header';
 import BottomNavBar from './BottomNavBar';
 import { Tooltip } from 'flowbite-react';
 import { 
-  ShieldAlert, Megaphone, MessageSquare, CalendarDays, 
-  Trash2, Check, AlertTriangle, Send, MapPin, Info, X, Loader2
+  ShieldAlert, Megaphone, MessageSquare, 
+  Trash2, Check, AlertTriangle, Send, Info, X, Loader2,
+  GraduationCap, Save, Calendar, UserCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { forumService } from '../services/forumService';
 import { adminService } from '../services/adminService';
-
-const INITIAL_ANNOUNCEMENTS = [
-  { id: 1, title: "Manutenção do Bloco de Laboratórios", date: "Hoje, 09:30", target: "Todos os Cursos" },
-  { id: 2, title: "Prazo final para renovação de matrícula", date: "Ontem", target: "Ciência da Computação" }
-];
+import { gradeService } from '../services/gradeService';
+import { announcementService } from '../services/announcementService';
+import { classSessionService } from '../services/classSessionService';
 
 const AdminScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isOnlyProfessor = user?.role?.toUpperCase() === 'PROFESSOR';
-  const [activeSubTab, setActiveSubTab] = useState(isOnlyProfessor ? 'comunicados' : 'forum');
+  const [activeSubTab, setActiveSubTab] = useState(isOnlyProfessor ? 'notas' : 'forum');
 
   const [reportedPosts, setReportedPosts] = useState([]);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [confirmForumId, setConfirmForumId] = useState(null);
-
-  const [announcements, setAnnouncements] = useState(() => {
-    const saved = localStorage.getItem('gradua_admin_announcements');
-    return saved ? JSON.parse(saved) : INITIAL_ANNOUNCEMENTS;
-  });
-  const [confirmAnnounceId, setConfirmAnnounceId] = useState(null);
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const toastTimeout = useRef(null);
@@ -56,16 +49,10 @@ const AdminScreen = () => {
   }, [showToast]);
 
   useEffect(() => {
-    fetchReports();
-  }, [fetchReports]);
-
-  useEffect(() => {
-    localStorage.setItem('gradua_admin_announcements', JSON.stringify(announcements));
-  }, [announcements]);
-
-  const [newAnnounce, setNewAnnounce] = useState({ title: '', message: '', target: 'Todos os Cursos' });
-  const [announceLoading, setAnnounceLoading] = useState(false);
-  const [classAlert, setClassAlert] = useState({ classTitle: 'PROG 3', reason: 'Falta do Professor', actionType: 'canceled', newRoom: '' });
+    if (activeSubTab === 'forum') {
+      fetchReports();
+    }
+  }, [activeSubTab, fetchReports]);
 
   const handleApprove = async (topicId) => {
     try {
@@ -88,22 +75,243 @@ const AdminScreen = () => {
     }
   };
 
+  // ---- Grade Entry ----
+  const [gradeClasses, setGradeClasses] = useState([]);
+  const [selectedGradeClass, setSelectedGradeClass] = useState(null);
+  const [gradeStudents, setGradeStudents] = useState([]);
+  const [gradeLoading, setGradeLoading] = useState(false);
+  const [savingGrades, setSavingGrades] = useState(false);
+
+  const loadGradeClasses = useCallback(async () => {
+    setGradeLoading(true);
+    try {
+      const data = await gradeService.getProfessorClasses();
+      setGradeClasses(data || []);
+    } catch (err) {
+      showToast('Erro ao carregar turmas: ' + (err.message || ''), 'error');
+    } finally {
+      setGradeLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    if (activeSubTab === 'notas') {
+      loadGradeClasses();
+    }
+  }, [activeSubTab, loadGradeClasses]);
+
+  const handleSelectGradeClass = (classId) => {
+    const cls = gradeClasses.find(c => c.classId === classId);
+    setSelectedGradeClass(cls);
+    if (cls) {
+      setGradeStudents(cls.students.map(s => ({ ...s })));
+    } else {
+      setGradeStudents([]);
+    }
+  };
+
+  const handleGradeChange = (enrollmentId, field, value) => {
+    setGradeStudents(prev => prev.map(s => {
+      if (s.enrollmentId !== enrollmentId) return s;
+      return { ...s, [field]: value };
+    }));
+  };
+
+  const handleSaveGrades = async () => {
+    if (!selectedGradeClass) return;
+    setSavingGrades(true);
+    try {
+      const entries = [];
+      for (const student of gradeStudents) {
+        for (const type of ['ab1', 'ab2', 'reav', 'finalGrade']) {
+          const raw = student[type];
+          if (raw === null || raw === undefined || raw === '') continue;
+          const normalized = String(raw).replace(',', '.');
+          const parsed = parseFloat(normalized);
+          if (isNaN(parsed)) continue;
+          if (parsed < 0 || parsed > 10) {
+            showToast(`Nota deve estar entre 0 e 10 (${student.studentName})`, 'error');
+            return;
+          }
+          const decimalPlaces = (normalized.split('.')[1] || '').length;
+          if (decimalPlaces > 2) {
+            showToast(`Nota pode ter no máximo 2 casas decimais (${student.studentName})`, 'error');
+            return;
+          }
+          entries.push({
+            enrollmentId: student.enrollmentId,
+            gradeType: type === 'finalGrade' ? 'FINAL' : type.toUpperCase(),
+            value: parsed,
+          });
+        }
+      }
+      if (entries.length === 0) {
+        showToast('Nenhuma nota para salvar.', 'info');
+        return;
+      }
+      await gradeService.saveGrades(selectedGradeClass.classId, entries);
+      showToast('Notas salvas com sucesso!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Erro ao salvar notas', 'error');
+    } finally {
+      setSavingGrades(false);
+    }
+  };
+
+  // ---- Attendance ----
+  const [faltasClasses, setFaltasClasses] = useState([]);
+  const [selectedFaltasClass, setSelectedFaltasClass] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [newSessionDate, setNewSessionDate] = useState('');
+  const [newSessionDesc, setNewSessionDesc] = useState('');
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [attendanceList, setAttendanceList] = useState([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [savingAttendance, setSavingAttendance] = useState(false);
+
+  // ---- Announcements ----
+  const [newAnnounce, setNewAnnounce] = useState({ title: '', message: '', classId: '' });
+  const [announceLoading, setAnnounceLoading] = useState(false);
+  const [announceHistory, setAnnounceHistory] = useState([]);
+  const [announceHistoryLoading, setAnnounceHistoryLoading] = useState(false);
+  const [confirmAnnounceId, setConfirmAnnounceId] = useState(null);
+  const [professorClasses, setProfessorClasses] = useState([]);
+
+  const loadAnnounceHistory = useCallback(async () => {
+    setAnnounceHistoryLoading(true);
+    try {
+      const data = await announcementService.listMyClasses();
+      setAnnounceHistory(data || []);
+    } catch (err) {
+      setAnnounceHistory([]);
+    } finally {
+      setAnnounceHistoryLoading(false);
+    }
+  }, []);
+
+  const loadProfessorClasses = useCallback(async () => {
+    try {
+      const data = await gradeService.getProfessorClasses();
+      setProfessorClasses(data || []);
+    } catch (err) {
+      setProfessorClasses([]);
+    }
+  }, []);
+
+  const loadFaltasClasses = useCallback(async () => {
+    try {
+      const data = await gradeService.getProfessorClasses();
+      setFaltasClasses(data || []);
+    } catch (err) {
+      setFaltasClasses([]);
+    }
+  }, []);
+
+  const loadSessions = useCallback(async (classId) => {
+    if (!classId) { setSessions([]); return; }
+    setSessionsLoading(true);
+    try {
+      const data = await classSessionService.getSessions(classId);
+      setSessions(data || []);
+    } catch (err) {
+      setSessions([]);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
+  const handleSelectFaltasClass = (classId) => {
+    const cls = faltasClasses.find(c => c.classId === classId);
+    setSelectedFaltasClass(cls);
+    setSelectedSession(null);
+    setAttendanceList([]);
+    loadSessions(classId);
+  };
+
+  const handleCreateSession = async () => {
+    if (!selectedFaltasClass || !newSessionDate) return;
+    try {
+      await classSessionService.createSession(selectedFaltasClass.classId, newSessionDate, newSessionDesc);
+      setNewSessionDate('');
+      setNewSessionDesc('');
+      loadSessions(selectedFaltasClass.classId);
+      showToast('Aula registrada!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Erro ao registrar aula', 'error');
+    }
+  };
+
+  const handleDeleteSession = async (sessionId) => {
+    try {
+      await classSessionService.deleteSession(sessionId);
+      if (selectedSession?.sessionId === sessionId) {
+        setSelectedSession(null);
+        setAttendanceList([]);
+      }
+      loadSessions(selectedFaltasClass.classId);
+      showToast('Aula removida.', 'info');
+    } catch (err) {
+      showToast(err.message || 'Erro ao remover aula', 'error');
+    }
+  };
+
+  const handleOpenAttendance = async (session) => {
+    setSelectedSession(session);
+    setAttendanceLoading(true);
+    try {
+      const data = await classSessionService.getAttendance(session.sessionId);
+      setAttendanceList(data || []);
+    } catch (err) {
+      showToast(err.message || 'Erro ao carregar chamada', 'error');
+    } finally {
+      setAttendanceLoading(false);
+    }
+  };
+
+  const handleToggleAttendance = (enrollmentId) => {
+    setAttendanceList(prev => prev.map(a => {
+      if (a.enrollmentId !== enrollmentId) return a;
+      return { ...a, present: a.present === false ? true : false };
+    }));
+  };
+
+  const handleSaveAttendance = async () => {
+    if (!selectedSession) return;
+    setSavingAttendance(true);
+    try {
+      await classSessionService.markAttendance(selectedSession.sessionId, attendanceList);
+      showToast('Chamada salva!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Erro ao salvar chamada', 'error');
+    } finally {
+      setSavingAttendance(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSubTab === 'comunicados') {
+      loadAnnounceHistory();
+      loadProfessorClasses();
+    }
+    if (activeSubTab === 'faltas') {
+      loadFaltasClasses();
+    }
+  }, [activeSubTab, loadAnnounceHistory, loadProfessorClasses, loadFaltasClasses]);
+
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
-    if (!newAnnounce.title.trim()) return;
+    if (!newAnnounce.title.trim() || !newAnnounce.classId) return;
     setAnnounceLoading(true);
     try {
-      await forumService.createTopic({
+      const created = await announcementService.create({
         title: newAnnounce.title,
         content: newAnnounce.message || newAnnounce.title,
-        type: 'aviso',
+        classId: newAnnounce.classId,
       });
-      setAnnouncements(prev => [
-        { id: Date.now(), title: newAnnounce.title, date: 'Agora mesmo', target: newAnnounce.target },
-        ...prev
-      ]);
-      showToast('Comunicado enviado e notificações disparadas!', 'success');
-      setNewAnnounce({ title: '', message: '', target: 'Todos os Cursos' });
+      setAnnounceHistory(prev => [created, ...prev]);
+      showToast('Comunicado enviado para a turma!', 'success');
+      setNewAnnounce({ title: '', message: '', classId: '' });
     } catch (err) {
       showToast(err.message || 'Erro ao publicar comunicado.', 'error');
     } finally {
@@ -111,19 +319,21 @@ const AdminScreen = () => {
     }
   };
 
-  const handleDeleteAnnouncement = (id) => {
-    setAnnouncements(prev => prev.filter(ann => ann.id !== id));
-    setConfirmAnnounceId(null);
-    showToast("Comunicado apagado do histórico.", "info");
+  const handleDeleteAnnouncement = async (id) => {
+    try {
+      await announcementService.delete(id);
+      setAnnounceHistory(prev => prev.filter(a => a.id !== id));
+      setConfirmAnnounceId(null);
+      showToast("Comunicado apagado.", "info");
+    } catch (err) {
+      showToast(err.message || 'Erro ao apagar comunicado', 'error');
+    }
   };
 
-  const handleSendClassAlert = (e) => {
-    e.preventDefault();
-    if (classAlert.actionType === 'canceled') {
-        showToast(`Aula de ${classAlert.classTitle} cancelada no sistema!`, "error");
-    } else {
-        showToast(`Mudança de sala de ${classAlert.classTitle} notificada!`, "success");
-    }
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -141,6 +351,20 @@ const AdminScreen = () => {
         </div>
 
         <div className="flex gap-1 bg-gray-200/60 p-1 rounded-xl mb-6">
+          {isOnlyProfessor && (
+            <>
+              <button 
+                onClick={() => setActiveSubTab('notas')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all ${activeSubTab === 'notas' ? 'bg-white text-gradua-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+                <GraduationCap size={16} /> Notas
+              </button>
+              <button 
+                onClick={() => setActiveSubTab('faltas')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all ${activeSubTab === 'faltas' ? 'bg-white text-gradua-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+                <UserCheck size={16} /> Faltas
+              </button>
+            </>
+          )}
           {!isOnlyProfessor && (
             <button 
               onClick={() => setActiveSubTab('forum')}
@@ -153,11 +377,7 @@ const AdminScreen = () => {
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all ${activeSubTab === 'comunicados' ? 'bg-white text-gradua-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
             <Megaphone size={16} /> Comunicados
           </button>
-          <button 
-            onClick={() => setActiveSubTab('aulas')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all ${activeSubTab === 'aulas' ? 'bg-white text-gradua-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
-            <CalendarDays size={16} /> Aulas
-          </button>
+
         </div>
 
         {activeSubTab === 'forum' && (
@@ -237,10 +457,225 @@ const AdminScreen = () => {
           </div>
         )}
 
+        {activeSubTab === 'notas' && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
+              <h3 className="text-base font-black text-gradua-primary mb-4">Lançamento de Notas</h3>
+
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Selecione a Turma</label>
+                <select
+                  value={selectedGradeClass?.classId || ''}
+                  onChange={e => handleSelectGradeClass(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-bold text-gray-700"
+                >
+                  <option value="">— Selecione —</option>
+                  {gradeClasses.map(cls => (
+                    <option key={cls.classId} value={cls.classId}>
+                      {cls.subjectCode} - {cls.subjectName} ({cls.academicTerm})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {gradeLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 size={24} className="animate-spin text-gray-400" />
+                </div>
+              ) : selectedGradeClass && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-2 px-2 text-xs font-bold text-gray-500 uppercase">Aluno</th>
+                        <th className="text-center py-2 px-2 text-xs font-bold text-gray-500 uppercase w-16">AB1</th>
+                        <th className="text-center py-2 px-2 text-xs font-bold text-gray-500 uppercase w-16">AB2</th>
+                        <th className="text-center py-2 px-2 text-xs font-bold text-gray-500 uppercase w-16">REAV</th>
+                        <th className="text-center py-2 px-2 text-xs font-bold text-gray-500 uppercase w-16">Final</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {gradeStudents.map(student => (
+                        <tr key={student.enrollmentId} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-2 px-2">
+                            <p className="font-semibold text-gray-800 text-sm">{student.studentName}</p>
+                            <p className="text-xs text-gray-400">{student.enrollmentNumber}</p>
+                          </td>
+                          {['ab1', 'ab2', 'reav', 'finalGrade'].map(field => (
+                            <td key={field} className="py-2 px-2 text-center">
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={student[field] ?? ''}
+                                onChange={e => handleGradeChange(student.enrollmentId, field, e.target.value)}
+                                className="w-14 text-center border border-gray-200 rounded-lg p-1.5 text-sm font-bold focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white"
+                                placeholder="—"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={handleSaveGrades}
+                      disabled={savingGrades}
+                      className="bg-gradua-perfil text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-60"
+                    >
+                      {savingGrades ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                      {savingGrades ? 'Salvando...' : 'Salvar Notas'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === 'faltas' && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
+              <h3 className="text-base font-black text-gradua-primary mb-4">Registro de Faltas</h3>
+
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Selecione a Turma</label>
+                <select
+                  value={selectedFaltasClass?.classId || ''}
+                  onChange={e => handleSelectFaltasClass(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-bold text-gray-700"
+                >
+                  <option value="">— Selecione —</option>
+                  {faltasClasses.map(cls => (
+                    <option key={cls.classId} value={cls.classId}>
+                      {cls.subjectCode} - {cls.subjectName} ({cls.academicTerm})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedFaltasClass && (
+                <>
+                  <div className="bg-gray-50 rounded-2xl p-4 mb-4">
+                    <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Registrar Nova Aula</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="date"
+                        value={newSessionDate}
+                        onChange={e => setNewSessionDate(e.target.value)}
+                        className="flex-1 border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-white font-medium"
+                      />
+                      <input
+                        type="text"
+                        value={newSessionDesc}
+                        onChange={e => setNewSessionDesc(e.target.value)}
+                        placeholder="Descrição (opcional)"
+                        className="flex-1 border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-white font-medium"
+                      />
+                      <button
+                        onClick={handleCreateSession}
+                        disabled={!newSessionDate}
+                        className="bg-gradua-perfil text-white font-bold py-2.5 px-4 rounded-xl text-sm flex items-center gap-1.5 hover:opacity-95 transition-opacity disabled:opacity-60"
+                      >
+                        <Calendar size={16} /> Registrar
+                      </button>
+                    </div>
+                  </div>
+
+                  {sessionsLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 size={20} className="animate-spin text-gray-400" />
+                    </div>
+                  ) : sessions.length === 0 ? (
+                    <div className="text-center py-6 text-gray-500 text-sm font-medium">
+                      Nenhuma aula registrada.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Aulas Registradas</h4>
+                      {sessions.map(s => (
+                        <div key={s.sessionId}
+                          className={`border rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all ${
+                            selectedSession?.sessionId === s.sessionId
+                              ? 'border-gradua-perfil bg-gradua-perfil/5'
+                              : 'border-gray-100 bg-white hover:border-gray-200'
+                          }`}
+                          onClick={() => handleOpenAttendance(s)}
+                        >
+                          <div>
+                            <span className="text-sm font-bold text-gray-800">{new Date(s.date).toLocaleDateString('pt-BR')}</span>
+                            {s.description && (
+                              <span className="text-xs text-gray-500 ml-2 font-medium">{s.description}</span>
+                            )}
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteSession(s.sessionId); }}
+                            className="text-gray-300 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedSession && (
+                    <div className="mt-6 border-t border-gray-100 pt-4">
+                      <h4 className="text-sm font-bold text-gray-700 mb-3">
+                        Chamada - {new Date(selectedSession.date).toLocaleDateString('pt-BR')}
+                      </h4>
+
+                      {attendanceLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                          <Loader2 size={20} className="animate-spin text-gray-400" />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-1 max-h-64 overflow-y-auto">
+                            {attendanceList.map(a => (
+                              <div key={a.enrollmentId}
+                                onClick={() => handleToggleAttendance(a.enrollmentId)}
+                                className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-100"
+                              >
+                                <span className="text-sm font-semibold text-gray-800">{a.studentName}</span>
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                  a.present === false
+                                    ? 'bg-red-100 text-red-600'
+                                    : a.present === true
+                                    ? 'bg-green-100 text-green-600'
+                                    : 'bg-gray-100 text-gray-400'
+                                }`}>
+                                  {a.present === false ? <X size={16} /> : a.present === true ? <Check size={16} /> : '—'}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="mt-4 flex justify-end">
+                            <button
+                              onClick={handleSaveAttendance}
+                              disabled={savingAttendance}
+                              className="bg-gradua-perfil text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-60"
+                            >
+                              {savingAttendance ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                              {savingAttendance ? 'Salvando...' : 'Salvar Chamada'}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeSubTab === 'comunicados' && (
           <div className="space-y-5 animate-fade-in">
             <form onSubmit={handleCreateAnnouncement} className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-4">
-              <h3 className="text-base font-black text-gradua-primary mb-2">Novo Comunicado Geral</h3>
+              <h3 className="text-base font-black text-gradua-primary mb-2">Novo Comunicado para Turma</h3>
               
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Título do Aviso</label>
@@ -249,27 +684,42 @@ const AdminScreen = () => {
                   required
                   value={newAnnounce.title}
                   onChange={e => setNewAnnounce({...newAnnounce, title: e.target.value})}
-                  placeholder="Ex: Prorrogação de prazos de TCC"
+                  placeholder="Ex: Aula cancelada nesta sexta"
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Mensagem (opcional)</label>
+                <textarea
+                  value={newAnnounce.message}
+                  onChange={e => setNewAnnounce({...newAnnounce, message: e.target.value})}
+                  placeholder="Detalhes do comunicado..."
+                  rows={2}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-medium resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Destinatários</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Turma</label>
                   <select 
-                    value={newAnnounce.target}
-                    onChange={e => setNewAnnounce({...newAnnounce, target: e.target.value})}
+                    value={newAnnounce.classId}
+                    onChange={e => setNewAnnounce({...newAnnounce, classId: e.target.value})}
+                    required
                     className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-bold text-gray-700">
-                    <option>Todos os Cursos</option>
-                    <option>Ciência da Computação</option>
-                    <option>Engenharia Química</option>
+                    <option value="">— Selecione uma turma —</option>
+                    {professorClasses.map(cls => (
+                      <option key={cls.classId} value={cls.classId}>
+                        {cls.subjectCode} - {cls.subjectName}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex items-end">
                   <button 
                     type="submit"
-                    disabled={announceLoading}
+                    disabled={announceLoading || !newAnnounce.classId}
                     className="w-full bg-gradua-perfil text-white font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-95 transition-opacity shadow-md shadow-gradua-primary/10 disabled:opacity-60">
                     {announceLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                     {announceLoading ? 'Enviando...' : 'Publicar'}
@@ -281,25 +731,31 @@ const AdminScreen = () => {
             <div className="space-y-3">
               <h4 className="text-sm font-black text-gray-400 uppercase tracking-wider">Histórico de Envios</h4>
               
-              {announcements.length === 0 ? (
+              {announceHistoryLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 size={20} className="animate-spin text-gray-400" />
+                </div>
+              ) : announceHistory.length === 0 ? (
                  <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 text-gray-500 text-sm font-medium">
                     Nenhum comunicado enviado.
                  </div>
               ) : (
-                announcements.map(ann => (
+                announceHistory.map(ann => (
                   <div key={ann.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex justify-between items-center">
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <h5 className="text-sm font-bold text-gradua-primary">{ann.title}</h5>
-                      <p className="text-xs text-gray-400 mt-0.5 font-medium">{ann.date} • Destino: <span className="text-gradua-perfil font-semibold">{ann.target}</span></p>
+                      <p className="text-xs text-gray-400 mt-0.5 font-medium">
+                        {formatDate(ann.publishDate)} • Turma: <span className="text-gradua-perfil font-semibold">{ann.targetClass}</span>
+                      </p>
                     </div>
 
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-shrink-0 ml-2">
                       {confirmAnnounceId === ann.id ? (
                         <div className="flex items-center gap-1 bg-red-50 rounded-xl px-2 py-1 border border-red-200 animate-fade-in">
-                          <button onClick={() => handleDeleteAnnouncement(ann.id)} className="p-1 text-red-600 hover:bg-red-200 rounded-md">
+                          <button onClick={() => handleDeleteAnnouncement(ann.id)} className="p-1 text-red-600 hover:bg-red-200 rounded-md text-xs font-bold">
                             Sim
                           </button>
-                          <button onClick={() => setConfirmAnnounceId(null)} className="p-1 text-gray-500 hover:bg-gray-200 rounded-md">
+                          <button onClick={() => setConfirmAnnounceId(null)} className="p-1 text-gray-500 hover:bg-gray-200 rounded-md text-xs font-bold">
                             Não
                           </button>
                         </div>
@@ -316,78 +772,7 @@ const AdminScreen = () => {
           </div>
         )}
 
-        {activeSubTab === 'aulas' && (
-          <form onSubmit={handleSendClassAlert} className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-4 animate-fade-in">
-            <div>
-              <h3 className="text-base font-black text-gradua-primary">Gerenciamento de Grade Hoje</h3>
-              <p className="text-xs font-medium text-gray-500 mt-0.5">Altere status de salas ou avise imprevistos em tempo real.</p>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Disciplina</label>
-              <select 
-                value={classAlert.classTitle}
-                onChange={e => setClassAlert({...classAlert, classTitle: e.target.value})}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-bold text-gray-700">
-                <option>PROG 3</option>
-                <option>Teoria da Computação</option>
-                <option>Sistemas Operacionais</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Ação</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setClassAlert({...classAlert, actionType: 'canceled'})}
-                  className={`py-3 text-xs font-bold rounded-xl border-2 transition-all ${classAlert.actionType === 'canceled' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-                  Cancelar Aula
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setClassAlert({...classAlert, actionType: 'room_change'})}
-                  className={`py-3 text-xs font-bold rounded-xl border-2 transition-all ${classAlert.actionType === 'room_change' ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-                  Mudar Sala
-                </button>
-              </div>
-            </div>
-
-            {classAlert.actionType === 'room_change' ? (
-              <div className="animate-fade-in">
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Nova Localização</label>
-                <div className="relative flex items-center">
-                  <MapPin size={16} className="absolute left-3 text-gray-400" />
-                  <input 
-                    type="text"
-                    required
-                    value={classAlert.newRoom}
-                    onChange={e => setClassAlert({...classAlert, newRoom: e.target.value})}
-                    placeholder="Ex: Sala 102"
-                    className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 font-medium"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="animate-fade-in">
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Motivo</label>
-                <input 
-                  type="text"
-                  value={classAlert.reason}
-                  onChange={e => setClassAlert({...classAlert, reason: e.target.value})}
-                  placeholder="Ex: Imprevisto de saúde"
-                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 font-medium"
-                />
-              </div>
-            )}
-
-            <button 
-              type="submit"
-              className={`w-full font-bold py-3.5 rounded-xl text-base transition-opacity hover:opacity-95 text-white shadow-md mt-4 ${classAlert.actionType === 'canceled' ? 'bg-red-600 shadow-red-600/10' : 'bg-amber-600 shadow-amber-600/10'}`}>
-              Disparar Alerta Acadêmico
-            </button>
-          </form>
-        )}
       </main>
 
       {toast.show && (

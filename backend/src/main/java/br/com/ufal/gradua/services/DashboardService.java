@@ -24,11 +24,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.com.ufal.gradua.dtos.dashboard.DashboardStatsDTO;
 import br.com.ufal.gradua.dtos.dashboard.DashboardSubjectDTO;
+import br.com.ufal.gradua.models.academic.AbsencesDTO;
 import br.com.ufal.gradua.models.academic.ClassSectionModel;
 import br.com.ufal.gradua.models.academic.EnrollmentModel;
+import br.com.ufal.gradua.models.academic.GradeModel;
 import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.AnnouncementRepository;
 import br.com.ufal.gradua.repositories.EnrollmentRepository;
+import br.com.ufal.gradua.repositories.GradeRepository;
 import br.com.ufal.gradua.repositories.MonitorSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.server.ResponseStatusException;
@@ -42,6 +45,7 @@ public class DashboardService {
     private final ForumTopicService forumTopicService;
     private final MonitorSessionRepository monitorSessionRepository;
     private final AnnouncementRepository announcementRepository;
+    private final GradeRepository gradeRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -106,9 +110,27 @@ public class DashboardService {
 
             int participants = enrollmentRepository.countByClassSection(cls);
 
+            List<GradeModel> gradeList = gradeRepository.findByEnrollment(e);
+            java.util.Map<String, java.math.BigDecimal> gradeMap = new java.util.HashMap<>();
+            gradeMap.put("ab1", null);
+            gradeMap.put("ab2", null);
+            gradeMap.put("reav", null);
+            gradeMap.put("final", null);
+            for (GradeModel g : gradeList) {
+                if (g.getValue() != null) {
+                    gradeMap.put(g.getGradeType().toLowerCase(), g.getValue());
+                }
+            }
+
+            int registered = e.getAbsences() != null ? e.getAbsences() : 0;
+            Integer creditHours = subj != null ? subj.getCreditHours() : null;
+            int maxAbsences = creditHours != null ? (int) Math.ceil(creditHours * 0.25) : 999;
+            int remaining = Math.max(0, maxAbsences - registered);
+
             return new DashboardSubjectDTO(
                     cls.getClassId(), code, name, schedule, "Instituto de Computação", "Teórica",
-                    professor, participants, List.of(), new Object(), new Object(), "Em dia"
+                    professor, participants, List.of(), gradeMap,
+                    new AbsencesDTO(registered, remaining), "Em dia"
             );
         }).collect(Collectors.toList());
     }

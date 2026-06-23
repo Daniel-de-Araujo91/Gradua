@@ -4,12 +4,14 @@ import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import { TrendingUp, ChevronRight, FileText, History, KeyRound, LogOut, CheckCircle2, ShieldAlert, Loader2, Camera, X, Save, Eye, EyeOff, User } from 'lucide-react';
 import { gerarHistoricoEscolar } from '../utils/gerarHistoricoPDF';
+import { academicHistoryService } from '../services/academicHistoryService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { apiClient } from '../services/apiClient';
 
 const ProfileCard = ({ profile, loading, onPhotoChange, uploadingPhoto }) => {
   const fileInputRef = useRef(null);
+  const [imgError, setImgError] = useState(false);
   const photoUrl = profile?.profilePhoto;
 
   return (
@@ -19,11 +21,12 @@ const ProfileCard = ({ profile, loading, onPhotoChange, uploadingPhoto }) => {
           className="w-full h-full rounded-2xl overflow-hidden bg-orange-50 shadow-inner cursor-pointer group"
           onClick={() => fileInputRef.current?.click()}
         >
-          {photoUrl ? (
+          {photoUrl && !imgError ? (
             <img
               src={photoUrl}
               alt="Foto de Perfil"
               className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
+              onError={() => setImgError(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -317,7 +320,7 @@ const EditProfilePanel = ({ profile, onClose, onSave, saving }) => {
   );
 };
 
-const CentralAlunoCard = ({ user, profile, onEditClick }) => {
+const CentralAlunoCard = ({ user, profile, stats, onEditClick, showToast }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const isPrivileged = ADMIN_ROLES.includes(user?.role?.toUpperCase() || '');
@@ -331,7 +334,14 @@ const CentralAlunoCard = ({ user, profile, onEditClick }) => {
       <div className="flex flex-col">
         <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" onClick={() => navigate('/documentos')} />
         {!isPrivileged && (
-          <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" onClick={gerarHistoricoEscolar} />
+          <CentralAlunoItem icon={History} title="Histórico Escolar" subtitle="Emitir via PDF oficial" onClick={async () => {
+            try {
+              const historyData = await academicHistoryService.getHistory();
+              gerarHistoricoEscolar(profile, historyData, stats);
+            } catch (err) {
+              showToast('Erro ao gerar histórico: ' + (err.message || ''), 'error');
+            }
+          }} />
         )}
         <CentralAlunoItem icon={KeyRound} title="Alterar Senha / Email" subtitle="Segurança e recuperação de conta" onClick={onEditClick} />
         {isPrivileged && (
@@ -422,7 +432,7 @@ const PerfilScreen = () => {
         <ProfileCard profile={profile} loading={loading} onPhotoChange={handlePhotoChange} uploadingPhoto={uploadingPhoto} />
         {!isPrivileged && <IRACard ira={profile?.ira} loading={loading} />}
         {!isPrivileged && <ProgressCard stats={stats} loading={loading} />}
-        <CentralAlunoCard user={user} profile={profile} onEditClick={() => setShowEditPanel(true)} />
+        <CentralAlunoCard user={user} profile={profile} stats={stats} onEditClick={() => setShowEditPanel(true)} showToast={showToast} />
       </main>
       <BottomNavBar activeTab="profile" />
 

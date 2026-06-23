@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, X, Info, Calendar, Loader2, BellRing, User } from 'lucide-react';
+import { Bell, X, Info, Calendar, Loader2, BellRing, User, Trash2, ChevronDown } from 'lucide-react';
 import { Tooltip } from 'flowbite-react';
 import { useAuth } from '../context/AuthContext';
 import { notificationService } from '../services/notificationService';
 import { useWebNotifications } from '../hooks/useWebNotifications';
+
+const NOTIFS_PER_PAGE = 5;
 
 const Header = ({ activeTab = 'home' }) => {
     const { user, profile, logout } = useAuth();
@@ -20,6 +22,9 @@ const Header = ({ activeTab = 'home' }) => {
     const [notifications, setNotifications] = useState([]);
     const [loadingNotifs, setLoadingNotifs] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [visibleCount, setVisibleCount] = useState(NOTIFS_PER_PAGE);
+    const [deletingId, setDeletingId] = useState(null);
+    const [imgError, setImgError] = useState(false);
 
     const fetchNotifications = useCallback(async () => {
         setLoadingNotifs(true);
@@ -36,6 +41,7 @@ const Header = ({ activeTab = 'home' }) => {
     useEffect(() => {
         if (showNotifications) {
             fetchNotifications();
+            setVisibleCount(NOTIFS_PER_PAGE);
         }
     }, [showNotifications, fetchNotifications]);
 
@@ -75,6 +81,26 @@ const Header = ({ activeTab = 'home' }) => {
         }
     };
 
+    const handleDelete = async (notificationId) => {
+        setDeletingId(notificationId);
+        try {
+            await notificationService.delete(notificationId);
+            setNotifications(prev => prev.filter(n => n.notificationId !== notificationId));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch {
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
+    const handleDeleteAllRead = async () => {
+        try {
+            await notificationService.deleteAllRead();
+            setNotifications(prev => prev.filter(n => !n.isRead));
+        } catch {
+        }
+    };
+
     const handleMarkAllRead = async () => {
         const unread = notifications.filter(n => !n.isRead);
         await Promise.allSettled(unread.map(n => notificationService.markAsRead(n.notificationId)));
@@ -110,9 +136,12 @@ const Header = ({ activeTab = 'home' }) => {
         return `${Math.floor(diff / 1440)} dia(s) atrás`;
     };
 
+    const visibleNotifs = notifications.slice(0, visibleCount);
+    const hasMore = visibleCount < notifications.length;
+    const readCount = notifications.filter(n => n.isRead).length;
+
     return (
         <header className='bg-white px-4 py-2 md:py-4 relative'>
-            {/* Banner discreto de solicitação de permissão push */}
             {showPermBanner && permission === 'default' && (
                 <div className='flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 mb-3 gap-2 animate-fade-in'>
                     <div className='flex items-center gap-2'>
@@ -134,12 +163,13 @@ const Header = ({ activeTab = 'home' }) => {
             <div className='flex justify-between items-start mb-4'>
                 
                 <div className='flex items-center gap-3'>
-                    {profile?.profilePhoto ? (
+                    {profile?.profilePhoto && !imgError ? (
                         <img 
                             src={profilePhoto}
                             alt='Perfil' 
                             className='w-12 h-12 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity'
                             onClick={() => navigate('/perfil')}
+                            onError={() => setImgError(true)}
                         />
                     ) : (
                         <div 
@@ -161,7 +191,6 @@ const Header = ({ activeTab = 'home' }) => {
                             </Tooltip>
                             <Tooltip content="Sua matrícula do SIGAA" placement='bottom'>
                                 <span className='text-gray-500 text-xs font-semibold cursor-help'>
-                                    {/* Matrícula vinda do profile — '—' enquanto carrega, valor real quando disponível */}
                                     {matricula ?? '—'}
                                 </span>
                             </Tooltip>
@@ -169,7 +198,6 @@ const Header = ({ activeTab = 'home' }) => {
                     </div>
                 </div>
 
-                {/* Botão de notificações com badge de contagem não lida */}
                 <button 
                     onClick={() => setShowNotifications(true)}
                     className='relative p-2 hover:bg-gray-100 rounded-full transition-colors'>
@@ -184,7 +212,6 @@ const Header = ({ activeTab = 'home' }) => {
                 </button>
             </div>
 
-            {/* Painel de notificações */}
             {showNotifications && (
                 <div 
                     className='fixed inset-0 bg-black/20 z-[60] flex items-start justify-end p-4 sm:p-6' 
@@ -215,61 +242,96 @@ const Header = ({ activeTab = 'home' }) => {
                                     <p className='text-xs text-gray-300'>Sessões de monitoria aparecerão aqui</p>
                                 </div>
                             ) : (
-                                notifications.map((notif) => (
-                                    <div 
-                                        key={notif.notificationId} 
-                                        onClick={() => !notif.isRead && handleMarkAsRead(notif.notificationId)}
-                                        className={`p-3 mb-1 rounded-xl flex gap-3 items-start transition-colors cursor-pointer ${
-                                            !notif.isRead ? 'bg-blue-50/60 hover:bg-blue-50' : 'bg-white hover:bg-gray-50'
-                                        }`}>
-                                        <div className={`mt-1 p-2 rounded-full flex-shrink-0 ${
-                                            !notif.isRead ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
-                                        }`}>
-                                            <Calendar size={16} />
-                                        </div>
-                                        <div className='flex-1 min-w-0'>
-                                                <h3 className={`text-sm leading-snug ${
-                                                !notif.isRead ? 'font-bold text-gray-900' : 'font-medium text-gray-700'
+                                <>
+                                    {visibleNotifs.map((notif) => (
+                                        <div 
+                                            key={notif.notificationId} 
+                                            className={`p-3 mb-1 rounded-xl flex gap-3 items-start transition-colors ${
+                                                !notif.isRead ? 'bg-blue-50/60' : 'bg-white'
                                             }`}>
-                                                {notif.session ? 'Sessão de Monitoria' : 'Comunicado'}
-                                                {notif.session?.subjectName && (
-                                                    <span className='font-normal text-gray-500'> — {notif.session.subjectName}</span>
-                                                )}
-                                            </h3>
-                                            <p className='text-xs text-gray-600 mt-0.5 leading-relaxed line-clamp-2'>{notif.message}</p>
-                                            {notif.session && (
-                                                <div className='flex flex-wrap gap-x-3 mt-1.5'>
-                                                    {notif.session.date && (
-                                                        <span className='text-[10px] font-semibold text-blue-500'>
-                                                            📅 {new Date(notif.session.date + 'T00:00').toLocaleDateString('pt-BR')}
-                                                        </span>
-                                                    )}
-                                                    {notif.session.startTime && (
-                                                        <span className='text-[10px] font-semibold text-gray-500'>
-                                                            🕐 {notif.session.startTime} – {notif.session.endTime}
-                                                        </span>
-                                                    )}
+                                            <div 
+                                                onClick={() => !notif.isRead && handleMarkAsRead(notif.notificationId)}
+                                                className='flex-1 flex gap-3 items-start min-w-0 cursor-pointer'
+                                            >
+                                                <div className={`mt-1 p-2 rounded-full flex-shrink-0 ${
+                                                    !notif.isRead ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
+                                                }`}>
+                                                    <Calendar size={16} />
                                                 </div>
-                                            )}
-                                            <span className='text-[10px] font-semibold text-gray-400 mt-1 block'>
-                                                {formatDate(notif.createdAt)}
-                                            </span>
+                                                <div className='flex-1 min-w-0'>
+                                                    <h3 className={`text-sm leading-snug ${
+                                                        !notif.isRead ? 'font-bold text-gray-900' : 'font-medium text-gray-700'
+                                                    }`}>
+                                                        {notif.session ? 'Sessão de Monitoria' : 'Comunicado'}
+                                                        {notif.session?.subjectName && (
+                                                            <span className='font-normal text-gray-500'> — {notif.session.subjectName}</span>
+                                                        )}
+                                                    </h3>
+                                                    <p className='text-xs text-gray-600 mt-0.5 leading-relaxed line-clamp-2'>{notif.message}</p>
+                                                    {notif.session && (
+                                                        <div className='flex flex-wrap gap-x-3 mt-1.5'>
+                                                            {notif.session.date && (
+                                                                <span className='text-[10px] font-semibold text-blue-500'>
+                                                                    📅 {new Date(notif.session.date + 'T00:00').toLocaleDateString('pt-BR')}
+                                                                </span>
+                                                            )}
+                                                            {notif.session.startTime && (
+                                                                <span className='text-[10px] font-semibold text-gray-500'>
+                                                                    🕐 {notif.session.startTime} – {notif.session.endTime}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    <span className='text-[10px] font-semibold text-gray-400 mt-1 block'>
+                                                        {formatDate(notif.createdAt)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className='flex flex-col gap-1 flex-shrink-0 pt-1'>
+                                                {!notif.isRead && (
+                                                    <span className='w-2 h-2 bg-blue-500 rounded-full mx-auto' />
+                                                )}
+                                                <button
+                                                    onClick={() => handleDelete(notif.notificationId)}
+                                                    disabled={deletingId === notif.notificationId}
+                                                    className='p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors'
+                                                    title="Excluir notificação"
+                                                >
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            </div>
                                         </div>
-                                        {!notif.isRead && (
-                                            <span className='w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0' />
-                                        )}
-                                    </div>
-                                ))
+                                    ))}
+
+                                    {hasMore && (
+                                        <button
+                                            onClick={() => setVisibleCount(prev => prev + NOTIFS_PER_PAGE)}
+                                            className='w-full py-3 flex items-center justify-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gradua-perfil hover:bg-gray-50 rounded-xl transition-colors'
+                                        >
+                                            <ChevronDown size={14} />
+                                            Mostrar mais ({notifications.length - visibleCount} restantes)
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
 
-                        {notifications.some(n => !n.isRead) && (
-                            <div className='border-t border-gray-100 p-3'>
-                                <button 
-                                    onClick={handleMarkAllRead}
-                                    className={`w-full text-center text-sm font-semibold p-2 transition-colors rounded-lg hover:bg-gray-50 ${currentTheme.text} opacity-90 hover:opacity-100`}>
-                                    Marcar todas como lidas
-                                </button>
+                        {notifications.length > 0 && (
+                            <div className='border-t border-gray-100 p-3 flex gap-2'>
+                                {notifications.some(n => !n.isRead) && (
+                                    <button 
+                                        onClick={handleMarkAllRead}
+                                        className={`flex-1 text-center text-xs font-semibold p-2 transition-colors rounded-lg hover:bg-gray-50 ${currentTheme.text}`}>
+                                        Marcar todas lidas
+                                    </button>
+                                )}
+                                {readCount > 0 && (
+                                    <button 
+                                        onClick={handleDeleteAllRead}
+                                        className='flex-1 text-center text-xs font-semibold p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors'>
+                                        Excluir lidas ({readCount})
+                                    </button>
+                                )}
                             </div>
                         )}
 
