@@ -64,6 +64,8 @@ public class ForumTopicModel implements Serializable {
 
     private Boolean hidden = false;
 
+    private LocalDateTime hiddenAt;
+
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ForumCommentModel> comments;
 

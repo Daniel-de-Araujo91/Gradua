@@ -22,4 +22,7 @@ public interface ForumTopicRepository extends JpaRepository<ForumTopicModel, UUI
 
     @Query("SELECT t FROM ForumTopicModel t JOIN FETCH t.author WHERE t.hidden = true ORDER BY t.creationDate DESC")
     List<ForumTopicModel> findByHiddenTrueOrderByCreationDateDesc();
+
+    @Query("SELECT t FROM ForumTopicModel t WHERE t.hidden = true AND t.hiddenAt IS NOT NULL AND t.hiddenAt < :deadline")
+    List<ForumTopicModel> findByHiddenTrueAndHiddenAtBefore(java.time.LocalDateTime deadline);
 }

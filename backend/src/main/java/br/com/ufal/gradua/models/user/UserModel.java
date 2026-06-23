@@ -1,6 +1,7 @@
 package br.com.ufal.gradua.models.user;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.auth.ProfessorModel;
@@ -63,5 +64,11 @@ public class UserModel implements Serializable{
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "professor_id")
     private ProfessorModel professor;
+
+    private Integer redFlagCount = 0;
+
+    private LocalDateTime restrictedUntil;
+
+    private String restrictionType;
 
 }

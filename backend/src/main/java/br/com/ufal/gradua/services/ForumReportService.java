@@ -39,6 +39,10 @@ public class ForumReportService {
 
     public void reportTopic(UUID topicId, String reason) {
         UserModel user = getCurrentUser();
+        if (isUserFullyRestricted(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você está suspenso e não pode denunciar conteúdo.");
+        }
+
         ForumTopicModel topic = topicRepository.findById(topicId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico não encontrado"));
 
@@ -63,6 +67,10 @@ public class ForumReportService {
 
     public void reportComment(UUID commentId, String reason) {
         UserModel user = getCurrentUser();
+        if (isUserFullyRestricted(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você está suspenso e não pode denunciar conteúdo.");
+        }
+
         ForumCommentModel comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentário não encontrado"));
 
@@ -85,12 +93,24 @@ public class ForumReportService {
         checkAndAutoDeleteComment(comment);
     }
 
+    private boolean isUserRestricted(UserModel user) {
+        if (user.getRedFlagCount() != null && user.getRedFlagCount() >= 4) return true;
+        if (user.getRestrictedUntil() == null) return false;
+        return user.getRestrictedUntil().isAfter(LocalDateTime.now());
+    }
+
+    private boolean isUserFullyRestricted(UserModel user) {
+        if (!isUserRestricted(user)) return false;
+        return "FULL".equals(user.getRestrictionType()) || (user.getRedFlagCount() != null && user.getRedFlagCount() >= 2);
+    }
+
     private void checkAndAutoDeleteTopic(ForumTopicModel topic) {
         int downVotes = topic.getDownVoteCount() != null ? topic.getDownVoteCount() : 0;
         int reports = topic.getReportCount() != null ? topic.getReportCount() : 0;
 
         if (downVotes >= 5 || reports >= 3) {
             topic.setHidden(true);
+            topic.setHiddenAt(LocalDateTime.now(ZoneOffset.of("-3")));
             topicRepository.save(topic);
         }
     }

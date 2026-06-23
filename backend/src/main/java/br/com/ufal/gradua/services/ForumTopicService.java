@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.com.ufal.gradua.models.user.UserModel;
+
 import br.com.ufal.gradua.dtos.forum.ForumTopicRequestDTO;
 import br.com.ufal.gradua.dtos.forum.ForumTopicResponseDTO;
 import br.com.ufal.gradua.models.forum.ForumTopicModel;
@@ -58,8 +60,18 @@ public class ForumTopicService {
         );
     }
 
+    private boolean isUserRestricted(UserModel user) {
+        if (user.getRedFlagCount() != null && user.getRedFlagCount() >= 4) return true;
+        if (user.getRestrictedUntil() == null) return false;
+        return user.getRestrictedUntil().isAfter(LocalDateTime.now());
+    }
+
     public ForumTopicResponseDTO create(ForumTopicRequestDTO dto) {
         UserModel author = getUserByToken();
+
+        if (isUserRestricted(author)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você está suspenso e não pode criar publicações.");
+        }
 
         if ("AVISO".equalsIgnoreCase(dto.type()) && 
             !("MONITOR".equalsIgnoreCase(author.getRole()) || "ADMIN".equalsIgnoreCase(author.getRole()) || "PROFESSOR".equalsIgnoreCase(author.getRole()))) {
@@ -173,6 +185,7 @@ public class ForumTopicService {
         if (topic.getDownVoteCount() != null && topic.getDownVoteCount() >= 5 ||
             topic.getReportCount() != null && topic.getReportCount() >= 3) {
             topic.setHidden(true);
+            topic.setHiddenAt(LocalDateTime.now(ZoneOffset.of("-3")));
             repository.save(topic);
         }
     }

@@ -114,13 +114,6 @@ public class DashboardService {
     }
 
     public List<Object> getAnnouncements() {
-
-        var anns = announcementRepository.findAllByOrderByPublishDateDesc();
-
-        if (!anns.isEmpty()) {
-            return new ArrayList<>(anns);
-        }
-
         return new ArrayList<>(forumTopicService.listAll("aviso"));
     }
 

@@ -1,5 +1,7 @@
 package br.com.ufal.gradua.services;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,8 +34,22 @@ public class ForumVoteService {
         return (UserModel) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
+    private boolean isUserRestricted(UserModel user) {
+        if (user.getRedFlagCount() != null && user.getRedFlagCount() >= 4) return true;
+        if (user.getRestrictedUntil() == null) return false;
+        return user.getRestrictedUntil().isAfter(LocalDateTime.now());
+    }
+
+    private boolean isUserFullyRestricted(UserModel user) {
+        if (!isUserRestricted(user)) return false;
+        return "FULL".equals(user.getRestrictionType()) || (user.getRedFlagCount() != null && user.getRedFlagCount() >= 2);
+    }
+
     public Map<String, Object> voteTopic(UUID topicId, String voteTypeStr) {
         UserModel user = getCurrentUser();
+        if (isUserFullyRestricted(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você está suspenso e não pode votar.");
+        }
         ForumTopicModel topic = topicRepository.findById(topicId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico não encontrado"));
 
@@ -90,6 +106,9 @@ public class ForumVoteService {
 
     public Map<String, Object> voteComment(UUID commentId, String voteTypeStr) {
         UserModel user = getCurrentUser();
+        if (isUserFullyRestricted(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você está suspenso e não pode votar.");
+        }
         ForumCommentModel comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentário não encontrado"));
 
@@ -178,6 +197,7 @@ public class ForumVoteService {
 
         if (downVotes >= 5 || reports >= 3) {
             topic.setHidden(true);
+            topic.setHiddenAt(LocalDateTime.now(ZoneOffset.of("-3")));
             topicRepository.save(topic);
             return true;
         }

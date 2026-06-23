@@ -1,5 +1,7 @@
 package br.com.ufal.gradua.controllers;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,10 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import br.com.ufal.gradua.models.forum.ForumTopicModel;
+import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.ForumCommentRepository;
 import br.com.ufal.gradua.repositories.ForumReportRepository;
 import br.com.ufal.gradua.repositories.ForumTopicRepository;
 import br.com.ufal.gradua.repositories.ForumVoteRepository;
+import br.com.ufal.gradua.repositories.UserRepository;
 
 @RestController
 @RequestMapping("/admin/reports")
@@ -32,6 +36,9 @@ public class AdminReportController {
 
     @Autowired
     private ForumVoteRepository voteRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping
     @Transactional(readOnly = true)
@@ -89,11 +96,36 @@ public class AdminReportController {
         ForumTopicModel topic = topicRepository.findById(topicId)
             .orElseThrow(() -> new RuntimeException("Tópico não encontrado"));
 
+        UserModel author = topic.getAuthor();
+        int flags = (author.getRedFlagCount() != null ? author.getRedFlagCount() : 0) + 1;
+        author.setRedFlagCount(flags);
+
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.of("-3"));
+        switch (flags) {
+            case 1:
+                author.setRestrictionType("POST_COMMENT");
+                author.setRestrictedUntil(now.plusHours(24));
+                break;
+            case 2:
+                author.setRestrictionType("FULL");
+                author.setRestrictedUntil(now.plusWeeks(1));
+                break;
+            case 3:
+                author.setRestrictionType("FULL");
+                author.setRestrictedUntil(now.plusMonths(1));
+                break;
+            default:
+                author.setRestrictionType("FULL");
+                author.setRestrictedUntil(now.plusYears(100));
+                break;
+        }
+
+        userRepository.save(author);
         topicRepository.delete(topic);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Tópico e todos os dados relacionados foram removidos");
+        response.put("message", "Tópico removido e autor recebeu " + flags + "ª bandeira vermelha");
         return ResponseEntity.ok(response);
     }
 }

@@ -22,6 +22,7 @@ const FILTER_TO_API_TYPE = {
   avisos:    'aviso',
   dicas:     'dica',
   eventos:   'evento',
+  topicos:   'topico',
 };
 
 const TYPE_TO_TAG = {
@@ -29,6 +30,7 @@ const TYPE_TO_TAG = {
   aviso:    { label: 'AVISO',     variant: 'avisos'    },
   dica:     { label: 'DICA',      variant: 'dicas'      },
   evento:   { label: 'EVENTO',    variant: 'eventos'   },
+  topico:   { label: 'TÓPICO',    variant: 'topicos'   },
 };
 
 /* ─────────────────────────────────────────
@@ -40,6 +42,7 @@ const CategoryTag = ({ label, variant }) => {
     avisos:    'bg-blue-100 text-blue-800',
     dicas:     'bg-yellow-50 text-yellow-800',
     eventos:   'bg-purple-50 text-purple-800',
+    topicos:   'bg-cyan-50 text-cyan-800',
     destaque:  'bg-white text-gradua-forum',
   };
   return (
@@ -497,6 +500,7 @@ const ALL_CATEGORIES = [
   { id: 'aviso',    label: 'Aviso',    icon: Bell },
   { id: 'dica',     label: 'Dica',     icon: Lightbulb },
   { id: 'evento',   label: 'Evento',   icon: CalendarDays },
+  { id: 'topico',   label: 'Tópico',   icon: MessageCircle },
 ];
 
 const AddPostCard = ({ onPublish, loading: publishLoading, userRole }) => {
@@ -653,6 +657,7 @@ const ForumScreen = () => {
     { id: 'avisos',    label: 'Avisos' },
     { id: 'dicas',     label: 'Dicas' },
     { id: 'eventos',   label: 'Eventos' },
+    { id: 'topicos',   label: 'Tópicos' },
   ];
 
   const fetchFeed = useCallback(async (filter = 'todos') => {

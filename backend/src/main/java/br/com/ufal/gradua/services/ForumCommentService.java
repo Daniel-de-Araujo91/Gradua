@@ -91,8 +91,19 @@ public class ForumCommentService {
             .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    private boolean isUserRestricted(UserModel user) {
+        if (user.getRedFlagCount() != null && user.getRedFlagCount() >= 4) return true;
+        if (user.getRestrictedUntil() == null) return false;
+        return user.getRestrictedUntil().isAfter(LocalDateTime.now());
+    }
+
     public ForumCommentResponseDTO create(UUID topicId, ForumCommentRequestDTO dto) {
         UserModel author = getUserByToken();
+
+        if (isUserRestricted(author)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você está suspenso e não pode comentar.");
+        }
+
         ForumTopicModel topic = topicRepository.findById(topicId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico não encontrado"));
 

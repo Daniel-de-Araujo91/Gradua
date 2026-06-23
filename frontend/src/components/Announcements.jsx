@@ -5,14 +5,20 @@ import { apiClient } from '../services/apiClient';
 
 const Announcements = () => {
   const [ann, setAnn] = useState(null);
+  const [hasAnnouncement, setHasAnnouncement] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     apiClient.get('/dashboard/announcements').then(data => {
-      if (mounted && Array.isArray(data) && data.length > 0) setAnn(data[0]);
+      if (mounted && Array.isArray(data) && data.length > 0) {
+        setAnn(data[0]);
+        setHasAnnouncement(true);
+      }
     }).catch(() => {});
     return () => { mounted = false; };
   }, []);
+
+  if (!hasAnnouncement) return null;
 
   return (
     <div className="px-3 mb-6">
@@ -24,14 +30,20 @@ const Announcements = () => {
           <span className="text-xs font-semibold tracking-[0.18em] uppercase">Avisos recentes</span>
         </div>
 
-        <p className="text-lg leading-7 font-normal mb-6">{ann ? (ann.title || ann.content) : 'Nenhum aviso recente.'}</p>
+        <p className="text-lg leading-7 font-normal mb-6">{ann ? (ann.title || ann.content) : ''}</p>
 
         <div className="flex gap-3">
-          <button className="flex-1 flex items-center justify-center gap-2 h-11 px-4 rounded-full bg-white/10 border border-white/10 text-white font-semibold text-sm hover:bg-white/20 hover:border-white/20 active:bg-white/30 transition-all duration-200">
+          <button
+            onClick={() => window.open('https://web.whatsapp.com', '_blank')}
+            className="flex-1 flex items-center justify-center gap-2 h-11 px-4 rounded-full bg-white/10 border border-white/10 text-white font-semibold text-sm hover:bg-white/20 hover:border-white/20 active:bg-white/30 transition-all duration-200"
+          >
             <MessageSquareMore size={16} /> WhatsApp
           </button>
 
-          <button className="flex-1 flex items-center justify-center gap-2 h-11 px-4 rounded-full bg-white/10 border border-white/10 text-white font-semibold text-sm hover:bg-white/20 hover:border-white/20 active:bg-white/30 transition-all duration-200">
+          <button
+            onClick={() => window.open('https://web.telegram.org', '_blank')}
+            className="flex-1 flex items-center justify-center gap-2 h-11 px-4 rounded-full bg-white/10 border border-white/10 text-white font-semibold text-sm hover:bg-white/20 hover:border-white/20 active:bg-white/30 transition-all duration-200"
+          >
             <Send size={16} /> Telegram
           </button>
         </div>
