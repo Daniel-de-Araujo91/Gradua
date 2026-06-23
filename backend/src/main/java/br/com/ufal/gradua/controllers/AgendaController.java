@@ -31,6 +31,13 @@ public class AgendaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(agendaService.createReminder(dto));
     }
 
+    @PutMapping("/lembrete/{reminderId}")
+    public ResponseEntity<ReminderResponseDTO> updateReminder(
+            @PathVariable UUID reminderId,
+            @RequestBody @Valid ReminderRequestDTO dto) {
+        return ResponseEntity.ok(agendaService.updateReminder(reminderId, dto));
+    }
+
     @DeleteMapping("/lembrete/{reminderId}")
     public ResponseEntity<Void> deleteReminder(@PathVariable UUID reminderId) {
         agendaService.deleteReminder(reminderId);

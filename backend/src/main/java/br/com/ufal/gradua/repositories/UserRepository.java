@@ -15,6 +15,9 @@ public interface UserRepository extends JpaRepository<UserModel, UUID> {
     @EntityGraph(attributePaths = {"student"})
     Optional<UserModel> findWithStudentByUserId(UUID userId);
 
+    @EntityGraph(attributePaths = {"professor"})
+    Optional<UserModel> findWithProfessorByUserId(UUID userId);
+
     default Optional<UserModel> findByCpfOrPassport(String document) {
         return this.findByCpfOrPassport(document, document);
     }

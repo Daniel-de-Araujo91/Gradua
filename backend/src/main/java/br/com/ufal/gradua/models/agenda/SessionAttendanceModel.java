@@ -17,7 +17,7 @@ import jakarta.persistence.FetchType;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "TB_REMINDER")
+@Table(name = "TB_ATTENDANCE")
 public class SessionAttendanceModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
