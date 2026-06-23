@@ -23,4 +23,6 @@ public interface ForumReportRepository extends JpaRepository<ForumReportModel, U
     boolean existsByTopicAndAuthor(ForumTopicModel topic, UserModel author);
     
     boolean existsByCommentAndAuthor(ForumCommentModel comment, UserModel author);
+
+    java.util.List<ForumReportModel> findByTopic(ForumTopicModel topic);
 }

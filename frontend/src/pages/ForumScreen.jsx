@@ -223,7 +223,7 @@ const PostCard = ({
     setVoteLoading(true);
     try {
       const data = await forumService.vote(topicId, voteType);
-      if (data.deleted) {
+      if (data.hidden) {
         onDelete(topicId);
         return;
       }
@@ -312,7 +312,7 @@ const PostCard = ({
   const handleVoteComment = async (commentId, voteType) => {
     try {
       const data = await forumService.voteComment(commentId, voteType);
-      if (data.deleted) {
+      if (data.hidden) {
         setComments(prev => prev.filter(c => c.commentId !== commentId));
         setCommentCount(c => Math.max(0, c - 1));
         return;
@@ -713,7 +713,7 @@ const ForumScreen = () => {
   const handleReport = async (topicId, reason) => {
     try {
       const data = await forumService.reportTopic(topicId, reason);
-      if (data.deleted) {
+      if (data.hidden) {
         setPosts(prev => prev.filter(p => p.topicId !== topicId));
         return;
       }
@@ -849,7 +849,7 @@ const ForumScreen = () => {
             let data;
             if (reportState.type === 'comment') {
               data = await forumService.reportComment(reportState.targetId, reason);
-              if (data.deleted) {
+              if (data.hidden) {
                 setPosts(prev => prev.map(p => ({
                   ...p,
                   commentCount: Math.max(0, (p.commentCount || 0) - 1)
@@ -857,7 +857,7 @@ const ForumScreen = () => {
               }
             } else {
               data = await forumService.reportTopic(reportState.targetId, reason);
-              if (data.deleted) {
+              if (data.hidden) {
                 setPosts(prev => prev.filter(p => p.topicId !== reportState.targetId));
               }
             }

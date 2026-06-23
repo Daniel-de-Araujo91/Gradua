@@ -53,7 +53,8 @@ public class ForumTopicService {
             topic.getIsEdited() != null ? topic.getIsEdited() : false,
             topic.getVoteScore() != null ? topic.getVoteScore() : 0,
             topic.getCommentCount() != null ? topic.getCommentCount() : 0,
-            topic.getReportCount() != null ? topic.getReportCount() : 0
+            topic.getReportCount() != null ? topic.getReportCount() : 0,
+            topic.getHidden() != null && topic.getHidden()
         );
     }
 
@@ -102,7 +103,10 @@ public class ForumTopicService {
             topics = repository.findAllByOrderByCreationDateDesc();
         }
 
-        return topics.stream().map(this::toDTO).collect(Collectors.toList());
+        return topics.stream()
+            .filter(t -> t.getHidden() == null || !t.getHidden())
+            .map(this::toDTO)
+            .collect(Collectors.toList());
     }
 
     public ForumTopicResponseDTO update(UUID id, ForumTopicRequestDTO dto) {
@@ -158,10 +162,18 @@ public class ForumTopicService {
         return repository.existsById(id);
     }
 
+    public boolean isHidden(UUID id) {
+        return repository.findById(id)
+            .map(t -> t.getHidden() != null && t.getHidden())
+            .orElse(false);
+    }
+
     @Transactional
     public void checkAndDeleteTopic(ForumTopicModel topic) {
-        if (topic.getDownVoteCount() >= 5 || topic.getReportCount() >= 3) {
-            repository.delete(topic); 
+        if (topic.getDownVoteCount() != null && topic.getDownVoteCount() >= 5 ||
+            topic.getReportCount() != null && topic.getReportCount() >= 3) {
+            topic.setHidden(true);
+            repository.save(topic);
         }
     }
 } 

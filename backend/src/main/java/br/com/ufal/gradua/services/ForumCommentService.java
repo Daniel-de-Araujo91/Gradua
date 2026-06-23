@@ -78,7 +78,8 @@ public class ForumCommentService {
             comment.getUpVoteCount() != null ? comment.getUpVoteCount() : 0,
             comment.getDownVoteCount() != null ? comment.getDownVoteCount() : 0,
             comment.getReportCount() != null ? comment.getReportCount() : 0,
-            currentUserVote
+            currentUserVote,
+            comment.getHidden() != null && comment.getHidden()
         );
     }
 
@@ -163,16 +164,23 @@ public class ForumCommentService {
         return commentRepository.existsById(id);
     }
 
+    public boolean isHidden(UUID id) {
+        return commentRepository.findById(id)
+            .map(c -> c.getHidden() != null && c.getHidden())
+            .orElse(false);
+    }
+
     @Transactional
     public void checkAndDeleteComment(ForumCommentModel comment) {
-        if (comment.getDownVoteCount() != null && comment.getDownVoteCount() >= 5 || 
+        if (comment.getDownVoteCount() != null && comment.getDownVoteCount() >= 5 ||
             comment.getReportCount() != null && comment.getReportCount() >= 3) {
             ForumTopicModel topic = comment.getTopic();
             if (topic != null && topic.getCommentCount() != null && topic.getCommentCount() > 0) {
                 topic.setCommentCount(topic.getCommentCount() - 1);
                 topicRepository.save(topic);
             }
-            commentRepository.delete(comment);
+            comment.setHidden(true);
+            commentRepository.save(comment);
         }
     }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import BottomNavBar from './BottomNavBar';
@@ -7,13 +7,9 @@ import {
   ShieldAlert, Megaphone, MessageSquare, CalendarDays, 
   Trash2, Check, AlertTriangle, Send, MapPin, Info, X, Loader2
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { forumService } from '../services/forumService';
-import { apiClient } from '../services/apiClient';
-
-const INITIAL_REPORTS = [
-  { id: 1, author: "Lucas Aluno", title: "Links suspeitos no material", reports: 3, content: "Galera, cliquem nesse link aqui para ganhar créditos complementares grátis..." },
-  { id: 2, author: "Mariana Costa", title: "Discussão fora de contexto", reports: 1, content: "Alguém vendendo ingresso para a festa do fim de semana?" }
-];
+import { adminService } from '../services/adminService';
 
 const INITIAL_ANNOUNCEMENTS = [
   { id: 1, title: "Manutenção do Bloco de Laboratórios", date: "Hoje, 09:30", target: "Todos os Cursos" },
@@ -22,53 +18,74 @@ const INITIAL_ANNOUNCEMENTS = [
 
 const AdminScreen = () => {
   const navigate = useNavigate();
-  const [activeSubTab, setActiveSubTab] = useState('forum');
+  const { user } = useAuth();
+  const isOnlyProfessor = user?.role?.toUpperCase() === 'PROFESSOR';
+  const [activeSubTab, setActiveSubTab] = useState(isOnlyProfessor ? 'comunicados' : 'forum');
 
-  const [reportedPosts, setReportedPosts] = useState(() => {
-    const saved = localStorage.getItem('gradua_admin_reports');
-    return saved ? JSON.parse(saved) : INITIAL_REPORTS;
-  });
+  const [reportedPosts, setReportedPosts] = useState([]);
+  const [reportsLoading, setReportsLoading] = useState(true);
+  const [confirmForumId, setConfirmForumId] = useState(null);
 
   const [announcements, setAnnouncements] = useState(() => {
     const saved = localStorage.getItem('gradua_admin_announcements');
     return saved ? JSON.parse(saved) : INITIAL_ANNOUNCEMENTS;
   });
-
-  const [confirmForumId, setConfirmForumId] = useState(null);
   const [confirmAnnounceId, setConfirmAnnounceId] = useState(null);
-
-  useEffect(() => {
-    localStorage.setItem('gradua_admin_reports', JSON.stringify(reportedPosts));
-  }, [reportedPosts]);
-
-  useEffect(() => {
-    localStorage.setItem('gradua_admin_announcements', JSON.stringify(announcements));
-  }, [announcements]);
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const toastTimeout = useRef(null);
 
-  const showToast = (message, type = 'success') => {
+  const showToast = useCallback((message, type = 'success') => {
     setToast({ show: true, message, type });
     if (toastTimeout.current) clearTimeout(toastTimeout.current);
     toastTimeout.current = setTimeout(() => {
       setToast({ show: false, message: '', type: 'success' });
     }, 3000);
-  };
+  }, []);
+
+  const fetchReports = useCallback(async () => {
+    setReportsLoading(true);
+    try {
+      const data = await adminService.getReports();
+      setReportedPosts(data || []);
+    } catch (err) {
+      showToast('Erro ao carregar denúncias: ' + (err.message || 'desconhecido'), 'error');
+    } finally {
+      setReportsLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
+
+  useEffect(() => {
+    localStorage.setItem('gradua_admin_announcements', JSON.stringify(announcements));
+  }, [announcements]);
 
   const [newAnnounce, setNewAnnounce] = useState({ title: '', message: '', target: 'Todos os Cursos' });
   const [announceLoading, setAnnounceLoading] = useState(false);
   const [classAlert, setClassAlert] = useState({ classTitle: 'PROG 3', reason: 'Falta do Professor', actionType: 'canceled', newRoom: '' });
 
-  const handleDismissReport = (id) => {
-    setReportedPosts(prev => prev.filter(post => post.id !== id));
-    showToast("Denúncia ignorada e postagem mantida.", "info");
+  const handleApprove = async (topicId) => {
+    try {
+      await adminService.approveReport(topicId);
+      setReportedPosts(prev => prev.filter(p => p.topicId !== topicId));
+      showToast("Postagem aprovada e restaurada ao fórum!", "success");
+    } catch (err) {
+      showToast(err.message || 'Erro ao aprovar postagem', 'error');
+    }
   };
 
-  const handleDeletePost = (id) => {
-    setReportedPosts(prev => prev.filter(post => post.id !== id));
-    setConfirmForumId(null);
-    showToast("Postagem removida do fórum com sucesso!", "success");
+  const handleDeny = async (topicId) => {
+    try {
+      await adminService.denyReport(topicId);
+      setReportedPosts(prev => prev.filter(p => p.topicId !== topicId));
+      setConfirmForumId(null);
+      showToast("Postagem e todos os dados removidos!", "success");
+    } catch (err) {
+      showToast(err.message || 'Erro ao remover postagem', 'error');
+    }
   };
 
   const handleCreateAnnouncement = async (e) => {
@@ -124,11 +141,13 @@ const AdminScreen = () => {
         </div>
 
         <div className="flex gap-1 bg-gray-200/60 p-1 rounded-xl mb-6">
-          <button 
-            onClick={() => setActiveSubTab('forum')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all ${activeSubTab === 'forum' ? 'bg-white text-gradua-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
-            <MessageSquare size={16} /> Fórum
-          </button>
+          {!isOnlyProfessor && (
+            <button 
+              onClick={() => setActiveSubTab('forum')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all ${activeSubTab === 'forum' ? 'bg-white text-gradua-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+              <MessageSquare size={16} /> Fórum
+            </button>
+          )}
           <button 
             onClick={() => setActiveSubTab('comunicados')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all ${activeSubTab === 'comunicados' ? 'bg-white text-gradua-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
@@ -145,27 +164,34 @@ const AdminScreen = () => {
           <div className="space-y-4 animate-fade-in">
             <h2 className="text-sm font-black text-gray-400 uppercase tracking-wider mb-2">Denúncias Recentes</h2>
             
-            {reportedPosts.length === 0 ? (
+            {reportsLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 size={24} className="animate-spin text-gray-400" />
+              </div>
+            ) : reportedPosts.length === 0 ? (
               <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 text-gray-500 text-sm font-medium">
                 Nenhuma denúncia pendente de revisão.
               </div>
             ) : (
               reportedPosts.map(post => (
-                <div key={post.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative">
+                <div key={post.topicId} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative">
                   <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
                     <div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-50 text-red-600 flex items-center gap-1 w-fit mb-1">
-                        <AlertTriangle size={12} /> {post.reports} {post.reports === 1 ? 'denúncia' : 'denúncias'}
+                        <AlertTriangle size={12} /> {post.reportCount} {post.reportCount === 1 ? 'denúncia' : 'denúncias'}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600 flex items-center gap-1 w-fit mb-1">
+                        <MessageSquare size={12} /> {post.downVoteCount} downvotes
                       </span>
                       <h3 className="text-base font-bold text-gradua-primary">{post.title}</h3>
-                      <p className="text-xs font-semibold text-gray-400 uppercase mt-0.5">Por: {post.author}</p>
+                      <p className="text-xs font-semibold text-gray-400 uppercase mt-0.5">Por: {post.authorName}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {confirmForumId === post.id ? (
+                      {confirmForumId === post.topicId ? (
                         <div className="flex items-center gap-1.5 bg-red-50 rounded-xl px-2 py-1 border border-red-200 animate-fade-in">
                           <span className="text-[10px] font-bold text-red-600 px-1">Apagar?</span>
-                          <button onClick={() => handleDeletePost(post.id)} className="p-1 bg-red-600 text-white rounded-md hover:bg-red-700">
+                          <button onClick={() => handleDeny(post.topicId)} className="p-1 bg-red-600 text-white rounded-md hover:bg-red-700">
                             <Check size={12} />
                           </button>
                           <button onClick={() => setConfirmForumId(null)} className="p-1 bg-gray-200 text-gray-600 rounded-md hover:bg-gray-300">
@@ -174,16 +200,16 @@ const AdminScreen = () => {
                         </div>
                       ) : (
                         <>
-                          <Tooltip content="Manter postagem" placement="bottom">
+                          <Tooltip content="Aprovar e restaurar ao fórum" placement="bottom">
                             <button 
-                              onClick={() => handleDismissReport(post.id)}
+                              onClick={() => handleApprove(post.topicId)}
                               className="p-2 bg-green-50 text-green-600 hover:bg-green-100 transition-colors rounded-xl">
                               <Check size={16} />
                             </button>
                           </Tooltip>
                           <Tooltip content="Apagar postagem" placement="bottom">
                             <button 
-                              onClick={() => setConfirmForumId(post.id)}
+                              onClick={() => setConfirmForumId(post.topicId)}
                               className="p-2 bg-red-50 text-red-600 hover:bg-red-100 transition-colors rounded-xl">
                               <Trash2 size={16} />
                             </button>
@@ -195,6 +221,16 @@ const AdminScreen = () => {
                   <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
                     "{post.content}"
                   </p>
+                  {post.reports && post.reports.length > 0 && (
+                    <div className="mt-3 space-y-1">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Motivos das denúncias:</span>
+                      {post.reports.map((r, idx) => (
+                        <div key={idx} className="text-xs text-gray-500 bg-red-50/50 px-3 py-1.5 rounded-lg border border-red-100">
+                          <span className="font-semibold text-gray-700">{r.authorName}:</span> "{r.reason}"
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))
             )}

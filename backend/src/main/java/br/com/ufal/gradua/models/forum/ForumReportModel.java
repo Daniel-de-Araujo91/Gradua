@@ -46,4 +46,10 @@ public class ForumReportModel implements Serializable {
     }
 
     private ReportType reportType;
+
+    public enum ReportStatus {
+        PENDING, APPROVED, REJECTED
+    }
+
+    private ReportStatus status = ReportStatus.PENDING;
 }

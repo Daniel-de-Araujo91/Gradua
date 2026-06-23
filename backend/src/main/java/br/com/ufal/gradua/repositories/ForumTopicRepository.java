@@ -19,4 +19,7 @@ public interface ForumTopicRepository extends JpaRepository<ForumTopicModel, UUI
 
     @Query("SELECT t FROM ForumTopicModel t JOIN FETCH t.author WHERE UPPER(t.type) IN :types ORDER BY t.creationDate DESC")
     List<ForumTopicModel> findByTypeInOrderByCreationDateDesc(@Param("types") List<String> types);
+
+    @Query("SELECT t FROM ForumTopicModel t JOIN FETCH t.author WHERE t.hidden = true ORDER BY t.creationDate DESC")
+    List<ForumTopicModel> findByHiddenTrueOrderByCreationDateDesc();
 }

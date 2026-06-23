@@ -69,7 +69,7 @@ public class ForumVoteService {
 
         if (checkAndAutoDeleteTopic(topic)) {
             return Map.of(
-                "deleted", true,
+                "hidden", true,
                 "ups", ups,
                 "downs", downs,
                 "voteScore", (long)(ups - downs),
@@ -121,7 +121,7 @@ public class ForumVoteService {
 
         if (checkAndAutoDeleteComment(comment)) {
             return Map.of(
-                "deleted", true,
+                "hidden", true,
                 "ups", ups,
                 "downs", downs,
                 "voteScore", (long)(ups - downs),
@@ -177,7 +177,8 @@ public class ForumVoteService {
         int reports = topic.getReportCount() != null ? topic.getReportCount() : 0;
 
         if (downVotes >= 5 || reports >= 3) {
-            topicRepository.delete(topic);
+            topic.setHidden(true);
+            topicRepository.save(topic);
             return true;
         }
         return false;
@@ -193,7 +194,8 @@ public class ForumVoteService {
                 topic.setCommentCount(topic.getCommentCount() - 1);
                 topicRepository.save(topic);
             }
-            commentRepository.delete(comment);
+            comment.setHidden(true);
+            commentRepository.save(comment);
             return true;
         }
         return false;

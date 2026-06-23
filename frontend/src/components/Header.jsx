@@ -87,8 +87,12 @@ const Header = ({ activeTab = 'home' }) => {
         }
     };
 
+    const isPrivileged = ['ADMIN', 'PROFESSOR'].includes(user?.role?.toUpperCase() || '');
+
     const themeColors = {
-        home: { text: 'text-gradua-inicio', bg: 'bg-gradua-inicio/20' },
+        home: isPrivileged
+            ? { text: 'text-gradua-perfil', bg: 'bg-gradua-perfil/20' }
+            : { text: 'text-gradua-inicio', bg: 'bg-gradua-inicio/20' },
         agenda: { text: 'text-gradua-agenda', bg: 'bg-gradua-agenda/20' },
         forum: { text: 'text-gradua-forum', bg: 'bg-gradua-forum/20' },
         profile: { text: 'text-gradua-perfil', bg: 'bg-gradua-perfil/20' }

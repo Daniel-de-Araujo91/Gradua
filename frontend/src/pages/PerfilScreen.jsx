@@ -321,10 +321,13 @@ const CentralAlunoCard = ({ user, profile, onEditClick }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const isPrivileged = ADMIN_ROLES.includes(user?.role?.toUpperCase() || '');
+  const roleLabel = user?.role?.toUpperCase() === 'ADMIN' ? 'Administrador'
+    : user?.role?.toUpperCase() === 'PROFESSOR' ? 'Professor'
+    : 'Aluno';
 
   return (
     <div className="bg-white rounded-3xl p-6 mb-28 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50">
-      <h3 className="text-lg font-black text-gradua-perfil mb-2">Central do Aluno</h3>
+      <h3 className="text-lg font-black text-gradua-perfil mb-2">{`Central do ${roleLabel}`}</h3>
       <div className="flex flex-col">
         <CentralAlunoItem icon={FileText} title="Meus Documentos" subtitle="RG, CPF e Comprovante de Residência" onClick={() => navigate('/documentos')} />
         {!isPrivileged && (
@@ -360,6 +363,7 @@ const PerfilScreen = () => {
   const [showEditPanel, setShowEditPanel] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
+  const isPrivileged = ADMIN_ROLES.includes(user?.role?.toUpperCase() || '');
 
   const loadProfile = () => {
     Promise.all([
@@ -416,8 +420,8 @@ const PerfilScreen = () => {
       <Header activeTab='profile' />
       <main className="flex-1 px-4 py-5 overflow-y-auto">
         <ProfileCard profile={profile} loading={loading} onPhotoChange={handlePhotoChange} uploadingPhoto={uploadingPhoto} />
-        <IRACard ira={profile?.ira} loading={loading} />
-        <ProgressCard stats={stats} loading={loading} />
+        {!isPrivileged && <IRACard ira={profile?.ira} loading={loading} />}
+        {!isPrivileged && <ProgressCard stats={stats} loading={loading} />}
         <CentralAlunoCard user={user} profile={profile} onEditClick={() => setShowEditPanel(true)} />
       </main>
       <BottomNavBar activeTab="profile" />

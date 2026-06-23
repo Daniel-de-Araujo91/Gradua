@@ -161,7 +161,7 @@ public class DashboardService {
         return agendaList;
     }
     public Object getProfileForCurrentUser() {
-        UserModel user = getUserByToken();
+        UserModel user = getUserWithStudent();
         var student = user.getStudent();
 
         if (student != null) {

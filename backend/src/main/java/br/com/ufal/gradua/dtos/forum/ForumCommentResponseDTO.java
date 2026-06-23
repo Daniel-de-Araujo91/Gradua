@@ -20,5 +20,6 @@ public record ForumCommentResponseDTO(
     Integer upVoteCount,
     Integer downVoteCount,
     Integer reportCount,
-    String currentUserVote
+    String currentUserVote,
+    Boolean hidden
 ) {}

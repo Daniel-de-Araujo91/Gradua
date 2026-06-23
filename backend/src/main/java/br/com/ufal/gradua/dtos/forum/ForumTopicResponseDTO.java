@@ -23,5 +23,6 @@ public record ForumTopicResponseDTO(
     Boolean isEdited,
     Integer voteScore,
     Integer commentCount,
-    Integer reportCount
+    Integer reportCount,
+    Boolean hidden
 ) {}

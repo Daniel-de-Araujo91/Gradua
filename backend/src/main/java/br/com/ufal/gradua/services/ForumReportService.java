@@ -90,7 +90,8 @@ public class ForumReportService {
         int reports = topic.getReportCount() != null ? topic.getReportCount() : 0;
 
         if (downVotes >= 5 || reports >= 3) {
-            topicRepository.delete(topic);
+            topic.setHidden(true);
+            topicRepository.save(topic);
         }
     }
 
@@ -104,7 +105,8 @@ public class ForumReportService {
                 topic.setCommentCount(topic.getCommentCount() - 1);
                 topicRepository.save(topic);
             }
-            commentRepository.delete(comment);
+            comment.setHidden(true);
+            commentRepository.save(comment);
         }
     }
 }

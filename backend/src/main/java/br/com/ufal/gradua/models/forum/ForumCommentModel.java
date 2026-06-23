@@ -48,6 +48,8 @@ public class ForumCommentModel implements Serializable {
     private Integer downVoteCount = 0;
     private Integer reportCount = 0;
 
+    private Boolean hidden = false;
+
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ForumVoteModel> votes;
 
