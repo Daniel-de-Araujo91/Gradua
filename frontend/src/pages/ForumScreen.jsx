@@ -4,7 +4,7 @@ import BottomNavBar from '../components/BottomNavBar';
 import {
   ArrowUp, ArrowDown, MessageCircle, Search, Plus, BookOpen,
   Bell, Lightbulb, CalendarDays, X, Trash2, Loader2, Pencil,
-  Check, ChevronDown, ChevronUp, Send
+  Check, ChevronDown, ChevronUp, Send, Flag
 } from 'lucide-react';
 import { forumService } from '../services/forumService';
 import { useAuth } from '../context/AuthContext';
@@ -49,7 +49,7 @@ const CategoryTag = ({ label, variant }) => {
 /* ─────────────────────────────────────────
    Comment Item
 ───────────────────────────────────────── */
-const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
+const CommentItem = ({ comment, currentUserId, onDelete, onUpdate, onReport, onVote }) => {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
   const [saving, setSaving] = useState(false);
@@ -64,6 +64,12 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleReport = async () => {
+    const reason = window.prompt('Motivo do report:');
+    if (!reason || !reason.trim()) return;
+    await onReport(comment.commentId, reason.trim());
   };
 
   return (
@@ -100,21 +106,63 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate }) => {
             </div>
           </div>
         ) : (
-          <p className="text-xs text-gray-600 leading-relaxed">{comment.content}</p>
+          <>
+            <p className="text-xs text-gray-600 leading-relaxed">{comment.content}</p>
+            <div className="flex items-center gap-3 mt-1.5">
+              <span className="text-[10px] text-gray-400">
+                {comment.creationDate ? new Date(comment.creationDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => onVote(comment.commentId, 'up')}
+                  className={`flex items-center gap-0.5 p-1 rounded transition-colors ${
+                    comment.currentUserVote === 'up' 
+                      ? 'text-green-600 font-bold bg-green-50' 
+                      : 'text-gray-400 hover:text-green-600 hover:bg-gray-50'
+                  }`}
+                  title="Gostei"
+                >
+                  <ArrowUp size={11} strokeWidth={comment.currentUserVote === 'up' ? 3 : 2} />
+                  <span className="text-[10px]">{comment.upVoteCount || 0}</span>
+                </button>
+                <button
+                  onClick={() => onVote(comment.commentId, 'down')}
+                  className={`flex items-center gap-0.5 p-1 rounded transition-colors ${
+                    comment.currentUserVote === 'down' 
+                      ? 'text-red-600 font-bold bg-red-50' 
+                      : 'text-gray-400 hover:text-red-600 hover:bg-gray-50'
+                  }`}
+                  title="Não gostei"
+                >
+                  <ArrowDown size={11} strokeWidth={comment.currentUserVote === 'down' ? 3 : 2} />
+                  <span className="text-[10px]">{comment.downVoteCount || 0}</span>
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
-      {isAuthor && !editing && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <button onClick={() => setEditing(true)}
-            className="p-1 text-gray-300 hover:text-gradua-forum hover:bg-gradua-forum/10 rounded transition-colors">
-            <Pencil size={11} />
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {!isAuthor && !editing && (
+          <button onClick={handleReport}
+            className="p-1 text-gray-300 hover:text-orange-500 hover:bg-orange-50 rounded transition-colors"
+            title="Reportar">
+            <Flag size={11} />
           </button>
-          <button onClick={() => onDelete(comment.commentId)}
-            className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
-            <Trash2 size={11} />
-          </button>
-        </div>
-      )}
+        )}
+        {isAuthor && !editing && (
+          <>
+            <button onClick={() => setEditing(true)}
+              className="p-1 text-gray-300 hover:text-gradua-forum hover:bg-gradua-forum/10 rounded transition-colors">
+              <Pencil size={11} />
+            </button>
+            <button onClick={() => onDelete(comment.commentId)}
+              className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+              <Trash2 size={11} />
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 };
@@ -126,7 +174,7 @@ const PostCard = ({
   topicId, avatar, name, time, title, content,
   tag, tagVariant, type, isEdited,
   voteScore: initialVoteScore, commentCount: initialCommentCount,
-  currentUser, onDelete, authorId,
+  currentUser, onDelete, onReport, authorId,
 }) => {
   const isAnnouncement = (type || '').toLowerCase() === 'aviso';
 
@@ -173,6 +221,10 @@ const PostCard = ({
     setVoteLoading(true);
     try {
       const data = await forumService.vote(topicId, voteType);
+      if (data.deleted) {
+        onDelete(topicId);
+        return;
+      }
       setUps(Number(data.ups) || 0);
       setDowns(Number(data.downs) || 0);
       setUserVote(data.currentUserVote || null);
@@ -241,9 +293,49 @@ const PostCard = ({
     }
   };
 
+  const handleReportComment = async (commentId, reason) => {
+    try {
+      const data = await forumService.reportComment(commentId, reason);
+      if (data.deleted) {
+        setComments(prev => prev.filter(c => c.commentId !== commentId));
+        setCommentCount(c => Math.max(0, c - 1));
+        return;
+      }
+      alert('Comentário reportado com sucesso.');
+    } catch (err) {
+      alert(err.message || 'Erro ao reportar.');
+    }
+  };
+
   const handleUpdateComment = async (commentId, newContent) => {
     const updated = await apiClient.put(`/forum/comment/${commentId}`, { content: newContent });
     setComments(prev => prev.map(c => c.commentId === commentId ? { ...c, content: updated.content, isEdited: true } : c));
+  };
+
+  const handleVoteComment = async (commentId, voteType) => {
+    try {
+      const data = await forumService.voteComment(commentId, voteType);
+      if (data.deleted) {
+        setComments(prev => prev.filter(c => c.commentId !== commentId));
+        setCommentCount(c => Math.max(0, c - 1));
+        return;
+      }
+      setComments(prev => prev.map(c => c.commentId === commentId ? {
+        ...c,
+        voteScore: Number(data.voteScore) || 0,
+        upVoteCount: Number(data.ups) || 0,
+        downVoteCount: Number(data.downs) || 0,
+        currentUserVote: data.currentUserVote || null
+      } : c));
+    } catch (err) {
+      alert(err.message || 'Erro ao votar no comentário.');
+    }
+  };
+
+  const handleReportTopic = async () => {
+    const reason = window.prompt('Motivo do report:');
+    if (!reason || !reason.trim()) return;
+    onReport(topicId, reason.trim());
   };
 
   return (
@@ -262,6 +354,13 @@ const PostCard = ({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {!isAuthor && (
+            <button onClick={handleReportTopic}
+              className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-orange-500 hover:bg-orange-50"
+              title="Reportar tópico">
+              <Flag size={14} />
+            </button>
+          )}
           {isAuthor && !editing && (
             <button onClick={() => setEditing(true)}
               className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-gradua-forum hover:bg-gradua-forum/10"
@@ -366,6 +465,8 @@ const PostCard = ({
                     currentUserId={currentUser?.id}
                     onDelete={handleDeleteComment}
                     onUpdate={handleUpdateComment}
+                    onReport={handleReportComment}
+                    onVote={handleVoteComment}
                   />
                 ))
               )}
@@ -605,6 +706,19 @@ const ForumScreen = () => {
     }
   };
 
+  const handleReport = async (topicId, reason) => {
+    try {
+      const data = await forumService.reportTopic(topicId, reason);
+      if (data.deleted) {
+        setPosts(prev => prev.filter(p => p.topicId !== topicId));
+        return;
+      }
+      alert('Tópico reportado com sucesso.');
+    } catch (err) {
+      alert(err.message || 'Erro ao reportar.');
+    }
+  };
+
   // Filtro de busca local (por texto) — o filtro por categoria já é feito no back
   const filteredPosts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -699,6 +813,7 @@ const ForumScreen = () => {
                 {...toCardProps(post)}
                 currentUser={{ name: currentUserName, id: currentUserId }}
                 onDelete={handleDelete}
+                onReport={handleReport}
               />
             ))
           ) : (

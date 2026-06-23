@@ -3,7 +3,7 @@ package br.com.ufal.gradua.models.forum;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
+import java.util.List;
 
 import br.com.ufal.gradua.models.user.UserModel;
 import jakarta.persistence.*;
@@ -43,5 +43,14 @@ public class ForumCommentModel implements Serializable {
 
     private LocalDateTime updatedAt;
 
+    private Integer voteScore = 0;
+    private Integer upVoteCount = 0;
+    private Integer downVoteCount = 0;
+    private Integer reportCount = 0;
 
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ForumVoteModel> votes;
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ForumReportModel> reports;
 }

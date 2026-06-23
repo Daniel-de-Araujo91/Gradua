@@ -3,6 +3,7 @@ package br.com.ufal.gradua.services;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import br.com.ufal.gradua.models.forum.ForumTopicModel;
 import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.ForumCommentRepository;
 import br.com.ufal.gradua.repositories.ForumTopicRepository;
+import br.com.ufal.gradua.repositories.ForumVoteRepository;
 
 @Service
 @Transactional
@@ -31,12 +33,39 @@ public class ForumCommentService {
     @Autowired
     ForumTopicRepository topicRepository;
 
+    @Autowired
+    ForumVoteRepository voteRepository;
+
+    @Autowired
+    ForumVoteService forumVoteService;
+
+    @Autowired
+    ForumReportService forumReportService;
+
     private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
         return (UserModel) authentication.getPrincipal();
     }
 
     private ForumCommentResponseDTO toDTO(ForumCommentModel comment) {
+        UserModel user = null;
+        try {
+            user = getUserByToken();
+        } catch (Exception e) {
+            // Ignorar
+        }
+        
+        String currentUserVote = "";
+        if (user != null) {
+            var voteOpt = voteRepository.findByCommentAndAuthor(comment, user);
+            if (voteOpt.isPresent()) {
+                currentUserVote = voteOpt.get().getVoteType().name().toLowerCase();
+            }
+        }
+
         return new ForumCommentResponseDTO(
             comment.getCommentId(),
             comment.getContent(),
@@ -44,7 +73,12 @@ public class ForumCommentService {
             comment.getAuthor().getUserId(),
             comment.getCreationDate(),
             comment.getIsEdited() != null ? comment.getIsEdited() : false,
-            comment.getUpdatedAt()
+            comment.getUpdatedAt(),
+            comment.getVoteScore() != null ? comment.getVoteScore() : 0,
+            comment.getUpVoteCount() != null ? comment.getUpVoteCount() : 0,
+            comment.getDownVoteCount() != null ? comment.getDownVoteCount() : 0,
+            comment.getReportCount() != null ? comment.getReportCount() : 0,
+            currentUserVote
         );
     }
 
@@ -111,5 +145,34 @@ public class ForumCommentService {
         }
 
         commentRepository.delete(comment);
+    }
+
+    public Map<String, Object> vote(UUID commentId, String voteType) {
+        return forumVoteService.voteComment(commentId, voteType);
+    }
+
+    public Map<String, Object> getVoteState(UUID commentId) {
+        return forumVoteService.getCommentVoteState(commentId);
+    }
+
+    public void report(UUID commentId, String reason) {
+        forumReportService.reportComment(commentId, reason);
+    }
+
+    public boolean existsById(UUID id) {
+        return commentRepository.existsById(id);
+    }
+
+    @Transactional
+    public void checkAndDeleteComment(ForumCommentModel comment) {
+        if (comment.getDownVoteCount() != null && comment.getDownVoteCount() >= 5 || 
+            comment.getReportCount() != null && comment.getReportCount() >= 3) {
+            ForumTopicModel topic = comment.getTopic();
+            if (topic != null && topic.getCommentCount() != null && topic.getCommentCount() > 0) {
+                topic.setCommentCount(topic.getCommentCount() - 1);
+                topicRepository.save(topic);
+            }
+            commentRepository.delete(comment);
+        }
     }
 }

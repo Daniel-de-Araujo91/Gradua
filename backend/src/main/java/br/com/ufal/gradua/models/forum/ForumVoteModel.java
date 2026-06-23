@@ -26,7 +26,10 @@ import jakarta.persistence.FetchType;
 @NoArgsConstructor
 @Entity
 @Table(name = "TB_FORUM_VOTE",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"topic_id", "author_id"}))
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"topic_id", "author_id"}),
+        @UniqueConstraint(columnNames = {"comment_id", "author_id"})
+    })
 public class ForumVoteModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -37,6 +40,10 @@ public class ForumVoteModel implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id", nullable = true)
     private ForumTopicModel topic;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id", nullable = true)
+    private ForumCommentModel comment;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")

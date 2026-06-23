@@ -10,6 +10,7 @@ import java.util.UUID;
  *   - isEdited: exibir indicador "editado"
  *   - voteScore: ocultar/mostrar componente de votos baseado no tipo
  *   - authorId: determinar se o usuário logado é o autor (para botão de edição)
+ *   - reportCount: contador de denúncias para auto-exclusão
  */
 public record ForumTopicResponseDTO(
     UUID topicId,
@@ -21,5 +22,6 @@ public record ForumTopicResponseDTO(
     LocalDateTime creationDate,
     Boolean isEdited,
     Integer voteScore,
-    Integer commentCount
+    Integer commentCount,
+    Integer reportCount
 ) {}

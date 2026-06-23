@@ -3,6 +3,7 @@ package br.com.ufal.gradua.services;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map; 
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,9 +27,14 @@ public class ForumTopicService {
     @Autowired
     ForumTopicRepository repository;
 
-    /** Injeção via setter para evitar dependência circular */
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private ForumVoteService forumVoteService;
+
+    @Autowired
+    private ForumReportService forumReportService;
 
     private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -46,7 +52,8 @@ public class ForumTopicService {
             topic.getCreationDate(),
             topic.getIsEdited() != null ? topic.getIsEdited() : false,
             topic.getVoteScore() != null ? topic.getVoteScore() : 0,
-            topic.getCommentCount() != null ? topic.getCommentCount() : 0
+            topic.getCommentCount() != null ? topic.getCommentCount() : 0,
+            topic.getReportCount() != null ? topic.getReportCount() : 0
         );
     }
 
@@ -134,4 +141,27 @@ public class ForumTopicService {
 
         repository.delete(forumTopic);
     }
-}
+
+    public Map<String, Object> vote(UUID topicId, String voteType) {
+        return forumVoteService.voteTopic(topicId, voteType);
+    }
+
+    public Map<String, Object> getVoteState(UUID topicId) {
+        return forumVoteService.getVoteState(topicId);
+    }
+
+    public void report(UUID topicId, String reason) {
+        forumReportService.reportTopic(topicId, reason);
+    }
+
+    public boolean existsById(UUID id) {
+        return repository.existsById(id);
+    }
+
+    @Transactional
+    public void checkAndDeleteTopic(ForumTopicModel topic) {
+        if (topic.getDownVoteCount() >= 5 || topic.getReportCount() >= 3) {
+            repository.delete(topic); 
+        }
+    }
+} 
