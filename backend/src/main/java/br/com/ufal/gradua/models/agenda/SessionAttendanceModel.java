@@ -19,7 +19,7 @@ import jakarta.persistence.FetchType;
 @Entity
 @Table(name = "TB_ATTENDANCE")
 public class SessionAttendanceModel implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L ;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
