@@ -12,7 +12,7 @@ const CommunityForum = () => {
     let mounted = true;
     forumService.getFeed(null).then(data => {
       if (!mounted) return;
-      setPosts((data || []).slice(0, 3).map(p => ({ id: p.topicId, author: p.authorName, time: p.creationDate, content: p.content, likes: p.voteScore || 0, dislikes: 0, userVote: null })));
+      setPosts((data || []).slice(0, 3).map(p => ({ id: p.topicId, author: p.authorName, authorPhoto: p.authorPhoto, time: p.creationDate, content: p.content, likes: p.voteScore || 0, dislikes: 0, userVote: null })));
     }).catch(() => {}).finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
@@ -67,7 +67,14 @@ const CommunityForum = () => {
       <div className="space-y-3">
         {posts.map((post) => (
           <div key={post.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-orange-100 flex-shrink-0">
+                {post.authorPhoto ? (
+                  <img src={post.authorPhoto} alt={post.author} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<span class=\"text-xs font-bold text-orange-600\">' + post.author?.charAt(0)?.toUpperCase() + '</span>'; }} />
+                ) : (
+                  <span className="w-full h-full flex items-center justify-center text-xs font-bold text-orange-600">{post.author?.charAt(0)?.toUpperCase() || '?'}</span>
+                )}
+              </div>
               <div>
                 <p className="font-semibold text-gray-900">{post.author}</p>
                 <p className="text-xs text-gray-500">{post.time}</p>

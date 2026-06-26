@@ -55,6 +55,20 @@ const CategoryTag = ({ label, variant }) => {
 /* ─────────────────────────────────────────
    Comment Item
 ───────────────────────────────────────── */
+const AvatarImg = ({ photo, name, className = "w-full h-full object-cover" }) => {
+  const [imgError, setImgError] = useState(false);
+  if (photo && !imgError) {
+    return (
+      <img src={photo} alt={name} className={className} onError={() => setImgError(true)} />
+    );
+  }
+  return (
+    <div className="w-full h-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
+      {name?.charAt(0)?.toUpperCase() || '?'}
+    </div>
+  );
+};
+
 const CommentItem = ({ comment, currentUserId, onDelete, onUpdate, onReport, onVote }) => {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
@@ -79,11 +93,7 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate, onReport, onV
   return (
     <div className="flex gap-2 py-2 border-b border-gray-50 last:border-0">
       <div className="w-7 h-7 rounded-full overflow-hidden bg-orange-100 flex-shrink-0 mt-0.5">
-        <img
-          src={`https://api.dicebear.com/7.x/personas/svg?seed=${comment.authorName}&backgroundColor=ffedd5`}
-          alt={comment.authorName}
-          className="w-full h-full object-cover"
-        />
+        <AvatarImg photo={comment.authorPhoto} name={comment.authorName} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
@@ -175,7 +185,7 @@ const CommentItem = ({ comment, currentUserId, onDelete, onUpdate, onReport, onV
    Post Card — com votos PERSISTENTES
 ───────────────────────────────────────── */
 const PostCard = ({
-  topicId, avatar, name, time, title, content,
+  topicId, avatar, authorPhoto, name, time, title, content,
   tag, tagVariant, type, isEdited,
   voteScore: initialVoteScore, commentCount: initialCommentCount,
   currentUser, onDelete, onReport, authorId,
@@ -341,7 +351,7 @@ const PostCard = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-orange-100 flex-shrink-0">
-            <img src={`https://api.dicebear.com/7.x/personas/svg?seed=${avatar}&backgroundColor=ffedd5`} alt={name} className="w-full h-full object-cover" />
+            <AvatarImg photo={authorPhoto} name={name} />
           </div>
           <div>
             <p className="text-sm font-bold text-gray-900">{name}</p>
@@ -503,7 +513,7 @@ const ALL_CATEGORIES = [
   { id: 'topico',   label: 'Tópico',   icon: MessageCircle },
 ];
 
-const AddPostCard = ({ onPublish, loading: publishLoading, userRole }) => {
+const AddPostCard = ({ onPublish, loading: publishLoading, userRole, userPhoto }) => {
   const [isExpanded, setIsExpanded]             = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('pergunta');
   const [title, setTitle]                       = useState('');
@@ -539,7 +549,7 @@ const AddPostCard = ({ onPublish, loading: publishLoading, userRole }) => {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-1">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-orange-50 flex-shrink-0">
-            <img src="https://api.dicebear.com/7.x/personas/svg?seed=usuario-atual&backgroundColor=ffedd5" alt="Você" className="w-full h-full object-cover" />
+            <AvatarImg photo={userPhoto} name="Você" />
           </div>
           {!isExpanded
             ? <span className="text-sm font-medium text-gray-400">Compartilhe algo com a turma...</span>
@@ -636,10 +646,11 @@ const EmptyState = ({ query, filter }) => (
    Main — ForumScreen
 ───────────────────────────────────────── */
 const ForumScreen = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { showToast } = useToast();
   const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : null;
   const currentUserId = user ? user.id : null;
+  const userPhoto = profile?.profilePhoto;
   const { pushNotify } = useWebNotifications();
 
   const [posts, setPosts]                   = useState([]);
@@ -748,6 +759,7 @@ const ForumScreen = () => {
     return {
       topicId:      post.topicId,
       avatar:       post.authorName?.toLowerCase().replace(/\s+/g, '-') || 'user',
+      authorPhoto:  post.authorPhoto,
       name:         post.authorName || 'Usuário',
       time,
       title:        post.title,
@@ -808,7 +820,7 @@ const ForumScreen = () => {
 
         <div className="px-4 pb-28">
           {activeFilter === 'todos' && !searchQuery && (
-            <AddPostCard onPublish={handlePublish} loading={publishLoading} userRole={user?.role} />
+            <AddPostCard onPublish={handlePublish} loading={publishLoading} userRole={user?.role} userPhoto={userPhoto} />
           )}
 
           {loading ? (

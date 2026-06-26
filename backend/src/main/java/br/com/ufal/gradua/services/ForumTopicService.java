@@ -50,6 +50,7 @@ public class ForumTopicService {
             topic.getContent(),
             topic.getAuthor().getFirstName() + " " + topic.getAuthor().getLastName(),
             topic.getAuthor().getUserId(),
+            topic.getAuthor().getProfilePhoto(),
             topic.getType(),
             topic.getCreationDate(),
             topic.getIsEdited() != null ? topic.getIsEdited() : false,

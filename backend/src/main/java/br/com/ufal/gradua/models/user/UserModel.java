@@ -12,7 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -55,8 +54,7 @@ public class UserModel implements Serializable{
     @Column(nullable = false)
     private String role = "USER";
 
-    @Lob
-    @Column(name = "profile_photo")
+    @Column(name = "profile_photo", columnDefinition = "TEXT")
     private String profilePhoto;
 
     @OneToOne(fetch = FetchType.LAZY)

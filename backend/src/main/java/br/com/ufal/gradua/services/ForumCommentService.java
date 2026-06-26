@@ -71,6 +71,7 @@ public class ForumCommentService {
             comment.getContent(),
             comment.getAuthor().getFirstName() + " " + comment.getAuthor().getLastName(),
             comment.getAuthor().getUserId(),
+            comment.getAuthor().getProfilePhoto(),
             comment.getCreationDate(),
             comment.getIsEdited() != null ? comment.getIsEdited() : false,
             comment.getUpdatedAt(),

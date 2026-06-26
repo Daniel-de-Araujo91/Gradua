@@ -13,6 +13,7 @@ public record ForumCommentResponseDTO(
     String content,
     String authorName,
     UUID authorId,
+    String authorPhoto,
     LocalDateTime creationDate,
     Boolean isEdited,
     LocalDateTime updatedAt,

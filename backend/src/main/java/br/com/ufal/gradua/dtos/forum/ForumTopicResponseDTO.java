@@ -18,6 +18,7 @@ public record ForumTopicResponseDTO(
     String content,
     String authorName,
     UUID authorId,
+    String authorPhoto,
     String type,
     LocalDateTime creationDate,
     Boolean isEdited,
