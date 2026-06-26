@@ -171,24 +171,28 @@ const AdminScreen = () => {
   const [savingAttendance, setSavingAttendance] = useState(false);
 
   // ---- Announcements ----
-  const [newAnnounce, setNewAnnounce] = useState({ title: '', message: '', classId: '' });
+  const [newAnnounce, setNewAnnounce] = useState({ title: '', message: '', classId: '', programId: '' });
   const [announceLoading, setAnnounceLoading] = useState(false);
   const [announceHistory, setAnnounceHistory] = useState([]);
   const [announceHistoryLoading, setAnnounceHistoryLoading] = useState(false);
   const [confirmAnnounceId, setConfirmAnnounceId] = useState(null);
   const [professorClasses, setProfessorClasses] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
   const loadAnnounceHistory = useCallback(async () => {
     setAnnounceHistoryLoading(true);
     try {
-      const data = await announcementService.listMyClasses();
+      const data = isAdmin
+        ? await announcementService.listProgramAnnouncements()
+        : await announcementService.listMyClasses();
       setAnnounceHistory(data || []);
     } catch (err) {
       setAnnounceHistory([]);
     } finally {
       setAnnounceHistoryLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   const loadProfessorClasses = useCallback(async () => {
     try {
@@ -196,6 +200,15 @@ const AdminScreen = () => {
       setProfessorClasses(data || []);
     } catch (err) {
       setProfessorClasses([]);
+    }
+  }, []);
+
+  const loadPrograms = useCallback(async () => {
+    try {
+      const data = await announcementService.listPrograms();
+      setPrograms(data || []);
+    } catch (err) {
+      setPrograms([]);
     }
   }, []);
 
@@ -293,25 +306,34 @@ const AdminScreen = () => {
     if (activeSubTab === 'comunicados') {
       loadAnnounceHistory();
       loadProfessorClasses();
+      if (isAdmin) loadPrograms();
     }
     if (activeSubTab === 'faltas') {
       loadFaltasClasses();
     }
-  }, [activeSubTab, loadAnnounceHistory, loadProfessorClasses, loadFaltasClasses]);
+  }, [activeSubTab, loadAnnounceHistory, loadProfessorClasses, loadFaltasClasses, loadPrograms, isAdmin]);
 
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
-    if (!newAnnounce.title.trim() || !newAnnounce.classId) return;
+    if (!newAnnounce.title.trim()) return;
+    if (!newAnnounce.classId && !newAnnounce.programId) return;
     setAnnounceLoading(true);
     try {
-      const created = await announcementService.create({
+      const payload = {
         title: newAnnounce.title,
         content: newAnnounce.message || newAnnounce.title,
-        classId: newAnnounce.classId,
-      });
+      };
+      if (isAdmin && newAnnounce.programId) {
+        payload.programId = newAnnounce.programId;
+      } else {
+        payload.classId = newAnnounce.classId;
+      }
+      const created = await announcementService.create(payload);
       setAnnounceHistory(prev => [created, ...prev]);
-      showToast('Comunicado enviado para a turma!', 'success');
-      setNewAnnounce({ title: '', message: '', classId: '' });
+      showToast(isAdmin && newAnnounce.programId
+        ? 'Comunicado enviado para o curso!'
+        : 'Comunicado enviado para a turma!', 'success');
+      setNewAnnounce({ title: '', message: '', classId: '', programId: '' });
     } catch (err) {
       showToast(err.message || 'Erro ao publicar comunicado.', 'error');
     } finally {
@@ -334,6 +356,12 @@ const AdminScreen = () => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatLocalDate = (dateStr) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
   };
 
   return (
@@ -604,7 +632,7 @@ const AdminScreen = () => {
                           onClick={() => handleOpenAttendance(s)}
                         >
                           <div>
-                            <span className="text-sm font-bold text-gray-800">{new Date(s.date).toLocaleDateString('pt-BR')}</span>
+                            <span className="text-sm font-bold text-gray-800">{formatLocalDate(s.date)}</span>
                             {s.description && (
                               <span className="text-xs text-gray-500 ml-2 font-medium">{s.description}</span>
                             )}
@@ -623,7 +651,7 @@ const AdminScreen = () => {
                   {selectedSession && (
                     <div className="mt-6 border-t border-gray-100 pt-4">
                       <h4 className="text-sm font-bold text-gray-700 mb-3">
-                        Chamada - {new Date(selectedSession.date).toLocaleDateString('pt-BR')}
+                        Chamada - {formatLocalDate(selectedSession.date)}
                       </h4>
 
                       {attendanceLoading ? (
@@ -675,7 +703,9 @@ const AdminScreen = () => {
         {activeSubTab === 'comunicados' && (
           <div className="space-y-5 animate-fade-in">
             <form onSubmit={handleCreateAnnouncement} className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-4">
-              <h3 className="text-base font-black text-gradua-primary mb-2">Novo Comunicado para Turma</h3>
+              <h3 className="text-base font-black text-gradua-primary mb-2">
+                {isAdmin ? 'Novo Comunicado para o Curso' : 'Novo Comunicado para Turma'}
+              </h3>
               
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Título do Aviso</label>
@@ -702,24 +732,44 @@ const AdminScreen = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Turma</label>
-                  <select 
-                    value={newAnnounce.classId}
-                    onChange={e => setNewAnnounce({...newAnnounce, classId: e.target.value})}
-                    required
-                    className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-bold text-gray-700">
-                    <option value="">— Selecione uma turma —</option>
-                    {professorClasses.map(cls => (
-                      <option key={cls.classId} value={cls.classId}>
-                        {cls.subjectCode} - {cls.subjectName}
-                      </option>
-                    ))}
-                  </select>
+                  {isAdmin ? (
+                    <>
+                      <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Curso</label>
+                      <select 
+                        value={newAnnounce.programId}
+                        onChange={e => setNewAnnounce({...newAnnounce, programId: e.target.value, classId: ''})}
+                        required
+                        className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-bold text-gray-700">
+                        <option value="">— Selecione um curso —</option>
+                        {programs.map(p => (
+                          <option key={p.programId} value={p.programId}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  ) : (
+                    <>
+                      <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Turma</label>
+                      <select 
+                        value={newAnnounce.classId}
+                        onChange={e => setNewAnnounce({...newAnnounce, classId: e.target.value})}
+                        required
+                        className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gradua-perfil outline-none bg-gray-50 focus:bg-white transition-all font-bold text-gray-700">
+                        <option value="">— Selecione uma turma —</option>
+                        {professorClasses.map(cls => (
+                          <option key={cls.classId} value={cls.classId}>
+                            {cls.subjectCode} - {cls.subjectName}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-end">
                   <button 
                     type="submit"
-                    disabled={announceLoading || !newAnnounce.classId}
+                    disabled={announceLoading || (!newAnnounce.classId && !newAnnounce.programId)}
                     className="w-full bg-gradua-perfil text-white font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-95 transition-opacity shadow-md shadow-gradua-primary/10 disabled:opacity-60">
                     {announceLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                     {announceLoading ? 'Enviando...' : 'Publicar'}
@@ -745,7 +795,8 @@ const AdminScreen = () => {
                     <div className="flex-1 min-w-0">
                       <h5 className="text-sm font-bold text-gradua-primary">{ann.title}</h5>
                       <p className="text-xs text-gray-400 mt-0.5 font-medium">
-                        {formatDate(ann.publishDate)} • Turma: <span className="text-gradua-perfil font-semibold">{ann.targetClass}</span>
+                        {formatDate(ann.publishDate)} • {ann.programId ? 'Curso: ' : 'Turma: '}
+                        <span className="text-gradua-perfil font-semibold">{ann.targetClass}</span>
                       </p>
                     </div>
 

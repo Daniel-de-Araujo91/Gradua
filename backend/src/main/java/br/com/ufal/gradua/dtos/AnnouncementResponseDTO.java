@@ -10,5 +10,7 @@ public record AnnouncementResponseDTO(
     String authorName,
     String targetClass,
     UUID classId,
+    UUID programId,
+    String programName,
     LocalDateTime publishDate
 ) {}

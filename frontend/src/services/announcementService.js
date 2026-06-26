@@ -7,5 +7,9 @@ export const announcementService = {
 
   listStudent: () => apiClient.get('/announcements/student'),
 
+  listProgramAnnouncements: () => apiClient.get('/announcements/program'),
+
+  listPrograms: () => apiClient.get('/announcements/programs/list'),
+
   delete: (id) => apiClient.delete(`/announcements/${id}`),
 };

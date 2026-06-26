@@ -1,10 +1,8 @@
 package br.com.ufal.gradua.services;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +12,6 @@ import br.com.ufal.gradua.dtos.UpdateProfileRequestDTO;
 import br.com.ufal.gradua.models.agenda.MonitorSessionModel;
 import br.com.ufal.gradua.models.institutional.CurriculumModel;
 import br.com.ufal.gradua.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,9 +45,6 @@ public class DashboardService {
     private final GradeRepository gradeRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    @Value("${api.upload.dir:uploads}")
-    private String uploadDir;
 
     private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -228,22 +222,17 @@ public class DashboardService {
         }
 
         try {
-            String originalName = file.getOriginalFilename();
-            String extension = "";
-            if (originalName != null && originalName.contains(".")) {
-                extension = originalName.substring(originalName.lastIndexOf("."));
-            }
-            String fileName = "profile_" + user.getUserId() + extension;
-            Path uploadPath = Paths.get(uploadDir, "profiles");
-            Files.createDirectories(uploadPath);
-            Path filePath = uploadPath.resolve(fileName);
-            file.transferTo(filePath.toFile());
+            byte[] bytes = file.getBytes();
+            String base64 = Base64.getEncoder().encodeToString(bytes);
 
-            String photoUrl = "/uploads/profiles/" + fileName;
-            user.setProfilePhoto(photoUrl);
+            String contentType = file.getContentType();
+            if (contentType == null) contentType = "image/png";
+            String dataUri = "data:" + contentType + ";base64," + base64;
+
+            user.setProfilePhoto(dataUri);
             userRepository.save(user);
 
-            return java.util.Map.of("photoUrl", photoUrl);
+            return java.util.Map.of("photoUrl", dataUri);
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao salvar foto");
         }

@@ -54,7 +54,7 @@ public class UserModel implements Serializable{
     @Column(nullable = false)
     private String role = "USER";
 
-    @Column(name = "profile_photo")
+    @Column(name = "profile_photo", columnDefinition = "TEXT")
     private String profilePhoto;
 
     @OneToOne(fetch = FetchType.LAZY)

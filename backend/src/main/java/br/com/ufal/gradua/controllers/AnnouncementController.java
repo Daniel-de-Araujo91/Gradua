@@ -40,6 +40,16 @@ public class AnnouncementController {
         return ResponseEntity.ok(announcementService.getAnnouncementsForStudent());
     }
 
+    @GetMapping("/program")
+    public ResponseEntity<List<AnnouncementResponseDTO>> listProgramAnnouncements() {
+        return ResponseEntity.ok(announcementService.listProgramAnnouncements());
+    }
+
+    @GetMapping("/programs/list")
+    public ResponseEntity<List<br.com.ufal.gradua.models.institutional.ProgramModel>> listPrograms() {
+        return ResponseEntity.ok(announcementService.listPrograms());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         announcementService.delete(id);
