@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -46,8 +47,9 @@ public class DocumentModel implements Serializable {
 
     private Long fileSize;
 
-    @Column(nullable = false)
-    private String filePath;
+    @Lob
+    @Column(name = "file_data")
+    private String fileData;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

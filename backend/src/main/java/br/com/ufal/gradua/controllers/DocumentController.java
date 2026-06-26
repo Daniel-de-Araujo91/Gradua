@@ -1,18 +1,13 @@
 package br.com.ufal.gradua.controllers;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,9 +34,6 @@ import lombok.RequiredArgsConstructor;
 public class DocumentController {
 
     private final DocumentRepository documentRepository;
-
-    @Value("${api.upload.dir:uploads}")
-    private String uploadDir;
 
     private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -80,38 +72,27 @@ public class DocumentController {
         }
 
         try {
-            String originalName = file.getOriginalFilename();
-            String extension = "";
-            if (originalName != null && originalName.contains(".")) {
-                extension = originalName.substring(originalName.lastIndexOf("."));
-            }
-            String fileName = "doc_" + user.getUserId() + "_" + docType.toLowerCase() + extension;
-            Path uploadPath = Paths.get(uploadDir, "documents");
-            Files.createDirectories(uploadPath);
-            Path filePath = uploadPath.resolve(fileName);
-            file.transferTo(filePath.toFile());
+            String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+            byte[] bytes = file.getBytes();
+            String base64 = Base64.getEncoder().encodeToString(bytes);
+            String dataUri = "data:" + contentType + ";base64," + base64;
 
-            documentRepository.findByUserAndDocType(user, docType.toUpperCase()).ifPresent(existing -> {
-                try {
-                    Path oldPath = Paths.get(existing.getFilePath());
-                    Files.deleteIfExists(oldPath);
-                } catch (IOException e) {
-                }
-                documentRepository.delete(existing);
-            });
+            String originalName = file.getOriginalFilename();
+            if (originalName == null) originalName = "documento";
+
+            documentRepository.findByUserAndDocType(user, docType.toUpperCase())
+                .ifPresent(existing -> documentRepository.delete(existing));
 
             DocumentModel doc = new DocumentModel();
             doc.setUser(user);
             doc.setDocType(docType.toUpperCase());
-            doc.setFileName(originalName != null ? originalName : "documento" + extension);
-            doc.setFileType(file.getContentType());
+            doc.setFileName(originalName);
+            doc.setFileType(contentType);
             doc.setFileSize(file.getSize());
-            doc.setFilePath(filePath.toString());
+            doc.setFileData(dataUri);
             doc.setCreatedAt(LocalDateTime.now(ZoneOffset.of("-3")));
             doc.setUpdatedAt(LocalDateTime.now(ZoneOffset.of("-3")));
             documentRepository.save(doc);
-
-            String url = "/uploads/documents/" + fileName;
 
             java.util.Map<String, Object> resultMap = new java.util.HashMap<>();
             resultMap.put("documentId", doc.getDocumentId().toString());
@@ -119,7 +100,7 @@ public class DocumentController {
             resultMap.put("fileName", doc.getFileName());
             resultMap.put("fileType", doc.getFileType());
             resultMap.put("fileSize", doc.getFileSize());
-            resultMap.put("url", url);
+            resultMap.put("url", dataUri);
             resultMap.put("createdAt", doc.getCreatedAt().toString());
             return ResponseEntity.ok(resultMap);
         } catch (IOException e) {
@@ -128,24 +109,28 @@ public class DocumentController {
     }
 
     @GetMapping("/{docType}/download")
-    public ResponseEntity<Resource> downloadDocument(@PathVariable String docType) {
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable String docType) {
         UserModel user = getUserByToken();
         DocumentModel doc = documentRepository.findByUserAndDocType(user, docType.toUpperCase())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento não encontrado"));
 
+        if (doc.getFileData() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo não encontrado");
+        }
+
         try {
-            Path filePath = Paths.get(doc.getFilePath());
-            Resource resource = new UrlResource(filePath.toUri());
-            if (!resource.exists()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo não encontrado");
+            String base64Data = doc.getFileData();
+            if (base64Data.contains(",")) {
+                base64Data = base64Data.substring(base64Data.indexOf(",") + 1);
             }
+            byte[] fileBytes = Base64.getDecoder().decode(base64Data);
 
             String contentType = doc.getFileType() != null ? doc.getFileType() : "application/octet-stream";
             return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + doc.getFileName() + "\"")
-                .body(resource);
-        } catch (IOException e) {
+                .body(fileBytes);
+        } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao ler arquivo");
         }
     }
@@ -155,12 +140,6 @@ public class DocumentController {
         UserModel user = getUserByToken();
         DocumentModel doc = documentRepository.findByUserAndDocType(user, docType.toUpperCase())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento não encontrado"));
-
-        try {
-            Path filePath = Paths.get(doc.getFilePath());
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-        }
 
         documentRepository.delete(doc);
         return ResponseEntity.noContent().build();
