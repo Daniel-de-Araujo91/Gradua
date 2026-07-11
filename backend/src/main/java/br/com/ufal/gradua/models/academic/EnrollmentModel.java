@@ -1,7 +1,6 @@
 package br.com.ufal.gradua.models.academic;
 
 import java.io.Serializable;
-import java.time.LocalTime;
 import java.util.UUID;
 
 import br.com.ufal.gradua.models.auth.StudentModel;

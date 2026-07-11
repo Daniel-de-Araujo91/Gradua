@@ -5,11 +5,9 @@ import java.time.LocalDate;
 import java.util.Base64;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import br.com.ufal.gradua.dtos.UpdateProfileRequestDTO;
-import br.com.ufal.gradua.models.agenda.MonitorSessionModel;
 import br.com.ufal.gradua.models.institutional.CurriculumModel;
 import br.com.ufal.gradua.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -43,6 +41,7 @@ public class DashboardService {
     private final MonitorSessionRepository monitorSessionRepository;
     private final AnnouncementRepository announcementRepository;
     private final GradeRepository gradeRepository;
+    private final GradeService gradeService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -121,10 +120,14 @@ public class DashboardService {
             int maxAbsences = creditHours != null ? (int) Math.ceil(creditHours * 0.25) : 999;
             int remaining = Math.max(0, maxAbsences - registered);
 
+            // Calcular previsão de aprovação com base nas notas do aluno.
+            // O gradeMap já usa null para notas ausentes, conforme esperado pelo GradeService.
+            var approvalForecast = gradeService.calculateApprovalForecast(gradeMap);
+
             return new DashboardSubjectDTO(
                     cls.getClassId(), code, name, schedule, "Instituto de Computação", "Teórica",
                     professor, participants, List.of(), gradeMap,
-                    new AbsencesDTO(registered, remaining), "Em dia"
+                    new AbsencesDTO(registered, remaining), "Em dia", approvalForecast
             );
         }).collect(Collectors.toList());
     }
@@ -152,7 +155,7 @@ public class DashboardService {
         }
 
         List<ClassSectionModel> userClasses = enrollments.stream()
-                .map(EnrollmentModel::getClassSection)
+                .map(e -> e.getClassSection())
                 .collect(Collectors.toList());
 
         if (!userClasses.isEmpty()) {

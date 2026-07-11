@@ -5,12 +5,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import br.com.ufal.gradua.models.document.DocumentModel;
 import br.com.ufal.gradua.models.user.UserModel;
 
-@Repository
 public interface DocumentRepository extends JpaRepository<DocumentModel, UUID> {
     List<DocumentModel> findByUserOrderByCreatedAtDesc(UserModel user);
     Optional<DocumentModel> findByUserAndDocType(UserModel user, String docType);

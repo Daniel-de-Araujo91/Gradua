@@ -1,9 +1,10 @@
 package br.com.ufal.gradua.infra.security;
 
+import lombok.RequiredArgsConstructor;
+
 import java.io.IOException;
 import java.util.Collections;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
+@RequiredArgsConstructor
 public class SecurityFilter extends OncePerRequestFilter {
 
     @Autowired

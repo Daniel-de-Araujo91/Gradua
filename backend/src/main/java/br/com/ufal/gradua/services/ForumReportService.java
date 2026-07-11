@@ -1,11 +1,11 @@
 package br.com.ufal.gradua.services;
 
+import lombok.RequiredArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -22,16 +22,14 @@ import br.com.ufal.gradua.repositories.ForumCommentRepository;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ForumReportService {
 
-    @Autowired
-    private ForumReportRepository reportRepository;
+    private final ForumReportRepository reportRepository;
 
-    @Autowired
-    private ForumTopicRepository topicRepository;
+    private final ForumTopicRepository topicRepository;
 
-    @Autowired
-    private ForumCommentRepository commentRepository;
+    private final ForumCommentRepository commentRepository;
 
     private UserModel getCurrentUser() {
         return (UserModel) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

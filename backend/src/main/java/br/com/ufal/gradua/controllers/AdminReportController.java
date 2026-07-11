@@ -1,5 +1,7 @@
 package br.com.ufal.gradua.controllers;
 
+import lombok.RequiredArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -8,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -23,22 +24,14 @@ import br.com.ufal.gradua.repositories.UserRepository;
 
 @RestController
 @RequestMapping("/admin/reports")
+@RequiredArgsConstructor
 public class AdminReportController {
 
-    @Autowired
-    private ForumTopicRepository topicRepository;
+    private final ForumTopicRepository topicRepository;
 
-    @Autowired
-    private ForumCommentRepository commentRepository;
+    private final ForumReportRepository reportRepository;
 
-    @Autowired
-    private ForumReportRepository reportRepository;
-
-    @Autowired
-    private ForumVoteRepository voteRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @GetMapping
     @Transactional(readOnly = true)

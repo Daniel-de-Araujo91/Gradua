@@ -1,6 +1,7 @@
 package br.com.ufal.gradua.services;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.com.ufal.gradua.dtos.grade.ApprovalForecastDTO;
 import br.com.ufal.gradua.dtos.grade.ClassWithStudentsDTO;
 import br.com.ufal.gradua.dtos.grade.GradeEntryDTO;
 import br.com.ufal.gradua.dtos.grade.StudentGradeDTO;
@@ -31,6 +33,28 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 @RequiredArgsConstructor
 public class GradeService {
+
+    // -------------------------------------------------------------------------
+    // Constantes do sistema de avaliação
+    // -------------------------------------------------------------------------
+    /** Média mínima para aprovação direta, sem necessidade de reavaliação. */
+    private static final BigDecimal PASSING_GRADE        = new BigDecimal("7.0");
+    /** Nota máxima possível em qualquer avaliação. */
+    private static final BigDecimal MAX_GRADE            = new BigDecimal("10.0");
+    /** Nota ponderada mínima para aprovação na reavaliação final. */
+    private static final BigDecimal FINAL_PASSING_SCORE  = new BigDecimal("5.5");
+    /** Peso da média parcial (AB1/AB2) na fórmula da reavaliação final. */
+    private static final BigDecimal FINAL_WEIGHT_PARTIAL = new BigDecimal("0.6");
+    /** Peso da nota da prova final na fórmula da reavaliação final. */
+    private static final BigDecimal FINAL_WEIGHT_EXAM    = new BigDecimal("0.4");
+    /** Média parcial mínima para ter acesso à reavaliação final. */
+    private static final BigDecimal MIN_AVG_FOR_FINAL    = new BigDecimal("5.0");
+    /** Média parcial máxima que ainda exige reavaliação final (abaixo de PASSING_GRADE). */
+    private static final BigDecimal MAX_AVG_FOR_FINAL    = new BigDecimal("6.9");
+    /** Soma-alvo das duas avaliações para aprovação direta (PASSING_GRADE × 2). */
+    private static final BigDecimal TARGET_SUM           = new BigDecimal("14.0");
+    /** Divisor para cálculo de médias de duas avaliações. */
+    private static final BigDecimal TWO                  = new BigDecimal("2");
 
     private final GradeRepository gradeRepository;
     private final EnrollmentRepository enrollmentRepository;
@@ -161,5 +185,196 @@ public class GradeService {
                 g -> g.getValue() != null ? g.getValue() : BigDecimal.ZERO,
                 (a, b) -> b
             ));
+    }
+
+    // =========================================================================
+    // Calculadora de Previsão de Aprovação
+    // =========================================================================
+
+    /**
+     * Calcula a previsão de aprovação de um aluno com base nas notas disponíveis.
+     *
+     * <p>Regras do sistema:</p>
+     * <ul>
+     *   <li>Média aritmética simples de AB1 e AB2 para aprovação direta (≥ 7.0).</li>
+     *   <li>REAV substitui min(AB1, AB2) apenas se o valor da REAV for superior.</li>
+     *   <li>Acesso à reavaliação final: média efetiva entre 5.0 e 6.9 (inclusive).</li>
+     *   <li>Aprovação na final: 0.6 × médiaParcial + 0.4 × notaFinal ≥ 5.5.</li>
+     * </ul>
+     *
+     * @param grades Mapa com as notas disponíveis: chaves "ab1", "ab2", "reav", "final".
+     *               Valores ausentes devem ser {@code null} (não zero).
+     * @return {@link ApprovalForecastDTO} com estado, mensagem e dados preditivos.
+     */
+    public ApprovalForecastDTO calculateApprovalForecast(Map<String, BigDecimal> grades) {
+        BigDecimal ab1   = grades.get("ab1");
+        BigDecimal ab2   = grades.get("ab2");
+        BigDecimal reav  = grades.get("reav");
+        BigDecimal final_ = grades.get("final");
+
+        // -----------------------------------------------------------------
+        // Caso 1: Nenhuma nota lançada
+        // -----------------------------------------------------------------
+        if (ab1 == null && ab2 == null) {
+            return new ApprovalForecastDTO(
+                "NO_GRADES",
+                "Notas ainda não disponíveis.",
+                null, null, null, null, null
+            );
+        }
+
+        // -----------------------------------------------------------------
+        // Caso 2: Apenas uma das ABs foi lançada (AB1 ou AB2)
+        // -----------------------------------------------------------------
+        if (ab1 == null || ab2 == null) {
+            BigDecimal existingGrade = ab1 != null ? ab1 : ab2;
+            String missingType = ab1 == null ? "AB1" : "AB2";
+            BigDecimal needed = TARGET_SUM.subtract(existingGrade);
+
+            if (needed.compareTo(MAX_GRADE) <= 0) {
+                BigDecimal neededRounded = needed.setScale(2, RoundingMode.HALF_UP);
+                return new ApprovalForecastDTO(
+                    "NEEDS_SCORE",
+                    String.format("Precisa de %.2f na %s para aprovação direta.", neededRounded, missingType),
+                    null, null, neededRounded, missingType, null
+                );
+            } else {
+                return new ApprovalForecastDTO(
+                    "REEVALUATION_CERTAIN",
+                    "Aprovação direta já não é possível. A reavaliação será necessária.",
+                    null, null, null, null, null
+                );
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // A partir daqui: AB1 e AB2 estão ambas disponíveis
+        // -----------------------------------------------------------------
+        BigDecimal currentAvg = ab1.add(ab2).divide(TWO, 2, RoundingMode.HALF_UP);
+
+        // -----------------------------------------------------------------
+        // Caso 3: REAV foi lançada — calcular média efetiva com substituição
+        // -----------------------------------------------------------------
+        if (reav != null) {
+            BigDecimal maxAB = ab1.max(ab2);
+
+            // A REAV substitui a menor nota apenas se for superior a ela
+            BigDecimal effectiveAvg;
+            boolean reavImproved;
+            if (reav.compareTo(minAB) > 0) {
+                effectiveAvg = maxAB.add(reav).divide(TWO, 2, RoundingMode.HALF_UP);
+                reavImproved = true;
+            } else {
+                effectiveAvg = currentAvg;
+                reavImproved = false;
+            }
+
+            // Aprovado diretamente pela média efetiva após REAV
+            if (effectiveAvg.compareTo(PASSING_GRADE) >= 0) {
+                String msg = reavImproved
+                    ? String.format("Aprovado(a) por média após REAV! Média efetiva: %.2f ✓", effectiveAvg)
+                    : String.format("Aprovado(a) por média! Média: %.2f ✓", effectiveAvg);
+                return new ApprovalForecastDTO(
+                    "APPROVED", msg, currentAvg, effectiveAvg, null, null, null
+                );
+            }
+
+            // Prova Final já foi lançada — calcular nota ponderada
+            if (final_ != null) {
+                BigDecimal weighted = FINAL_WEIGHT_PARTIAL.multiply(effectiveAvg)
+                    .add(FINAL_WEIGHT_EXAM.multiply(final_))
+                    .setScale(2, RoundingMode.HALF_UP);
+
+                if (weighted.compareTo(FINAL_PASSING_SCORE) >= 0) {
+                    return new ApprovalForecastDTO(
+                        "APPROVED",
+                        String.format("Aprovado(a) na reavaliação final! Nota ponderada: %.2f ✓", weighted),
+                        currentAvg, effectiveAvg, null, null, weighted
+                    );
+                } else {
+                    return new ApprovalForecastDTO(
+                        "FAILED",
+                        String.format("Reprovado(a). Nota final ponderada: %.2f (mínimo: 5.50).", weighted),
+                        currentAvg, effectiveAvg, null, null, weighted
+                    );
+                }
+            }
+
+            // Prova Final ainda não lançada — verificar elegibilidade
+            if (effectiveAvg.compareTo(MIN_AVG_FOR_FINAL) >= 0) {
+                // Nota necessária na final: (5.5 - 0.6 × médiaParcial) / 0.4
+                BigDecimal neededFinal = FINAL_PASSING_SCORE
+                    .subtract(FINAL_WEIGHT_PARTIAL.multiply(effectiveAvg))
+                    .divide(FINAL_WEIGHT_EXAM, 2, RoundingMode.HALF_UP);
+
+                String suffix = reavImproved
+                    ? String.format(" (REAV substituiu a menor AB; nova média: %.2f)", effectiveAvg)
+                    : " (REAV não substituiu — valor inferior à menor AB)";
+
+                return new ApprovalForecastDTO(
+                    "NEEDS_FINAL",
+                    String.format("Média após REAV: %.2f%s — Na prova final, precisa de %.2f para aprovação.",
+                        effectiveAvg, suffix, neededFinal),
+                    currentAvg, effectiveAvg, neededFinal, "FINAL", null
+                );
+            } else {
+                return new ApprovalForecastDTO(
+                    "FAILED",
+                    String.format("Média após REAV: %.2f — Insuficiente para acesso à reavaliação final (mínimo: 5.00).",
+                        effectiveAvg),
+                    currentAvg, effectiveAvg, null, null, null
+                );
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Caso 4: Ambas ABs, sem REAV
+        // -----------------------------------------------------------------
+
+        // Aprovado diretamente pela média das ABs
+        if (currentAvg.compareTo(PASSING_GRADE) >= 0) {
+            return new ApprovalForecastDTO(
+                "APPROVED",
+                String.format("Aprovado(a) por média! Média: %.2f ✓", currentAvg),
+                currentAvg, null, null, null, null
+            );
+        }
+
+        // Verificar se a REAV pode garantir aprovação direta
+        BigDecimal maxAB = ab1.max(ab2);
+        BigDecimal neededReav = TARGET_SUM.subtract(maxAB);
+
+        if (neededReav.compareTo(MAX_GRADE) <= 0) {
+            BigDecimal neededRounded = neededReav.setScale(2, RoundingMode.HALF_UP);
+            String substituting = ab1.compareTo(ab2) <= 0 ? "AB1" : "AB2";
+            return new ApprovalForecastDTO(
+                "NEEDS_REAV",
+                String.format(
+                    "Média atual: %.2f — Na REAV, precisa de %.2f (substituindo a %s) para aprovação direta.",
+                    currentAvg, neededRounded, substituting),
+                currentAvg, null, neededRounded, "REAV", null
+            );
+        }
+
+        // A REAV não garante aprovação direta; verificar se pode dar acesso à Final
+        BigDecimal bestPossibleAvgWithReav = maxAB.add(MAX_GRADE).divide(TWO, 2, RoundingMode.HALF_UP);
+        if (bestPossibleAvgWithReav.compareTo(MIN_AVG_FOR_FINAL) >= 0) {
+            return new ApprovalForecastDTO(
+                "REAV_MAY_SAVE",
+                String.format(
+                    "Aprovação direta já não é possível. Mas a REAV ainda pode garantir acesso à reavaliação final (melhor média possível: %.2f).",
+                    bestPossibleAvgWithReav),
+                currentAvg, null, null, "REAV", null
+            );
+        }
+
+        // Nem a melhor REAV possível garante acesso à final
+        return new ApprovalForecastDTO(
+            "FAILED",
+            String.format(
+                "Média atual: %.2f — Aprovação já não é possível neste período.",
+                currentAvg),
+            currentAvg, null, null, null, null
+        );
     }
 }

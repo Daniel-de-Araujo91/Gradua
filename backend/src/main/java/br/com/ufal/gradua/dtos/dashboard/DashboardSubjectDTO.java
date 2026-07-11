@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import br.com.ufal.gradua.dtos.grade.ApprovalForecastDTO;
 import br.com.ufal.gradua.models.academic.AbsencesDTO;
 
 public record DashboardSubjectDTO(
@@ -19,5 +20,6 @@ public record DashboardSubjectDTO(
     List<String> monitors,
     Map<String, BigDecimal> grades,
     AbsencesDTO absences,
-    String deliveryRate
+    String deliveryRate,
+    ApprovalForecastDTO approvalForecast
 ) {}

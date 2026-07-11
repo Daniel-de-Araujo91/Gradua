@@ -51,7 +51,7 @@ public class AgendaService {
 
         if (user.getStudent() != null) {
             List<EnrollmentModel> enrollments = enrollmentRepository.findByStudent(user.getStudent());
-            turmas = enrollments.stream().map(EnrollmentModel::getClassSection).toList();
+            turmas = enrollments.stream().map(e -> e.getClassSection()).toList();
         } else {
             UserModel userWithProfessor = userRepository.findWithProfessorByUserId(user.getUserId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário sem vínculo acadêmico"));

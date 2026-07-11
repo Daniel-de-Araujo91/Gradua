@@ -1,6 +1,5 @@
 package br.com.ufal.gradua.dtos.agenda;
 
-import java.util.List;
 import java.util.UUID;
 
 public record AgendaClassDTO(

@@ -1,6 +1,38 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, X, Clock, MapPin, User, Users, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { ChevronRight, X, Clock, MapPin, User, Users, FileText, AlertCircle, CheckCircle, AlertTriangle, BookOpen, Target, XCircle } from 'lucide-react';
 import { Tooltip, Button } from 'flowbite-react';
+
+// =============================================================================
+// Subcomponente: Alerta Preditivo de Aprovação
+// Recebe o objeto `forecast` do backend e renderiza o estado correspondente.
+// Nenhuma lógica de cálculo aqui — apenas apresentação.
+// =============================================================================
+const FORECAST_CONFIG = {
+    NO_GRADES:            { bg: 'bg-gray-50',    border: 'border-gray-200',   text: 'text-gray-600',   icon: Clock,          iconColor: 'text-gray-400'   },
+    NEEDS_SCORE:          { bg: 'bg-blue-50',     border: 'border-blue-200',   text: 'text-blue-700',   icon: Target,         iconColor: 'text-blue-500'   },
+    REEVALUATION_CERTAIN: { bg: 'bg-orange-50',   border: 'border-orange-200', text: 'text-orange-700', icon: AlertTriangle,   iconColor: 'text-orange-500' },
+    APPROVED:             { bg: 'bg-green-50',    border: 'border-green-200',  text: 'text-green-700',  icon: CheckCircle,    iconColor: 'text-green-500'  },
+    NEEDS_REAV:           { bg: 'bg-amber-50',    border: 'border-amber-200',  text: 'text-amber-700',  icon: AlertTriangle,  iconColor: 'text-amber-500'  },
+    REAV_MAY_SAVE:        { bg: 'bg-orange-50',   border: 'border-orange-200', text: 'text-orange-700', icon: AlertTriangle,  iconColor: 'text-orange-500' },
+    NEEDS_FINAL:          { bg: 'bg-yellow-50',   border: 'border-yellow-200', text: 'text-yellow-700', icon: BookOpen,       iconColor: 'text-yellow-500' },
+    FAILED:               { bg: 'bg-red-50',      border: 'border-red-200',    text: 'text-red-700',    icon: XCircle,        iconColor: 'text-red-500'    },
+};
+
+const ApprovalForecastAlert = ({ forecast }) => {
+    if (!forecast || !forecast.status) return null;
+
+    const config = FORECAST_CONFIG[forecast.status] ?? FORECAST_CONFIG['NO_GRADES'];
+    const Icon = config.icon;
+
+    return (
+        <div className={`mt-3 flex items-start gap-2.5 rounded-lg border px-3 py-2.5 ${config.bg} ${config.border}`}>
+            <Icon size={16} className={`mt-0.5 shrink-0 ${config.iconColor}`} />
+            <p className={`text-xs font-medium leading-relaxed ${config.text}`}>
+                {forecast.message}
+            </p>
+        </div>
+    );
+};
 
 const MySubjects = () => {
     const [selectedSubject, setSelectedSubject] = useState(null);
@@ -26,7 +58,8 @@ const MySubjects = () => {
                     monitors: s.monitors || [],
                     grades: s.grades || { ab1: null, ab2: null, reav: null, final: null },
                     absences: s.absences || { registered: 0, remaining: 15 },
-                    deliveryRate: s.deliveryRate || 'Em dia'
+                    deliveryRate: s.deliveryRate || 'Em dia',
+                    approvalForecast: s.approvalForecast || null,
                 }));
                 setSubjects(mapped);
             }).catch(() => {}).finally(() => { if (mounted) setLoading(false); });
@@ -195,6 +228,11 @@ const MySubjects = () => {
                                         <p className='text-lg font-bold text-gray-800'>{selectedSubject.grades.final || '—'}</p>
                                     </div>
                                 </div>
+
+                                {/* --- Alerta Preditivo de Aprovação --- */}
+                                {selectedSubject.approvalForecast && (
+                                    <ApprovalForecastAlert forecast={selectedSubject.approvalForecast} />
+                                )}
                             </div>
 
                             <div className='border-t border-gray-100 pt-3'>

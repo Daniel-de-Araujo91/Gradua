@@ -1,12 +1,13 @@
 package br.com.ufal.gradua.services;
 
+import lombok.RequiredArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import br.com.ufal.gradua.repositories.UserRepository;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class NotificationService {
 
     @Autowired

@@ -116,7 +116,7 @@ public class ClassSessionService {
             result.add(new AttendanceDTO(
                 enrollment.getEnrollmentId(),
                 studentName,
-                existing.map(ClassAttendanceModel::getPresent).orElse(null)
+                existing.map(a -> a.getPresent()).orElse(null)
             ));
         }
 

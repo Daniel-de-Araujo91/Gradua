@@ -80,3 +80,38 @@ Na visualização do aluno, cartões dinâmicos alertarão sobre novas sessões 
 **Fase 4: Garantia de Qualidade e Segurança**
 - Testes automatizados de validação de rotas (Garantir que requisições de criação de avisos vindas de perfis de alunos sejam rejeitadas com erro de falta de autorização).
 - Homologação da persistência de dados de edições e ordenação cronológica dos blocos de horários.
+
+**Fase 5: Calculadora Automática de Nota para Aprovação (Predição)**
+
+Funcionalidade preditiva que calcula e exibe ao estudante, no modal de detalhes da disciplina, quantos pontos precisa de obter na(s) próxima(s) avaliação(ões) para ser aprovado, sem reavaliação.
+
+**Decisão Arquitetural:** A lógica de cálculo reside exclusivamente no Backend (`GradeService`), garantindo centralização das regras de negócio, segurança (lógica não exposta ao browser) e testabilidade isolada. O Frontend (React) é puramente apresentacional.
+
+**Regras de Negócio:**
+- Média aritmética simples de AB1 e AB2 para aprovação direta (≥ 7.0).
+- Nota máxima possível por avaliação: 10.0.
+- REAV substitui `min(AB1, AB2)` apenas se o valor da REAV for superior à menor nota.
+- Acesso à Reavaliação Final: média efetiva entre 5.0 e 6.9 (inclusive).
+- Aprovação na Final: `0.6 × médiaParcial + 0.4 × notaFinal ≥ 5.5`.
+
+**Passo 5.1 — Criação dos DTOs**
+- Criar `ApprovalForecastDTO` em `dtos/grade/` com campos: `status`, `message`, `currentAvg`, `effectiveAvg`, `neededScore`, `neededScoreType`, `finalWeightedScore`.
+- Estender `DashboardSubjectDTO` com o campo `ApprovalForecastDTO approvalForecast`.
+
+**Passo 5.2 — Lógica de Cálculo (`GradeService`)**
+- Declarar constantes: `PASSING_GRADE=7.0`, `MAX_GRADE=10.0`, `FINAL_PASSING_SCORE=5.5`, `FINAL_WEIGHT_PARTIAL=0.6`, `FINAL_WEIGHT_EXAM=0.4`, `MIN_AVG_FOR_FINAL=5.0`, `TARGET_SUM=14.0`.
+- Implementar `calculateApprovalForecast(Map<String, BigDecimal> grades)` com 8 estados:
+  `NO_GRADES` | `NEEDS_SCORE` | `REEVALUATION_CERTAIN` | `APPROVED` | `NEEDS_REAV` | `REAV_MAY_SAVE` | `NEEDS_FINAL` | `FAILED`.
+
+**Passo 5.3 — Integração (`DashboardService`)**
+- Injetar `GradeService` no `DashboardService`.
+- Invocar `calculateApprovalForecast(gradeMap)` em `getSubjectsForCurrentUser()` após construir o mapa de notas.
+- Passar o resultado ao construtor do `DashboardSubjectDTO`.
+
+**Passo 5.4 — Interface Visual (`MySubjects.jsx`)**
+- Criar subcomponente `ApprovalForecastAlert` com mapeamento de estados para estilos visuais (cor + ícone).
+- Renderizar abaixo do grid de notas AB1/AB2/REAV/FINAL no modal de detalhes.
+- Zero lógica de cálculo no frontend — a mensagem é lida directamente do campo `message` do backend.
+
+**Passo 5.5 — Testes Unitários (Backend)**
+- Testes JUnit para `calculateApprovalForecast()` cobrindo os 12 cenários: todos os estados, edge-cases de REAV inferior à menor nota, e acesso à Final.

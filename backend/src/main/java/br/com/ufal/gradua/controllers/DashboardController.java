@@ -2,8 +2,6 @@ package br.com.ufal.gradua.controllers;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;

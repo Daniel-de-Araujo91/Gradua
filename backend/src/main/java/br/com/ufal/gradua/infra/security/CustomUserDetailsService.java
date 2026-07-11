@@ -1,8 +1,9 @@
 package br.com.ufal.gradua.infra.security;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.ArrayList;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,10 +13,10 @@ import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.UserRepository;
 
 @Component
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService{
 
-    @Autowired
-    private UserRepository repository;
+    private final UserRepository repository;
    
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

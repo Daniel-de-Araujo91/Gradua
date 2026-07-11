@@ -1,12 +1,13 @@
 package br.com.ufal.gradua.services;
 
+import lombok.RequiredArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import br.com.ufal.gradua.repositories.ForumVoteRepository;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ForumVoteService {
 
     @Autowired ForumVoteRepository voteRepository;

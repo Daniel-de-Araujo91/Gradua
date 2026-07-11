@@ -13,7 +13,6 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import jakarta.persistence.FetchType;
 
 @Getter
 @Setter

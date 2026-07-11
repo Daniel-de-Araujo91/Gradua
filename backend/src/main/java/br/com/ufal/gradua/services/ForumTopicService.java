@@ -1,5 +1,7 @@
 package br.com.ufal.gradua.services;
 
+import lombok.RequiredArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -7,36 +9,31 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import br.com.ufal.gradua.models.user.UserModel;
 
 import br.com.ufal.gradua.dtos.forum.ForumTopicRequestDTO;
 import br.com.ufal.gradua.dtos.forum.ForumTopicResponseDTO;
 import br.com.ufal.gradua.models.forum.ForumTopicModel;
-import br.com.ufal.gradua.models.user.UserModel;
 import br.com.ufal.gradua.repositories.ForumTopicRepository;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ForumTopicService {
 
     @Autowired
     ForumTopicRepository repository;
 
-    @Autowired
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
 
-    @Autowired
-    private ForumVoteService forumVoteService;
+    private final ForumVoteService forumVoteService;
 
-    @Autowired
-    private ForumReportService forumReportService;
+    private final ForumReportService forumReportService;
 
     private UserModel getUserByToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();

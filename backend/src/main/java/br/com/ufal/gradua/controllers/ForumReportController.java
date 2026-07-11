@@ -1,10 +1,11 @@
 package br.com.ufal.gradua.controllers;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,13 +14,12 @@ import br.com.ufal.gradua.services.ForumTopicService;
 
 @RestController
 @RequestMapping("/api/forum/report")
+@RequiredArgsConstructor
 public class ForumReportController {
 
-    @Autowired
-    private ForumTopicService forumTopicService;
+    private final ForumTopicService forumTopicService;
 
-    @Autowired
-    private ForumCommentService forumCommentService;
+    private final ForumCommentService forumCommentService;
 
     @PostMapping("/topic/{topicId}")
     public ResponseEntity<Map<String, Object>> reportTopic(
